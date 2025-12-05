@@ -1,0 +1,16 @@
+{
+  "alkali_metals": ["Li", "Na", "K", "Rb", "Cs"],
+  "alkaline_earth": ["Be", "Mg", "Ca", "Sr", "Ba"],
+  "transition_metals_3d": ["Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn"],
+  "transition_metals_4d": ["Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd"],
+  "transition_metals_5d": ["Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg"],
+  "lanthanides": ["La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu"],
+  "actinides": ["Ac", "Th", "Pa", "U", "Np", "Pu", "Am", "Cm"],
+  "framework_formers": ["Si", "Al", "P", "B", "Ge"],
+  "common_anions": ["O", "F", "Cl", "Br", "I", "S", "Se", "N"],
+  "post_transition_metals": ["Al", "Ga", "In", "Sn", "Tl", "Pb", "Bi"],
+  "metalloids": ["B", "Si", "Ge", "As", "Sb", "Te"],
+  "nonmetals": ["H", "C", "N", "O", "P", "S", "Se"],
+  "halogens": ["F", "Cl", "Br", "I"],
+  "noble_gases": ["He", "Ne", "Ar", "Kr", "Xe", "Rn"]
+}
