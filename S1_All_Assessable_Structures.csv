@@ -1,0 +1,613 @@
+ICSD Code,Formula,Chemical Formula,Space Group,Validation Status,Measurement Conditions,Compound Class,Year,Journal,GII,Failure Mode,Disorder Type
+8673,Br1 K1,Br1 K1,F m -3 m,Validated,Ambient,Bromide,2018.0,Luminescence,0.0698,,pure
+18015,Br1 K1,Br1 K1,F m -3 m,Validated,Ambient,Bromide,1926.0,Zeitschrift fuer Kristallographie,0.0669,,pure
+22157,Br1 K1,Br1 K1,F m -3 m,Validated,Ambient,Bromide,1969.0,"Annales Academiae Scientiarum Fennicae, Series A6: Physica",0.0862,,pure
+52243,Br1 K1,Br1 K1,F m -3 m,Validated,Ambient,Bromide,1936.0,"Proceedings of the Physical Society, London",0.0039,,pure
+53826,Br1 K1,Br1 K1,F m -3 m,Validated,Ambient,Bromide,1922.0,Journal of the Washington Academy of Sciences,0.064,,pure
+53842,Br1 K1,Br1 K1,F m -3 m,Validated,Ambient,Bromide,1921.0,Zeitschrift fuer Physik,0.0683,,pure
+187220,Br1 K1,Br1 K1,F m -3 m,Validated,Ambient,Bromide,2012.0,Archives of Physics Research,0.0437,,pure
+27982,Br1 Li1,Br1 Li1,F m -3 m,Failed,Ambient,Bromide,1923.0,Physikalische Zeitschrift,0.1657,Type6_Anomaly,pure
+52236,Br1 Li1,Br1 Li1,F m -3 m,Failed,Ambient,Bromide,1936.0,"Proceedings of the Physical Society, London",0.1725,Type6_Anomaly,pure
+53819,Br1 Li1,Br1 Li1,F m -3 m,Failed,Ambient,Bromide,1922.0,Journal of the Washington Academy of Sciences,0.1657,Type6_Anomaly,pure
+18013,Br1 Na1,Br1 Na1,F m -3 m,Validated,Ambient,Bromide,1926.0,Zeitschrift fuer Kristallographie,0.0328,,pure
+26910,Br1 Na1,Br1 Na1,F m -3 m,Validated,Ambient,Bromide,,,0.0343,,pure
+41440,Br1 Na1,Br1 Na1,F m -3 m,Validated,Ambient,Bromide,1990.0,Physical Review B: Condensed Matter and Materials Physics,0.0189,,pure
+52239,Br1 Na1,Br1 Na1,F m -3 m,Validated,Ambient,Bromide,1936.0,"Proceedings of the Physical Society, London",0.0148,,pure
+53822,Br1 Na1,Br1 Na1,F m -3 m,Validated,Ambient,Bromide,1922.0,Journal of the Washington Academy of Sciences,0.0356,,pure
+61672,Br1 Na1,Br1 Na1,F m -3 m,Validated,Ambient,Bromide,1949.0,Journal of Physical Chemistry,0.0165,,pure
+18017,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1926.0,Zeitschrift fuer Kristallographie,0.0426,,pure
+22167,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1969.0,"Annales Academiae Scientiarum Fennicae, Series A6: Physica",0.0124,,pure
+53830,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1922.0,Journal of the Washington Academy of Sciences,0.0579,,pure
+53845,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1921.0,Physical Review,0.0755,,pure
+197823,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1961.0,Acta Crystallographica,0.0066,,pure
+197945,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1961.0,Acta Crystallographica,0.0091,,pure
+199925,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1961.0,Acta Crystallographica,0.0125,,pure
+199926,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1961.0,Acta Crystallographica,0.0173,,pure
+199927,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Ambient,Bromide,1961.0,Acta Crystallographica,0.0215,,pure
+60281,Ag0.097 Cl1 Na0.903,Ag0.097 Cl1 Na0.903,F m -3 m,Failed,Ambient,Chloride,1970.0,"Izvestiya Akademii Nauk SSSR, Seriya Khimicheskaya",0.0886,Type3_Vacancy,homovalent
+60282,Ag0.201 Cl1 Na0.799,Ag0.201 Cl1 Na0.799,F m -3 m,Failed,Ambient,Chloride,1970.0,"Izvestiya Akademii Nauk SSSR, Seriya Khimicheskaya",0.0824,Type3_Vacancy,homovalent
+60283,Ag0.3 Cl1 Na0.7,Ag0.3 Cl1 Na0.7,F m -3 m,Borderline,Ambient,Chloride,1970.0,"Izvestiya Akademii Nauk SSSR, Seriya Khimicheskaya",0.075,,homovalent
+56538,Ag1 Cl1,Ag1 Cl1,F m -3 m,Validated,Ambient,Chloride,1999.0,Physical Review B: Condensed Matter and Materials Physics,0.0531,,pure
+64734,Ag1 Cl1,Ag1 Cl1,F m -3 m,Validated,Ambient,Chloride,1955.0,National Bureau of Standards Circular (U. S.),0.0566,,pure
+61663,Br0.1018 Cl0.8982 Na1,Br0.1018 Cl0.8982 Na1,F m -3 m,Failed,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.5187,Type3_Vacancy,pure
+187225,Br0.2 Cl0.8 K1,Br0.2 Cl0.8 K1,F m -3 m,Failed,Ambient,Chloride,2012.0,Archives of Physics Research,0.4858,Type3_Vacancy,pure
+61664,Br0.2019 Cl0.7981 Na1,Br0.2019 Cl0.7981 Na1,F m -3 m,Failed,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.4464,Type3_Vacancy,pure
+61665,Br0.2982 Cl0.7018 Na1,Br0.2982 Cl0.7018 Na1,F m -3 m,Failed,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.3837,Type3_Vacancy,pure
+187224,Br0.4 Cl0.6 K1,Br0.4 Cl0.6 K1,F m -3 m,Failed,Ambient,Chloride,2012.0,Archives of Physics Research,0.4425,Type3_Vacancy,pure
+22170,Br0.4 Cl0.6 Rb1,Br0.4 Cl0.6 Rb1,F m -3 m,Borderline,Ambient,Chloride,1969.0,"Annales Academiae Scientiarum Fennicae, Series A6: Physica",0.1085,,pure
+61666,Br0.4029 Cl0.5971 Na1,Br0.4029 Cl0.5971 Na1,F m -3 m,Failed,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.3172,Type3_Vacancy,pure
+61667,Br0.4927 Cl0.5073 Na1,Br0.4927 Cl0.5073 Na1,F m -3 m,Failed,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.2639,Type3_Vacancy,pure
+119597,Br0.5 Cl0.5 K1,Br0.5 Cl0.5 K1,F m -3 m,Borderline,Ambient,Chloride,1966.0,Acta Crystallographica,0.11,,pure
+187223,Br0.5 Cl0.5 K1,Br0.5 Cl0.5 K1,F m -3 m,Failed,Ambient,Chloride,2012.0,Archives of Physics Research,0.4006,Type3_Vacancy,pure
+61668,Br0.5977 Cl0.4023 Na1,Br0.5977 Cl0.4023 Na1,F m -3 m,Failed,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.2048,Type3_Vacancy,pure
+187222,Br0.6 Cl0.4 K1,Br0.6 Cl0.4 K1,F m -3 m,Failed,Ambient,Chloride,2012.0,Archives of Physics Research,0.2787,Type3_Vacancy,pure
+61669,Br0.7007 Cl0.2993 Na1,Br0.7007 Cl0.2993 Na1,F m -3 m,Failed,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.1515,Type3_Vacancy,pure
+61670,Br0.7922 Cl0.2078 Na1,Br0.7922 Cl0.2078 Na1,F m -3 m,Borderline,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.105,,pure
+187221,Br0.8 Cl0.2 K1,Br0.8 Cl0.2 K1,F m -3 m,Borderline,Ambient,Chloride,2012.0,Archives of Physics Research,0.1277,,pure
+61671,Br0.8947 Cl0.1053 Na1,Br0.8947 Cl0.1053 Na1,F m -3 m,Validated,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.0597,,pure
+28947,Cl1 K0.0997 Na0.9003,Cl1 K0.0997 Na0.9003,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.7578,Type3_Vacancy,homovalent
+240594,Cl1 K0.1 Na0.9,Cl1 K0.1 Na0.9,F m -3 m,Failed,Ambient,Chloride,2004.0,American Mineralogist,0.7591,Type3_Vacancy,homovalent
+28946,Cl1 K0.1757 Na0.8243,Cl1 K0.1757 Na0.8243,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.7036,Type3_Vacancy,homovalent
+22171,Cl1 K0.3 Rb0.7,Cl1 K0.3 Rb0.7,F m -3 m,Failed,Ambient,Chloride,1969.0,"Annales Academiae Scientiarum Fennicae, Series A6: Physica",0.181,Type3_Vacancy,homovalent
+28945,Cl1 K0.301 Na0.699,Cl1 K0.301 Na0.699,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.6259,Type3_Vacancy,homovalent
+28944,Cl1 K0.4019 Na0.5981,Cl1 K0.4019 Na0.5981,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.5706,Type3_Vacancy,homovalent
+28943,Cl1 K0.4963 Na0.5037,Cl1 K0.4963 Na0.5037,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.5242,Type3_Vacancy,homovalent
+28942,Cl1 K0.5001 Na0.4999,Cl1 K0.5001 Na0.4999,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.5221,Type3_Vacancy,homovalent
+28941,Cl1 K0.6165 Na0.3835,Cl1 K0.6165 Na0.3835,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.4724,Type3_Vacancy,homovalent
+240568,Cl1 K0.7 Na0.3,Cl1 K0.7 Na0.3,F m -3 m,Failed,Ambient,Chloride,2004.0,American Mineralogist,0.4411,Type3_Vacancy,homovalent
+28940,Cl1 K0.7003 Na0.2997,Cl1 K0.7003 Na0.2997,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.4397,Type3_Vacancy,homovalent
+240534,Cl1 K0.8 Na0.2,Cl1 K0.8 Na0.2,F m -3 m,Failed,Ambient,Chloride,2004.0,American Mineralogist,0.4025,Type3_Vacancy,homovalent
+28939,Cl1 K0.8998 Na0.1002,Cl1 K0.8998 Na0.1002,F m -3 m,Failed,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.3754,Type3_Vacancy,homovalent
+240531,Cl1 K0.9 Na0.1,Cl1 K0.9 Na0.1,F m -3 m,Failed,Ambient,Chloride,2004.0,American Mineralogist,0.3758,Type3_Vacancy,homovalent
+28695,Cl1 K0.92 Tl0.08,Cl1 K0.92 Tl0.08,F m -3 m,Borderline,Ambient,Chloride,1955.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.2083,Type3_Vacancy,homovalent
+18014,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Ambient,Chloride,1926.0,Zeitschrift fuer Kristallographie,0.105,,pure
+22156,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Ambient,Chloride,1969.0,"Annales Academiae Scientiarum Fennicae, Series A6: Physica",0.1219,,pure
+28938,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.1026,,pure
+52242,Cl1 K1,Cl1 K1,F m -3 m,Validated,Ambient,Chloride,1936.0,"Proceedings of the Physical Society, London",0.0441,,pure
+53825,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Ambient,Chloride,1919.0,Transactions of the American Institute of Electrical Engineers,0.1201,,pure
+53841,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Ambient,Chloride,1916.0,"Annalen der Physik (Berlin, Germany)",0.1322,,pure
+126365,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Ambient,Chloride,1953.0,Acta Crystallographica,0.1006,,pure
+154214,Cl1 K1,Cl1 K1,F m -3 m,Validated,Ambient,Chloride,2005.0,Journal of Molecular Structure: THEOCHEM,0.0973,,pure
+165593,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Ambient,Chloride,2006.0,Inorganic Chemistry,0.1127,,pure
+187219,Cl1 K1,Cl1 K1,F m -3 m,Validated,Ambient,Chloride,2012.0,Archives of Physics Research,0.0148,,pure
+240502,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Ambient,Chloride,2004.0,American Mineralogist,0.1082,,pure
+26909,Cl1 Li1,Cl1 Li1,F m -3 m,Validated,Ambient,Chloride,,,0.0224,,pure
+27981,Cl1 Li1,Cl1 Li1,F m -3 m,Validated,Ambient,Chloride,1923.0,Physikalische Zeitschrift,0.0039,,pure
+52235,Cl1 Li1,Cl1 Li1,F m -3 m,Validated,Ambient,Chloride,1936.0,"Proceedings of the Physical Society, London",0.0001,,pure
+53818,Cl1 Li1,Cl1 Li1,F m -3 m,Validated,Ambient,Chloride,1922.0,Journal of the Washington Academy of Sciences,0.032,,pure
+18189,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1965.0,Acta Crystallographica,0.008,,pure
+28948,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1954.0,Journal of the American Chemical Society,0.0189,,pure
+29929,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,2021.0,"Minerals (Basel, Switzerland)",0.0106,,pure
+41411,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1988.0,Kristallografiya,0.008,,pure
+41439,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1990.0,Physical Review B: Condensed Matter and Materials Physics,0.0242,,pure
+52232,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1936.0,Zeitschrift fuer Physik,0.0176,,pure
+52233,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1936.0,"Proceedings of the Physical Society, London",0.0711,,pure
+53815,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,,,0.0055,,pure
+53816,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1919.0,Transactions of the American Institute of Electrical Engineers,0.0189,,pure
+60280,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1970.0,"Izvestiya Akademii Nauk SSSR, Seriya Khimicheskaya",0.0215,,pure
+61662,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1949.0,Journal of Physical Chemistry,0.0191,,pure
+142801,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,,,0.0307,,pure
+165592,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,2006.0,Inorganic Chemistry,0.0415,,pure
+169462,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,2011.0,Journal of Alloys and Compounds,0.0102,,pure
+181148,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,2011.0,Journal of Crystal Growth,0.0213,,pure
+197693,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,1953.0,National Bureau of Standards Circular (U. S.),0.0191,,pure
+206948,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,2023.0,Sustainable Energy & Fuels,0.0696,,pure
+240598,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Ambient,Chloride,2004.0,American Mineralogist,0.019,,pure
+18016,Cl1 Rb1,Cl1 Rb1,F m -3 m,Borderline,Ambient,Chloride,1926.0,Zeitschrift fuer Kristallographie,0.117,,pure
+22166,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Ambient,Chloride,1969.0,"Annales Academiae Scientiarum Fennicae, Series A6: Physica",0.0712,,pure
+23761,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Ambient,Chloride,1970.0,"Acta Crystallographica, Section A",0.0683,,pure
+53829,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Ambient,Chloride,1922.0,Journal of the Washington Academy of Sciences,0.0412,,pure
+53844,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Ambient,Chloride,1925.0,Zeitschrift fuer Kristallographie,0.0843,,pure
+61538,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Ambient,Chloride,,,0.0669,,pure
+199932,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Ambient,Chloride,1961.0,Acta Crystallographica,0.0557,,pure
+199933,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Ambient,Chloride,1961.0,Acta Crystallographica,0.0531,,pure
+199934,Cl1 Rb1,Cl1 Rb1,F m -3 m,Failed,Ambient,Chloride,1961.0,Acta Crystallographica,3.0372,Type6_Anomaly,pure
+18008,Ag1 F1,Ag1 F1,F m -3 m,Validated,Ambient,Fluoride,1926.0,Zeitschrift fuer Kristallographie,0.008,,pure
+64132,Ag1 F1,Ag1 F1,F m -3 m,Validated,Ambient,Fluoride,2023.0,IUCrData,0.0057,,pure
+266257,Co0.7 Fe0.3 O1,Co0.7 Fe0.3 O1,F m -3 m,Validated,Ambient,Fluoride,2018.0,Inorganic Chemistry,0.0666,Type3_Vacancy,homovalent
+52241,F1 K1,F1 K1,F m -3 m,Validated,Ambient,Fluoride,1936.0,"Proceedings of the Physical Society, London",0.0743,,pure
+53824,F1 K1,F1 K1,F m -3 m,Validated,Ambient,Fluoride,1919.0,Transactions of the American Institute of Electrical Engineers,0.0904,,pure
+64686,F1 K1,F1 K1,F m -3 m,Validated,Ambient,Fluoride,,,0.045,,pure
+18012,F1 Li1,F1 Li1,F m -3 m,Validated,Ambient,Fluoride,1926.0,Zeitschrift fuer Kristallographie,0.0245,,pure
+41409,F1 Li1,F1 Li1,F m -3 m,Validated,Ambient,Fluoride,1988.0,Kristallografiya,0.0259,,pure
+44879,F1 Li1,F1 Li1,F m -3 m,Validated,Ambient,Fluoride,1955.0,Acta Crystallographica,0.0268,,pure
+52234,F1 Li1,F1 Li1,F m -3 m,Validated,Ambient,Fluoride,1936.0,"Proceedings of the Physical Society, London",0.0148,,pure
+53839,F1 Li1,F1 Li1,F m -3 m,Validated,Ambient,Fluoride,1916.0,Physikalische Zeitschrift,0.0217,,pure
+62361,F1 Li1,F1 Li1,F m -3 m,Validated,Ambient,Fluoride,1988.0,Naturwissenschaften,0.0259,,pure
+198097,F1 Li1,F1 Li1,F m -3 m,Validated,Ambient,Fluoride,1949.0,"Journal of Applied Physics (Melville, NY, United States)",0.027,,pure
+29128,F1 Na1,F1 Na1,F m -3 m,Borderline,Ambient,Fluoride,1920.0,"Nature (London, United Kingdom)",0.1265,,pure
+41410,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,1988.0,Kristallografiya,0.0931,,pure
+41438,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,1990.0,Physical Review B: Condensed Matter and Materials Physics,0.0669,,pure
+43611,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,1961.0,Acta Crystallographica,0.064,,pure
+52238,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,1936.0,"Proceedings of the Physical Society, London",0.0412,,pure
+53821,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,1919.0,Transactions of the American Institute of Electrical Engineers,0.0698,,pure
+53840,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,1918.0,Physikalische Zeitschrift,0.0858,,pure
+117382,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,1927.0,"Zentralblatt fuer Mineralogie, Geologie und Palaeontologie",0.0931,,pure
+117383,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,1927.0,"Zentralblatt fuer Mineralogie, Geologie und Palaeontologie",0.0858,,pure
+262837,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,2012.0,Journal of Solid State Chemistry,0.062,,pure
+262838,F1 Na1,F1 Na1,F m -3 m,Validated,Ambient,Fluoride,2012.0,Journal of Solid State Chemistry,0.0601,,pure
+22172,Br0.4 I0.6 K1,Br0.4 I0.6 K1,F m -3 m,Failed,Ambient,Iodide,1969.0,"Annales Academiae Scientiarum Fennicae, Series A6: Physica",0.263,Type3_Vacancy,pure
+27983,I1 Li1,I1 Li1,F m -3 m,Failed,Ambient,Iodide,1923.0,Physikalische Zeitschrift,0.2829,Type6_Anomaly,pure
+53820,I1 Li1,I1 Li1,F m -3 m,Failed,Ambient,Iodide,1922.0,Journal of the Washington Academy of Sciences,0.328,Type6_Anomaly,pure
+414244,I1 Li1,I1 Li1,F m -3 m,Failed,Ambient,Iodide,2004.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.2961,Type6_Anomaly,pure
+52240,I1 Na1,I1 Na1,F m -3 m,Validated,Ambient,Iodide,1936.0,"Proceedings of the Physical Society, London",0.0476,,pure
+53823,I1 Na1,I1 Na1,F m -3 m,Validated,Ambient,Iodide,1922.0,Journal of the Washington Academy of Sciences,0.0386,,pure
+61502,I1 Na1,I1 Na1,F m -3 m,Validated,Ambient,Iodide,1955.0,National Bureau of Standards Circular (U. S.),0.045,,pure
+61503,I1 Na1,I1 Na1,F m -3 m,Validated,Ambient,Iodide,1955.0,National Bureau of Standards Circular (U. S.),0.0437,,pure
+61504,I1 Na1,I1 Na1,F m -3 m,Validated,Ambient,Iodide,1955.0,National Bureau of Standards Circular (U. S.),0.032,,pure
+76656,Cl2 K1 Rb1,Cl2 K1 Rb1,F m -3 m,Validated,Ambient,Other,1950.0,Suomen Kemistilehti B,0.1989,Type6_Anomaly,homovalent
+61630,O0.9 V1,O0.9 V1,F m -3 m,Failed,Ambient,Other,1967.0,Monatshefte fuer Chemie,0.4857,Type3_Vacancy,pure
+26961,Ba1 O1,Ba1 O1,F m -3 m,Failed,Ambient,Oxide,1922.0,Zeitschrift fuer Physik,0.1978,Type6_Anomaly,pure
+52278,Ba1 O1,Ba1 O1,F m -3 m,Failed,Ambient,Oxide,1933.0,Zeitschrift fuer Physik,0.2144,Type6_Anomaly,pure
+58663,Ba1 O1,Ba1 O1,F m -3 m,Failed,Ambient,Oxide,1972.0,Journal of Geophysical Research,0.2192,Type6_Anomaly,pure
+616004,Ba1 O1,Ba1 O1,F m -3 m,Failed,Ambient,Oxide,1955.0,Physical Review,0.2193,Type6_Anomaly,pure
+616005,Ba1 O1,Ba1 O1,F m -3 m,Failed,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.2193,Type6_Anomaly,pure
+14922,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,2020.0,Chemistry of Materials,0.1118,Type6_Anomaly,pure
+26959,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,1922.0,Zeitschrift fuer Physik,0.0768,Type6_Anomaly,pure
+28905,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,1948.0,Journal of the American Chemical Society,0.1002,Type6_Anomaly,pure
+51409,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,2001.0,Materials Research Bulletin,0.1178,Type6_Anomaly,pure
+52783,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,1968.0,Journal of Applied Crystallography,0.1135,Type6_Anomaly,pure
+60199,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,1927.0,Zeitschrift fuer Physikalische Chemie (Leipzig),0.1144,Type6_Anomaly,pure
+60704,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.11,Type6_Anomaly,pure
+61550,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,1929.0,Gazzetta Chimica Italiana,0.1176,Type6_Anomaly,pure
+75785,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,,,0.1066,Type6_Anomaly,pure
+90486,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,2000.0,Journal of Physics: Condensed Matter,0.109,Type6_Anomaly,pure
+148208,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,2023.0,Inorganic Chemistry,0.1133,Type6_Anomaly,pure
+163628,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,2009.0,Journal of Materials Chemistry,0.113,Type6_Anomaly,pure
+197982,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.1135,Type6_Anomaly,pure
+198080,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,,,0.1144,Type6_Anomaly,pure
+261847,Ca1 O1,Ca1 O1,F m -3 m,Failed,Ambient,Oxide,2011.0,Journal of Solid State Chemistry,0.1199,Type6_Anomaly,pure
+24802,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1928.0,"Proceedings of the Physical Society, London",0.11,Type6_Anomaly,pure
+29289,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1960.0,Journal of Physics and Chemistry of Solids,0.1056,Type6_Anomaly,pure
+29290,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1960.0,Journal of Physics and Chemistry of Solids,0.1056,Type6_Anomaly,pure
+29291,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1960.0,Journal of Physics and Chemistry of Solids,0.1067,Type6_Anomaly,pure
+29292,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1960.0,Journal of Physics and Chemistry of Solids,0.1069,Type6_Anomaly,pure
+31055,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1922.0,Zeitschrift fuer Kristallographie,0.1415,Type6_Anomaly,pure
+61554,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1929.0,Gazzetta Chimica Italiana,0.1365,Type6_Anomaly,pure
+181294,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,2011.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.0943,Type6_Anomaly,pure
+181735,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,2011.0,Journal of Alloys and Compounds,0.111,Type6_Anomaly,pure
+197688,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1953.0,National Bureau of Standards Circular (U. S.),0.1061,Type6_Anomaly,pure
+259401,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,2015.0,RSC Advances,0.1108,Type6_Anomaly,pure
+259402,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,2015.0,RSC Advances,0.0921,Type6_Anomaly,pure
+259403,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,2015.0,RSC Advances,0.0982,Type6_Anomaly,pure
+259409,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,Bulletin of Materials Science,0.1155,Type6_Anomaly,pure
+620202,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,,Comptes Rendus Hebdomadaires des Seances de l'Academie des Sciences,0.0935,Type6_Anomaly,pure
+620205,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.1061,Type6_Anomaly,pure
+620206,Cd1 O1,Cd1 O1,F m -3 m,Failed,Ambient,Oxide,1971.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.1059,Type6_Anomaly,pure
+164322,Co1 Li1 O2,Co1 Li1 O2,F m -3 m,Failed,Ambient,Oxide,1994.0,"Journal of Applied Physics (Melville, NY, United States)",0.2855,Type6_Anomaly,heterovalent
+164323,Co1 Li1 O2,Co1 Li1 O2,F m -3 m,Failed,Ambient,Oxide,1994.0,"Journal of Applied Physics (Melville, NY, United States)",0.2749,Type6_Anomaly,heterovalent
+9865,Co1 O1,Co1 O1,F m -3 m,Borderline,Ambient,Oxide,1979.0,Proceedings of the Japan Academy,0.0529,,pure
+28505,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1968.0,Physical Review,0.0363,,pure
+28506,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1968.0,Physical Review,0.0363,,pure
+29049,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1950.0,"Nature (London, United Kingdom)",0.0465,,pure
+29081,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1962.0,"Nature (London, United Kingdom)",0.0234,,pure
+29226,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1958.0,Journal of Physics and Chemistry of Solids,0.0286,,pure
+53057,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1928.0,Gazzetta Chimica Italiana,0.0029,,pure
+53058,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.0387,,pure
+53929,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,,,0.0234,,pure
+61326,Co1 O1,Co1 O1,F m -3 m,Borderline,Ambient,Oxide,1968.0,"Zeitschrift fuer Physikalische Chemie (Muenchen, Germany)",0.0516,,pure
+76638,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1950.0,"Nature (London, United Kingdom)",0.0467,,pure
+128532,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,2023.0,Inorganic Chemistry,0.0454,,pure
+128534,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,2023.0,Inorganic Chemistry,0.0454,,pure
+191776,Co1 O1,Co1 O1,F m -3 m,Borderline,Ambient,Oxide,2001.0,Physical Review B: Condensed Matter and Materials Physics,0.05,,pure
+245319,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,2006.0,Journal of Physical Chemistry B,0.0427,,pure
+245320,Co1 O1,Co1 O1,F m -3 m,Borderline,Ambient,Oxide,2006.0,Journal of Physical Chemistry B,0.0629,,pure
+245321,Co1 O1,Co1 O1,F m -3 m,Borderline,Ambient,Oxide,2006.0,Journal of Physical Chemistry B,0.0654,,pure
+245322,Co1 O1,Co1 O1,F m -3 m,Borderline,Ambient,Oxide,2006.0,Journal of Physical Chemistry B,0.0541,,pure
+245323,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,2006.0,Journal of Physical Chemistry B,0.0491,,pure
+245324,Co1 O1,Co1 O1,F m -3 m,Borderline,Ambient,Oxide,2006.0,Journal of Physical Chemistry B,0.0541,,pure
+624575,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,1955.0,Journal of Metals,0.0495,,pure
+624580,Co1 O1,Co1 O1,F m -3 m,Validated,Ambient,Oxide,,,0.0234,,pure
+109296,Cr1 O1,Cr1 O1,F m -3 m,Failed,Ambient,Oxide,,,0.2058,Type6_Anomaly,pure
+61633,Cr1 O1.01,Cr1 O1.01,F m -3 m,Failed,Ambient,Oxide,1967.0,Monatshefte fuer Chemie,0.3138,Type6_Anomaly,pure
+61545,Cu0.05 Ni0.95 O1,Cu0.05 Ni0.95 O1,F m -3 m,Validated,Ambient,Oxide,1964.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0442,,homovalent
+61546,Cu0.1 Ni0.9 O1,Cu0.1 Ni0.9 O1,F m -3 m,Validated,Ambient,Oxide,1964.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0478,,homovalent
+61547,Cu0.15 Ni0.85 O1,Cu0.15 Ni0.85 O1,F m -3 m,Validated,Ambient,Oxide,1964.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0524,,homovalent
+61548,Cu0.2 Ni0.8 O1,Cu0.2 Ni0.8 O1,F m -3 m,Validated,Ambient,Oxide,1964.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0566,,homovalent
+61549,Cu0.25 Ni0.75 O1,Cu0.25 Ni0.75 O1,F m -3 m,Borderline,Ambient,Oxide,1964.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0612,,homovalent
+61323,Cu1 O1,Cu1 O1,F m -3 m,Failed,Ambient,Oxide,1968.0,"Zeitschrift fuer Physikalische Chemie (Muenchen, Germany)",0.1203,Type6_Anomaly,pure
+53437,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,1963.0,Reactor Materials,0.1672,Type6_Anomaly,pure
+148688,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,2023.0,Journal of the American Chemical Society,0.1706,Type6_Anomaly,pure
+148690,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,2023.0,Journal of the American Chemical Society,0.1706,Type6_Anomaly,pure
+148692,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,2023.0,Journal of the American Chemical Society,0.174,Type6_Anomaly,pure
+148694,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,2023.0,Journal of the American Chemical Society,0.1677,Type6_Anomaly,pure
+148696,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,2023.0,Journal of the American Chemical Society,0.1649,Type6_Anomaly,pure
+176176,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,2024.0,Chemistry of Materials,0.1639,Type6_Anomaly,pure
+176179,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,2024.0,Chemistry of Materials,0.1639,Type6_Anomaly,pure
+631456,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,1956.0,Journal of the American Chemical Society,0.1689,Type6_Anomaly,pure
+631458,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,1966.0,Physical Review,0.1698,Type6_Anomaly,pure
+631466,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.1672,Type6_Anomaly,pure
+631469,Eu1 O1,Eu1 O1,F m -3 m,Failed,Ambient,Oxide,1964.0,"Proceedings of the Conference on Rare Earths Research, 1963, 3rd",0.1672,Type6_Anomaly,pure
+119446,Fe0.02 Ni0.98 O1,Fe0.02 Ni0.98 O1,F m -3 m,Failed,Ambient,Oxide,2007.0,Inorganic Materials,0.0982,Type3_Vacancy,homovalent
+158835,Fe0.02 Ni0.98 O1,Fe0.02 Ni0.98 O1,F m -3 m,Failed,Ambient,Oxide,2007.0,Neorganicheskie Materialy,0.0982,Type3_Vacancy,homovalent
+119447,Fe0.05 Ni0.95 O1,Fe0.05 Ni0.95 O1,F m -3 m,Failed,Ambient,Oxide,2007.0,Inorganic Materials,0.0982,Type3_Vacancy,homovalent
+158836,Fe0.05 Ni0.95 O1,Fe0.05 Ni0.95 O1,F m -3 m,Failed,Ambient,Oxide,2007.0,Neorganicheskie Materialy,0.0982,Type3_Vacancy,homovalent
+60690,Fe0.099 Mn0.901 O1,Fe0.099 Mn0.901 O1,F m -3 m,Failed,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0905,Type3_Vacancy,homovalent
+60689,Fe0.198 Mn0.802 O1,Fe0.198 Mn0.802 O1,F m -3 m,Failed,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0777,Type3_Vacancy,homovalent
+60688,Fe0.331 Mn0.669 O1,Fe0.331 Mn0.669 O1,F m -3 m,Failed,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0594,Type3_Vacancy,homovalent
+60687,Fe0.497 Mn0.503 O1,Fe0.497 Mn0.503 O1,F m -3 m,Failed,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0533,Type3_Vacancy,homovalent
+60686,Fe0.664 Mn0.336 O1,Fe0.664 Mn0.336 O1,F m -3 m,Borderline,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0556,,homovalent
+60685,Fe0.798 Mn0.202 O1,Fe0.798 Mn0.202 O1,F m -3 m,Validated,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0575,,homovalent
+60684,Fe0.899 Mn0.101 O1,Fe0.899 Mn0.101 O1,F m -3 m,Validated,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.059,Type3_Vacancy,homovalent
+27237,Fe0.902 O1,Fe0.902 O1,F m -3 m,Validated,Ambient,Oxide,,,0.0021,,pure
+27850,Fe0.911 O1,Fe0.911 O1,F m -3 m,Validated,Ambient,Oxide,1933.0,Journal of Chemical Physics,0.0089,,pure
+27851,Fe0.918 O1,Fe0.918 O1,F m -3 m,Validated,Ambient,Oxide,1933.0,Journal of Chemical Physics,0.0053,,pure
+27852,Fe0.929 O1,Fe0.929 O1,F m -3 m,Validated,Ambient,Oxide,1933.0,Journal of Chemical Physics,0.0016,,pure
+633031,Fe0.93 O1,Fe0.93 O1,F m -3 m,Validated,Ambient,Oxide,1983.0,Journal of Physics and Chemistry of Solids,0.0154,,pure
+27853,Fe0.932 O1,Fe0.932 O1,F m -3 m,Validated,Ambient,Oxide,1933.0,Journal of Chemical Physics,0.0028,,pure
+24696,Fe0.942 O1,Fe0.942 O1,F m -3 m,Validated,Ambient,Oxide,1953.0,Acta Crystallographica,0.0205,,pure
+27854,Fe0.944 O1,Fe0.944 O1,F m -3 m,Validated,Ambient,Oxide,1933.0,Journal of Chemical Physics,0.0114,,pure
+27855,Fe0.944 O1,Fe0.944 O1,F m -3 m,Validated,Ambient,Oxide,1933.0,Journal of Chemical Physics,0.0128,,pure
+24695,Fe0.974 O1,Fe0.974 O1,F m -3 m,Validated,Ambient,Oxide,1953.0,Acta Crystallographica,0.0118,,pure
+28364,Fe1 Li1 O2,Fe1 Li1 O2,F m -3 m,Failed,Ambient,Oxide,1964.0,Journal of Physics and Chemistry of Solids,0.1776,Type6_Anomaly,heterovalent
+28365,Fe1 Li1 O2,Fe1 Li1 O2,F m -3 m,Failed,Ambient,Oxide,1964.0,Journal of Physics and Chemistry of Solids,0.1789,Type6_Anomaly,heterovalent
+63919,Fe1 Li1 O2,Fe1 Li1 O2,F m -3 m,Failed,Ambient,Oxide,2022.0,Journal of the American Chemical Society,0.1775,Type6_Anomaly,heterovalent
+76657,Fe1 Li1 O2,Fe1 Li1 O2,F m -3 m,Failed,Ambient,Oxide,,Comptes Rendus Hebdomadaires des Seances de l'Academie des Sciences,0.1712,Type6_Anomaly,heterovalent
+155031,Fe1 Li1 O2,Fe1 Li1 O2,F m -3 m,Failed,Ambient,Oxide,2006.0,Applied Physics A: Materials Science & Processing,0.1814,Type6_Anomaly,heterovalent
+230832,Fe1 Li1 O2,Fe1 Li1 O2,F m -3 m,Failed,Ambient,Oxide,2018.0,Journal of Physical Chemistry C,0.1784,Type6_Anomaly,heterovalent
+31081,Fe1 O1,Fe1 O1,F m -3 m,Validated,Ambient,Oxide,1926.0,Zeitschrift fuer Kristallographie,0.0054,,pure
+60683,Fe1 O1,Fe1 O1,F m -3 m,Validated,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0121,,pure
+76639,Fe1 O1,Fe1 O1,F m -3 m,Validated,Ambient,Oxide,1949.0,Bulletin de la Societe Chimique de France,0.0154,,pure
+82233,Fe1 O1,Fe1 O1,F m -3 m,Validated,Ambient,Oxide,1996.0,Journal of Solid State Chemistry,0.0307,,pure
+180972,Fe1 O1,Fe1 O1,F m -3 m,Validated,Ambient,Oxide,2011.0,Journal of Alloys and Compounds,0.0148,,pure
+633029,Fe1 O1,Fe1 O1,F m -3 m,Validated,Ambient,Oxide,1967.0,Journal of Chemical Physics,0.0274,,pure
+633036,Fe1 O1,Fe1 O1,F m -3 m,Validated,Ambient,Oxide,,,0.0092,,pure
+633038,Fe1 O1,Fe1 O1,F m -3 m,Validated,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.0021,,pure
+109053,Li3 Nb1 O4,Li3 Nb1 O4,F m -3 m,Failed,Ambient,Oxide,,Bulletin de la Societe Francaise de Mineralogie et de Cristallographie,0.2783,Type6_Anomaly,heterovalent
+56138,Li3 O4 Ta1,Li3 O4 Ta1,F m -3 m,Failed,Ambient,Oxide,2022.0,Journal of Solid State Chemistry,0.2946,Type6_Anomaly,heterovalent
+109086,Li3 O4 Ta1,Li3 O4 Ta1,F m -3 m,Failed,Ambient,Oxide,1964.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.2825,Type6_Anomaly,heterovalent
+9863,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1979.0,Proceedings of the Japan Academy,0.0307,,pure
+19755,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2020.0,Optik,0.0263,,pure
+26958,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1922.0,Zeitschrift fuer Physik,0.034,,pure
+29127,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1920.0,"Nature (London, United Kingdom)",0.034,,pure
+31051,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1921.0,Zeitschrift fuer Kristallographie,0.0097,,pure
+44927,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1964.0,Zhurnal Neorganicheskoi Khimii,0.024,,pure
+52026,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1998.0,"Acta Crystallographica, Section B: Structural Science",0.0274,,pure
+52087,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2022.0,Inorganic Chemistry Communications,0.0296,,pure
+52275,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1935.0,Berichte der Deutschen Keramischen Gesellschaft,0.0251,,pure
+56143,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1927.0,Zeitschrift fuer Physikalische Chemie (Leipzig),0.0296,,pure
+60492,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1964.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0246,,pure
+60692,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0219,,pure
+61325,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1968.0,"Zeitschrift fuer Physikalische Chemie (Muenchen, Germany)",0.0255,,pure
+64928,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1927.0,Zeitschrift fuer Physikalische Chemie (Leipzig),0.0296,,pure
+64929,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1925.0,Zeitschrift fuer Kristallographie,0.0241,,pure
+64930,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1921.0,Zeitschrift fuer Kristallographie,0.0263,,pure
+77759,Mg1 O1,Mg1 O1,F m -3 m,Borderline,Ambient,Oxide,1997.0,American Mineralogist,0.0668,,pure
+88058,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1999.0,Journal of Alloys and Compounds,0.0338,,pure
+104844,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.0243,,pure
+104845,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1977.0,Journal of Materials Science,0.0153,,pure
+158103,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2001.0,European Journal of Mineralogy,0.0244,,pure
+159367,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1976.0,American Mineralogist,0.0241,,pure
+159368,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1976.0,American Mineralogist,0.0241,,pure
+159374,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1976.0,American Mineralogist,0.0208,,pure
+159376,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1976.0,American Mineralogist,0.0252,,pure
+169450,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2011.0,Journal of Alloys and Compounds,0.019,,pure
+170905,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2005.0,Journal of the American Chemical Society,0.0416,,pure
+173128,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2007.0,Chemistry of Materials,0.0235,,pure
+173132,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2007.0,Chemistry of Materials,0.0254,,pure
+230803,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2017.0,Journal of Alloys and Compounds,0.0263,,pure
+230804,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2017.0,Journal of Alloys and Compounds,0.0296,,pure
+230805,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,2017.0,Journal of Alloys and Compounds,0.0362,,pure
+642712,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,1968.0,Journal of Applied Crystallography,0.0261,,pure
+642716,Mg1 O1,Mg1 O1,F m -3 m,Validated,Ambient,Oxide,,,0.0119,,pure
+259700,Mn0.02 Ni0.98 O1,Mn0.02 Ni0.98 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.1759,Type3_Vacancy,homovalent
+259701,Mn0.02 Ni0.98 O1,Mn0.02 Ni0.98 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.1771,Type3_Vacancy,homovalent
+259702,Mn0.04 Ni0.96 O1,Mn0.04 Ni0.96 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.1756,Type3_Vacancy,homovalent
+259703,Mn0.04 Ni0.96 O1,Mn0.04 Ni0.96 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.1972,Type3_Vacancy,homovalent
+259704,Mn0.06 Ni0.94 O1,Mn0.06 Ni0.94 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.1745,Type3_Vacancy,homovalent
+259705,Mn0.06 Ni0.94 O1,Mn0.06 Ni0.94 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.177,Type3_Vacancy,homovalent
+259706,Mn0.08 Ni0.92 O1,Mn0.08 Ni0.92 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.1757,Type3_Vacancy,homovalent
+259707,Mn0.08 Ni0.92 O1,Mn0.08 Ni0.92 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.1771,Type3_Vacancy,homovalent
+61320,Mn0.25 Ni0.75 O1,Mn0.25 Ni0.75 O1,F m -3 m,Failed,Ambient,Oxide,1964.0,Journal of the American Ceramic Society,0.1728,Type3_Vacancy,homovalent
+61321,Mn0.5 Ni0.5 O1,Mn0.5 Ni0.5 O1,F m -3 m,Failed,Ambient,Oxide,1964.0,Journal of the American Ceramic Society,0.1645,Type3_Vacancy,homovalent
+186221,Mn0.63 Ni0.37 O1,Mn0.63 Ni0.37 O1,F m -3 m,Failed,Ambient,Oxide,2012.0,Chemistry of Materials,0.1788,Type3_Vacancy,homovalent
+186217,Mn0.66 Ni0.34 O1,Mn0.66 Ni0.34 O1,F m -3 m,Failed,Ambient,Oxide,2012.0,Chemistry of Materials,0.1784,Type3_Vacancy,homovalent
+186219,Mn0.66 Ni0.34 O1,Mn0.66 Ni0.34 O1,F m -3 m,Failed,Ambient,Oxide,2012.0,Chemistry of Materials,0.1793,Type3_Vacancy,homovalent
+61322,Mn0.75 Ni0.25 O1,Mn0.75 Ni0.25 O1,F m -3 m,Borderline,Ambient,Oxide,1964.0,Journal of the American Ceramic Society,0.1588,Type3_Vacancy,homovalent
+9864,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,1979.0,Proceedings of the Japan Academy,0.0579,,pure
+18006,Mn1 O1,Mn1 O1,F m -3 m,Failed,Ambient,Oxide,1926.0,Zeitschrift fuer Kristallographie,0.0956,Type6_Anomaly,pure
+28898,Mn1 O1,Mn1 O1,F m -3 m,Validated,Ambient,Oxide,1926.0,Gazzetta Chimica Italiana,0.014,,pure
+29326,Mn1 O1,Mn1 O1,F m -3 m,Validated,Ambient,Oxide,1935.0,Physikalische Zeitschrift,0.0327,,pure
+29327,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,1935.0,Physikalische Zeitschrift,0.0551,,pure
+43459,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,1962.0,Journal of the Physical Society of Japan,0.0557,,pure
+53928,Mn1 O1,Mn1 O1,F m -3 m,Validated,Ambient,Oxide,,,0.0164,,pure
+60691,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,1945.0,"Journal of the Iron and Steel Institute, London",0.0557,,pure
+61319,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,1964.0,Journal of the American Ceramic Society,0.0534,,pure
+76086,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,1968.0,"Journal of the Iron and Steel Institute, London",0.0545,,pure
+128562,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,2023.0,Journal of Applied Crystallography,0.057,,pure
+162039,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,2007.0,"Poverkhnostnye Fizika, Khimiya, Mekhanika",0.0635,,pure
+210500,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,2025.0,"Angewandte Chemie, International Edition",0.0624,,pure
+643192,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,,,0.0511,,pure
+643195,Mn1 O1,Mn1 O1,F m -3 m,Borderline,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.0557,,pure
+28914,Ni0.6 O1 Zn0.4,Ni0.6 O1 Zn0.4,F m -3 m,Failed,Ambient,Oxide,1954.0,Journal of the American Chemical Society,0.0597,Type3_Vacancy,homovalent
+28913,Ni0.7 O1 Zn0.3,Ni0.7 O1 Zn0.3,F m -3 m,Failed,Ambient,Oxide,1954.0,Journal of the American Chemical Society,0.0532,Type3_Vacancy,homovalent
+28912,Ni0.8 O1 Zn0.2,Ni0.8 O1 Zn0.2,F m -3 m,Failed,Ambient,Oxide,1954.0,Journal of the American Chemical Society,0.0474,Type3_Vacancy,homovalent
+77065,Ni0.85 O1 Zn0.15,Ni0.85 O1 Zn0.15,F m -3 m,Borderline,Ambient,Oxide,1946.0,Gazzetta Chimica Italiana,0.0474,,homovalent
+28911,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Borderline,Ambient,Oxide,1954.0,Journal of the American Chemical Society,0.0474,,homovalent
+260801,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Borderline,Ambient,Oxide,2010.0,Journal of Applied Crystallography,0.0474,,homovalent
+260802,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Borderline,Ambient,Oxide,2010.0,Journal of Applied Crystallography,0.0474,,homovalent
+260803,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Borderline,Ambient,Oxide,2010.0,Journal of Applied Crystallography,0.0474,,homovalent
+260804,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Borderline,Ambient,Oxide,2010.0,Journal of Applied Crystallography,0.0474,,homovalent
+260805,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Borderline,Ambient,Oxide,2010.0,Journal of Applied Crystallography,0.0474,,homovalent
+9866,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,1979.0,Proceedings of the Japan Academy,0.0527,,pure
+18545,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,2020.0,Dalton Transactions,0.0417,,pure
+24014,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,1933.0,Journal of the American Chemical Society,0.0395,,pure
+24018,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,1936.0,Journal of the American Chemical Society,0.0554,,pure
+28834,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,1940.0,Journal of the American Chemical Society,0.0417,,pure
+28910,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,1954.0,Journal of the American Chemical Society,0.0502,,pure
+53930,Ni1 O1,Ni1 O1,F m -3 m,Failed,Ambient,Oxide,1920.0,Physical Review,0.0822,Type6_Anomaly,pure
+53931,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,1925.0,"Proceedings of the Physical Society, London",0.0554,,pure
+61318,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,1964.0,Journal of the American Ceramic Society,0.0541,,pure
+61324,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,1968.0,"Zeitschrift fuer Physikalische Chemie (Muenchen, Germany)",0.0515,,pure
+61544,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,1964.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.05,,pure
+73773,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2023.0,Chemistry of Materials,0.0527,,pure
+112314,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,2021.0,Journal of Alloys and Compounds,0.0417,,pure
+112324,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,2021.0,Journal of Alloys and Compounds,0.0442,,pure
+112532,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2019.0,Journal of Physics and Chemistry of Solids,0.053,,pure
+131090,Ni1 O1,Ni1 O1,F m -3 m,Failed,Ambient,Oxide,2019.0,Chemistry of Materials,0.0796,Type6_Anomaly,pure
+144839,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2022.0,Materials Today: Proceedings,0.0579,,pure
+147507,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2023.0,Journal of Alloys and Compounds,0.0535,,pure
+147509,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2023.0,Journal of Alloys and Compounds,0.0599,,pure
+147511,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2023.0,Journal of Alloys and Compounds,0.0623,,pure
+147513,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2023.0,Journal of Alloys and Compounds,0.0579,,pure
+182948,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,2011.0,Chemistry of Materials,0.0161,,pure
+184918,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2012.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.0541,,pure
+206877,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,2024.0,Chemistry of Materials,0.0145,,pure
+241420,Ni1 O1,Ni1 O1,F m -3 m,Failed,Ambient,Oxide,2016.0,Journal of Physical Chemistry C,0.3263,Type6_Anomaly,pure
+259698,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.0703,,pure
+259699,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,2016.0,"Physica B: Condensed Matter (Amsterdam, Netherlands)",0.0458,,pure
+259812,Ni1 O1,Ni1 O1,F m -3 m,Borderline,Ambient,Oxide,2016.0,RSC Advances,0.0618,,pure
+646099,Ni1 O1,Ni1 O1,F m -3 m,Validated,Ambient,Oxide,,,0.0417,,pure
+77650,O1 Pd1,O1 Pd1,F m -3 m,Failed,Ambient,Oxide,1989.0,Journal of the Less-Common Metals,0.8298,Type6_Anomaly,pure
+77682,O1 Sm1,O1 Sm1,F m -3 m,Failed,Ambient,Oxide,1956.0,Journal of the American Chemical Society,0.0796,Type6_Anomaly,pure
+647451,O1 Sm1,O1 Sm1,F m -3 m,Validated,Ambient,Oxide,1953.0,Journal of the American Chemical Society,0.026,,pure
+19987,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,2020.0,Solid State Ionics,0.1886,Type6_Anomaly,pure
+26960,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,1922.0,Zeitschrift fuer Physik,0.1499,Type6_Anomaly,pure
+28904,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,1948.0,Journal of the American Chemical Society,0.1636,Type6_Anomaly,pure
+52276,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,1933.0,Zeitschrift fuer Physik,0.1761,Type6_Anomaly,pure
+105548,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,1984.0,Transactions of the British Ceramic Society,0.1812,Type6_Anomaly,pure
+109461,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,2002.0,Powder Diffraction,0.1825,Type6_Anomaly,pure
+148358,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,2023.0,Dalton Transactions,0.1791,Type6_Anomaly,pure
+148361,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,2023.0,Dalton Transactions,0.1796,Type6_Anomaly,pure
+163625,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,2009.0,Journal of Materials Chemistry,0.1823,Type6_Anomaly,pure
+197983,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.1812,Type6_Anomaly,pure
+249178,O1 Sr1,O1 Sr1,F m -3 m,Failed,Ambient,Oxide,2006.0,"Chemical Communications (Cambridge, United Kingdom)",0.1575,Type6_Anomaly,pure
+28681,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1951.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.4461,Type6_Anomaly,pure
+60486,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1969.0,Journal of Physical Chemistry,0.5619,Type6_Anomaly,pure
+77705,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1985.0,Journal of Physics and Chemistry of Solids,0.5409,Type6_Anomaly,pure
+196919,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1954.0,Acta Chemica Scandinavica ,0.5059,Type6_Anomaly,pure
+647609,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1969.0,"Annales de Chimie (Cachan, France)",0.4877,Type6_Anomaly,pure
+647611,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1981.0,Inorganic Materials,0.5368,Type6_Anomaly,pure
+647627,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1972.0,Physical Review  B: Solid State,0.5451,Type6_Anomaly,pure
+647633,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1955.0,Transactions of the American Society for Metals,0.5059,Type6_Anomaly,pure
+647635,O1 V1,O1 V1,F m -3 m,Failed,Ambient,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.5518,Type6_Anomaly,pure
+77710,O1 Yb1,O1 Yb1,F m -3 m,Failed,Ambient,Oxide,,,0.1385,Type6_Anomaly,pure
+38222,O1 Zn1,O1 Zn1,F m -3 m,Failed,Ambient,Oxide,1962.0,"Science (Washington, DC, United States)",0.0879,Type6_Anomaly,pure
+57156,O1 Zn1,O1 Zn1,F m -3 m,Failed,Ambient,Oxide,1991.0,Materials Science Forum,0.0759,Type6_Anomaly,pure
+190802,O1 Zn1,O1 Zn1,F m -3 m,Borderline,Ambient,Oxide,2014.0,Solid State Communications,0.0711,,pure
+190803,O1 Zn1,O1 Zn1,F m -3 m,Borderline,Ambient,Oxide,2014.0,Solid State Communications,0.0711,,pure
+190804,O1 Zn1,O1 Zn1,F m -3 m,Borderline,Ambient,Oxide,2014.0,Solid State Communications,0.0719,,pure
+190805,O1 Zn1,O1 Zn1,F m -3 m,Borderline,Ambient,Oxide,2014.0,Solid State Communications,0.073,,pure
+190806,O1 Zn1,O1 Zn1,F m -3 m,Failed,Ambient,Oxide,2014.0,Solid State Communications,0.0753,Type6_Anomaly,pure
+190807,O1 Zn1,O1 Zn1,F m -3 m,Failed,Ambient,Oxide,2014.0,Solid State Communications,0.0775,Type6_Anomaly,pure
+76019,O1 Zr1,O1 Zr1,F m -3 m,Failed,Ambient,Oxide,1954.0,Acta Chemica Scandinavica ,2.3335,Type6_Anomaly,pure
+30240,Ba1 S1,Ba1 S1,F m -3 m,Validated,Ambient,Sulfide,1956.0,Zeitschrift fuer Kristallographie,0.0484,,pure
+52690,Ba1 S1,Ba1 S1,F m -3 m,Validated,Ambient,Sulfide,1981.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0475,,pure
+53942,Ba1 S1,Ba1 S1,F m -3 m,Validated,Ambient,Sulfide,1923.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.028,,pure
+616052,Ba1 S1,Ba1 S1,F m -3 m,Validated,Ambient,Sulfide,1962.0,Bulletin de la Societe Chimique de France,0.0227,,pure
+616053,Ba1 S1,Ba1 S1,F m -3 m,Validated,Ambient,Sulfide,,,0.0013,,pure
+616056,Ba1 S1,Ba1 S1,F m -3 m,Validated,Ambient,Sulfide,1973.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0488,,pure
+28902,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1948.0,Journal of the American Chemical Society,0.0405,,pure
+30236,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1956.0,Zeitschrift fuer Kristallographie,0.0308,,pure
+41956,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1994.0,Physical Review  B: Solid State,0.0329,,pure
+52784,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1979.0,Journal of Physics and Chemistry of Solids,0.004,,pure
+53940,Ca1 S1,Ca1 S1,F m -3 m,Failed,Ambient,Sulfide,1923.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.1308,Type6_Anomaly,pure
+60200,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1927.0,Zeitschrift fuer Physikalische Chemie (Leipzig),0.0371,,pure
+198081,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,,,0.0218,,pure
+603165,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1993.0,Journal of the Electrochemical Society,0.0177,,pure
+619527,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1962.0,Bulletin de la Societe Chimique de France,0.0149,,pure
+619528,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,,,0.0177,,pure
+619529,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1964.0,Current Science,0.0244,,pure
+619530,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1970.0,Inorganic Materials,0.0136,,pure
+619533,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1979.0,Journal of the American Ceramic Society,0.026,,pure
+619534,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1970.0,"Journal of the Iron and Steel Institute, London",0.0456,,pure
+619537,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1964.0,Russian Journal of Inorganic Chemistry,0.0254,,pure
+619538,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,1973.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0232,,pure
+619540,Ca1 S1,Ca1 S1,F m -3 m,Validated,Ambient,Sulfide,,,0.0413,,pure
+620315,Cd1 S1,Cd1 S1,F m -3 m,Validated,Ambient,Sulfide,1979.0,Journal of Physics and Chemistry of Solids,0.0385,,pure
+620316,Cd1 S1,Cd1 S1,F m -3 m,Validated,Ambient,Sulfide,1980.0,Journal of Solid State Chemistry,0.0188,,pure
+620322,Cd1 S1,Cd1 S1,F m -3 m,Failed,Ambient,Sulfide,1968.0,Soviet Physics - Crystallography,0.3324,Type6_Anomaly,pure
+53414,Er1 S1,Er1 S1,F m -3 m,Failed,Ambient,Sulfide,1974.0,"Proceedings of the Rare Earth Research Conference, 1974, 11th",0.8319,Type6_Anomaly,pure
+106619,Er1 S1,Er1 S1,F m -3 m,Failed,Ambient,Sulfide,1978.0,Zhurnal Neorganicheskoi Khimii,0.7426,Type6_Anomaly,pure
+631056,Er1 S1,Er1 S1,F m -3 m,Failed,Ambient,Sulfide,,,0.7663,Type6_Anomaly,pure
+631063,Er1 S1,Er1 S1,F m -3 m,Failed,Ambient,Sulfide,,,0.7903,Type6_Anomaly,pure
+30206,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1938.0,Zeitschrift fuer Kristallographie,0.0163,,pure
+53439,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1974.0,"Izvestiya Akademii Nauk SSSR, Neorganicheskie Materialy",0.0138,,pure
+113737,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,2021.0,"Angewandte Chemie, International Edition",0.0095,,pure
+631588,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,,,0.0163,,pure
+631589,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,,,0.0149,,pure
+631591,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1970.0,Inorganic Materials,0.0287,,pure
+631595,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1989.0,Inorganic Materials,0.0149,,pure
+631599,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1973.0,Journal of the Less-Common Metals,0.0177,,pure
+631600,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1977.0,Journal of Magnetism and Magnetic Materials,0.0143,,pure
+631602,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1989.0,Materials Research Bulletin,0.0013,,pure
+631603,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1986.0,Physical Review B: Condensed Matter and Materials Physics,0.0163,,pure
+631605,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1984.0,Russian Journal of Inorganic Chemistry,0.0136,,pure
+631606,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1939.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0343,,pure
+631612,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1974.0,"Proceedings of the Rare Earth Research Conference, 1974, 11th",0.0177,,pure
+631613,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1974.0,"Proceedings of the Rare Earth Research Conference, 1974, 11th",0.0191,,pure
+631614,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,,,0.0163,,pure
+657615,Eu1 S1,Eu1 S1,F m -3 m,Validated,Ambient,Sulfide,1992.0,Pramana,0.0177,,pure
+28903,Mg1 S1,Mg1 S1,F m -3 m,Validated,Ambient,Sulfide,1948.0,Journal of the American Chemical Society,0.0245,,pure
+30241,Mg1 S1,Mg1 S1,F m -3 m,Validated,Ambient,Sulfide,1956.0,Zeitschrift fuer Kristallographie,0.0403,,pure
+44930,Mg1 S1,Mg1 S1,F m -3 m,Validated,Ambient,Sulfide,1964.0,Zhurnal Neorganicheskoi Khimii,0.0355,,pure
+53939,Mg1 S1,Mg1 S1,F m -3 m,Failed,Ambient,Sulfide,1923.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.1217,Type6_Anomaly,pure
+64415,Mg1 S1,Mg1 S1,F m -3 m,Failed,Ambient,Sulfide,2023.0,Physica Status Solidi A: Applications and Materials Science,0.2784,Type6_Anomaly,pure
+64422,Mg1 S1,Mg1 S1,F m -3 m,Failed,Ambient,Sulfide,2023.0,Physica Status Solidi A: Applications and Materials Science,0.1119,Type6_Anomaly,pure
+603166,Mg1 S1,Mg1 S1,F m -3 m,Validated,Ambient,Sulfide,1993.0,Journal of the Electrochemical Society,0.0359,,pure
+642784,Mg1 S1,Mg1 S1,F m -3 m,Validated,Ambient,Sulfide,1962.0,Bulletin de la Societe Chimique de France,0.0372,,pure
+642786,Mg1 S1,Mg1 S1,F m -3 m,Validated,Ambient,Sulfide,1979.0,Journal of Physics and Chemistry of Solids,0.0359,,pure
+642787,Mg1 S1,Mg1 S1,F m -3 m,Validated,Ambient,Sulfide,1980.0,Journal of Solid State Chemistry,0.0488,,pure
+659124,Mg1 S1,Mg1 S1,F m -3 m,Validated,Ambient,Sulfide,1994.0,Journal of Physics and Chemistry of Solids,0.0372,,pure
+18007,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1926.0,Zeitschrift fuer Kristallographie,0.0177,,pure
+41331,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1993.0,Physics and Chemistry of Minerals,0.0456,,pure
+76204,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1965.0,Acta Chemica Scandinavica ,0.0419,,pure
+148200,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,2023.0,Chemistry of Materials,0.0411,,pure
+148201,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,2023.0,Chemistry of Materials,0.046,,pure
+148202,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,2023.0,Chemistry of Materials,0.0458,,pure
+148203,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,2023.0,Chemistry of Materials,0.0498,,pure
+148204,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,2023.0,Chemistry of Materials,0.0462,,pure
+148205,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,2023.0,Chemistry of Materials,0.048,,pure
+148206,Mn1 S1,Mn1 S1,F m -3 m,Borderline,Ambient,Sulfide,2023.0,Chemistry of Materials,0.0548,,pure
+158647,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1991.0,Physics and Chemistry of Minerals,0.0392,,pure
+603118,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1993.0,Soviet Physics - Solid State,0.047,,pure
+643434,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1962.0,Bulletin de la Societe Chimique de France,0.0315,,pure
+643435,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1969.0,High Temperature Science,0.0413,,pure
+643436,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1968.0,Journal of the American Ceramic Society,0.0416,,pure
+643437,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1979.0,Journal of the American Ceramic Society,0.0399,,pure
+643438,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1968.0,"Journal of the Iron and Steel Institute, London",0.0498,,pure
+643439,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1970.0,"Journal of the Iron and Steel Institute, London",0.0315,,pure
+643443,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1978.0,Journal of Solid State Chemistry,0.0442,,pure
+643445,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1985.0,Meiji Daigaku Kogakubu Kenkyu Hokoku,0.0456,,pure
+643450,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1968.0,Transactions of the Metallurgical Society of AIME,0.0413,,pure
+643451,Mn1 S1,Mn1 S1,F m -3 m,Validated,Ambient,Sulfide,1968.0,Transactions of the Metallurgical Society of AIME,0.0122,,pure
+643453,Mn1 S1,Mn1 S1,F m -3 m,Borderline,Ambient,Sulfide,1938.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0584,,pure
+643456,Mn1 S1,Mn1 S1,F m -3 m,Borderline,Ambient,Sulfide,1956.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0612,,pure
+645839,Nd1 S0.89,Nd1 S0.89,F m -3 m,Failed,Ambient,Sulfide,1983.0,Physica Status Solidi A: Applied Research,0.4919,Type3_Vacancy,pure
+29403,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1955.0,Gazzetta Chimica Italiana,0.4855,Type6_Anomaly,pure
+76603,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1975.0,Solid State Communications,0.4787,Type6_Anomaly,pure
+199549,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1977.0,Zhurnal Neorganicheskoi Khimii,0.4665,Type6_Anomaly,pure
+645821,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1962.0,Bulletin de la Societe Chimique de France,0.4665,Type6_Anomaly,pure
+645822,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1969.0,Bulletin de la Societe Chimique de France,0.5004,Type6_Anomaly,pure
+645826,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,,,0.4813,Type6_Anomaly,pure
+645831,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1980.0,Journal of Magnetism and Magnetic Materials,0.4686,Type6_Anomaly,pure
+645837,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1963.0,Physics of Metals and Metallography,0.4898,Type6_Anomaly,pure
+645840,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1984.0,Physica Status Solidi B: Basic Solid State Physics,0.4707,Type6_Anomaly,pure
+645843,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1977.0,Russian Journal of Inorganic Chemistry,0.4665,Type6_Anomaly,pure
+645849,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1984.0,Russian Journal of Inorganic Chemistry,0.4919,Type6_Anomaly,pure
+645851,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,,,1.0399,Type6_Anomaly,pure
+645852,Nd1 S1,Nd1 S1,F m -3 m,Failed,Ambient,Sulfide,1964.0,Soviet Physics - Crystallography,0.4375,Type6_Anomaly,pure
+28900,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1948.0,Journal of the American Chemical Society,0.02,,pure
+30239,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1956.0,Zeitschrift fuer Kristallographie,0.0357,,pure
+52112,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1985.0,Physica Status Solidi A: Applied Research,0.0411,,pure
+53941,S1 Sr1,S1 Sr1,F m -3 m,Failed,Ambient,Sulfide,1923.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.1493,Type6_Anomaly,pure
+249177,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,2006.0,"Chemical Communications (Cambridge, United Kingdom)",0.0346,,pure
+651056,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1962.0,Bulletin de la Societe Chimique de France,0.0359,,pure
+651057,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,,,0.0359,,pure
+651059,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1949.0,Journal of the Electrochemical Society,0.0346,,pure
+651060,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1977.0,Journal of Magnetism and Magnetic Materials,0.0381,,pure
+651061,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1979.0,Journal of Physics and Chemistry of Solids,0.0227,,pure
+651062,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1980.0,Journal of Solid State Chemistry,0.0372,,pure
+651068,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1973.0,Zeitschrift fuer Anorganische und Allgemeine Chemie (1950) (DE),0.0359,,pure
+659132,S1 Sr1,S1 Sr1,F m -3 m,Validated,Ambient,Sulfide,1994.0,Journal of Crystal Growth,0.0424,,pure
+199928,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Elevated,Bromide,1961.0,Acta Crystallographica,0.0276,,pure
+199929,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Elevated,Bromide,1961.0,Acta Crystallographica,0.0348,,pure
+199930,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Elevated,Bromide,1961.0,Acta Crystallographica,0.0393,,pure
+199931,Br1 Rb1,Br1 Rb1,F m -3 m,Validated,Elevated,Bromide,1961.0,Acta Crystallographica,0.0495,,pure
+240503,Cl1 K1,Cl1 K1,F m -3 m,Validated,Elevated,Chloride,2004.0,American Mineralogist,0.0921,,pure
+240504,Cl1 K1,Cl1 K1,F m -3 m,Validated,Elevated,Chloride,2004.0,American Mineralogist,0.0724,,pure
+240505,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Elevated,Chloride,2004.0,American Mineralogist,0.1136,,pure
+240506,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Elevated,Chloride,2004.0,American Mineralogist,0.1492,,pure
+240509,Cl1 K1,Cl1 K1,F m -3 m,Validated,Elevated,Chloride,2004.0,American Mineralogist,0.0383,,pure
+240510,Cl1 K1,Cl1 K1,F m -3 m,Borderline,Elevated,Chloride,2004.0,American Mineralogist,0.1127,,pure
+240599,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Elevated,Chloride,2004.0,American Mineralogist,0.036,,pure
+240600,Cl1 Na1,Cl1 Na1,F m -3 m,Validated,Elevated,Chloride,2004.0,American Mineralogist,0.0768,,pure
+199935,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Elevated,Chloride,1961.0,Acta Crystallographica,0.0328,,pure
+199936,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Elevated,Chloride,1961.0,Acta Crystallographica,0.0259,,pure
+199937,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Elevated,Chloride,1961.0,Acta Crystallographica,0.0004,,pure
+199938,Cl1 Rb1,Cl1 Rb1,F m -3 m,Validated,Elevated,Chloride,1961.0,Acta Crystallographica,0.0044,,pure
+56539,Ag1 Cl1,Ag1 Cl1,F m -3 m,Borderline,High_PT,Chloride,1999.0,Physical Review B: Condensed Matter and Materials Physics,0.1325,,pure
+56540,Ag1 Cl1,Ag1 Cl1,F m -3 m,Failed,High_PT,Chloride,1999.0,Physical Review B: Condensed Matter and Materials Physics,0.2412,Type6_Anomaly,pure
+240507,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.225,Type6_Anomaly,pure
+240508,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.3221,Type6_Anomaly,pure
+240511,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.1518,Type6_Anomaly,pure
+240512,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.2168,Type6_Anomaly,pure
+240513,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.3047,Type6_Anomaly,pure
+240515,Cl1 K1,Cl1 K1,F m -3 m,Borderline,High_PT,Chloride,2004.0,American Mineralogist,0.1381,,pure
+240516,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.2338,Type6_Anomaly,pure
+240518,Cl1 K1,Cl1 K1,F m -3 m,Validated,High_PT,Chloride,2004.0,American Mineralogist,0.0326,,pure
+240519,Cl1 K1,Cl1 K1,F m -3 m,Validated,High_PT,Chloride,2004.0,American Mineralogist,0.0884,,pure
+240520,Cl1 K1,Cl1 K1,F m -3 m,Borderline,High_PT,Chloride,2004.0,American Mineralogist,0.1207,,pure
+240521,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.2094,Type6_Anomaly,pure
+240522,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.251,Type6_Anomaly,pure
+240523,Cl1 K1,Cl1 K1,F m -3 m,Validated,High_PT,Chloride,2004.0,American Mineralogist,0.0755,,pure
+240524,Cl1 K1,Cl1 K1,F m -3 m,Borderline,High_PT,Chloride,2004.0,American Mineralogist,0.111,,pure
+240525,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.2001,Type6_Anomaly,pure
+240526,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.2269,Type6_Anomaly,pure
+240527,Cl1 K1,Cl1 K1,F m -3 m,Borderline,High_PT,Chloride,2004.0,American Mineralogist,0.127,,pure
+240528,Cl1 K1,Cl1 K1,F m -3 m,Validated,High_PT,Chloride,2004.0,American Mineralogist,0.0767,,pure
+240529,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.1917,Type6_Anomaly,pure
+240530,Cl1 K1,Cl1 K1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.2013,Type6_Anomaly,pure
+100633,Cl1 Na1,Cl1 Na1,F m -3 m,Failed,High_PT,Chloride,1978.0,American Mineralogist,0.2627,Type6_Anomaly,pure
+149476,Cl1 Na1,Cl1 Na1,F m -3 m,Failed,High_PT,Chloride,2023.0,Journal of Geophysical Research: Solid Earth,0.4074,Type6_Anomaly,pure
+240601,Cl1 Na1,Cl1 Na1,F m -3 m,Borderline,High_PT,Chloride,2004.0,American Mineralogist,0.1039,,pure
+240602,Cl1 Na1,Cl1 Na1,F m -3 m,Borderline,High_PT,Chloride,2004.0,American Mineralogist,0.1336,,pure
+240603,Cl1 Na1,Cl1 Na1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.1693,Type6_Anomaly,pure
+240604,Cl1 Na1,Cl1 Na1,F m -3 m,Failed,High_PT,Chloride,2004.0,American Mineralogist,0.2005,Type6_Anomaly,pure
+622369,Cl1 Na1,Cl1 Na1,F m -3 m,Failed,High_PT,Chloride,1973.0,"Journal of Applied Physics (Melville, NY, United States)",0.2821,Type6_Anomaly,pure
+149660,Co1 O1,Co1 O1,F m -3 m,Failed,High_PT,Oxide,2024.0,Reaction Chemistry & Engineering,0.2496,Type6_Anomaly,pure
+181021,Cu0.146 O1 Zn0.854,Cu0.146 O1 Zn0.854,F m -3 m,Validated,High_PT,Oxide,2011.0,Physica Status Solidi B: Basic Solid State Physics,0.0376,,homovalent
+181022,Cu0.146 O1 Zn0.854,Cu0.146 O1 Zn0.854,F m -3 m,Validated,High_PT,Oxide,2011.0,Physica Status Solidi B: Basic Solid State Physics,0.0376,,homovalent
+181023,Cu0.146 O1 Zn0.854,Cu0.146 O1 Zn0.854,F m -3 m,Borderline,High_PT,Oxide,2011.0,Physica Status Solidi B: Basic Solid State Physics,0.1043,Type3_Vacancy,homovalent
+67203,Fe0.88 O1,Fe0.88 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0503,,pure
+67202,Fe0.888 O1,Fe0.888 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0551,,pure
+67201,Fe0.902 O1,Fe0.902 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0614,,pure
+201091,Fe0.909 O1,Fe0.909 O1,F m -3 m,Validated,High_PT,Oxide,,,0.0092,,pure
+67421,Fe0.911 O1,Fe0.911 O1,F m -3 m,Failed,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0791,Type3_Vacancy,pure
+67420,Fe0.913 O1,Fe0.913 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0741,,pure
+67200,Fe0.914 O1,Fe0.914 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0666,,pure
+67419,Fe0.916 O1,Fe0.916 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0705,,pure
+67199,Fe0.92 O1,Fe0.92 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.068,,pure
+67418,Fe0.92 O1,Fe0.92 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0664,,pure
+103580,Fe0.924 O1,Fe0.924 O1,F m -3 m,Validated,High_PT,Oxide,1965.0,Transactions of the Metallurgical Society of AIME,0.0366,,pure
+67416,Fe0.928 O1,Fe0.928 O1,F m -3 m,Borderline,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0572,,pure
+67198,Fe0.945 O1,Fe0.945 O1,F m -3 m,Failed,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0805,Type3_Vacancy,pure
+67197,Fe0.95 O1,Fe0.95 O1,F m -3 m,Failed,High_PT,Oxide,1990.0,Journal of Physics and Chemistry of Solids,0.0829,Type3_Vacancy,pure
+53519,Fe1 O1,Fe1 O1,F m -3 m,Borderline,High_PT,Oxide,1974.0,Revue Internationale des Hautes Temperatures et des Refractaires,0.0602,,pure
+134961,Fe1 O1,Fe1 O1,F m -3 m,Validated,High_PT,Oxide,2021.0,Inorganic Chemistry,0.0454,,pure
+180973,Fe1 O1,Fe1 O1,F m -3 m,Validated,High_PT,Oxide,2011.0,Journal of Alloys and Compounds,0.0209,,pure
+180974,Fe1 O1,Fe1 O1,F m -3 m,Borderline,High_PT,Oxide,2011.0,Journal of Alloys and Compounds,0.0606,,pure
+230266,Fe1 O1,Fe1 O1,F m -3 m,Failed,High_PT,Oxide,2018.0,Physics and Chemistry of Minerals,0.1894,Type6_Anomaly,pure
+230269,Fe1 O1,Fe1 O1,F m -3 m,Failed,High_PT,Oxide,2018.0,Physics and Chemistry of Minerals,0.2383,Type6_Anomaly,pure
+230271,Fe1 O1,Fe1 O1,F m -3 m,Failed,High_PT,Oxide,2018.0,Physics and Chemistry of Minerals,0.3133,Type6_Anomaly,pure
+230273,Fe1 O1,Fe1 O1,F m -3 m,Failed,High_PT,Oxide,2018.0,Physics and Chemistry of Minerals,0.7662,Type6_Anomaly,pure
+159377,Mg1 O1,Mg1 O1,F m -3 m,Validated,High_PT,Oxide,1976.0,American Mineralogist,0.0097,,pure
+159378,Mg1 O1,Mg1 O1,F m -3 m,Validated,High_PT,Oxide,1976.0,American Mineralogist,0.0041,,pure
+208026,Mg1 O1,Mg1 O1,F m -3 m,Validated,High_PT,Oxide,2024.0,Journal of the American Chemical Society,0.0436,,pure
+208031,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2024.0,Journal of the American Chemical Society,0.1988,Type6_Anomaly,pure
+208032,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2024.0,Journal of the American Chemical Society,0.1521,Type6_Anomaly,pure
+241684,Mg1 O1,Mg1 O1,F m -3 m,Validated,High_PT,Oxide,2015.0,RSC Advances,0.0177,,pure
+241685,Mg1 O1,Mg1 O1,F m -3 m,Validated,High_PT,Oxide,2015.0,RSC Advances,0.036,,pure
+241686,Mg1 O1,Mg1 O1,F m -3 m,Validated,High_PT,Oxide,2015.0,RSC Advances,0.0371,,pure
+241687,Mg1 O1,Mg1 O1,F m -3 m,Borderline,High_PT,Oxide,2015.0,RSC Advances,0.0512,,pure
+241688,Mg1 O1,Mg1 O1,F m -3 m,Borderline,High_PT,Oxide,2015.0,RSC Advances,0.0732,,pure
+241689,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.0974,Type6_Anomaly,pure
+241690,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.1287,Type6_Anomaly,pure
+241691,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.145,Type6_Anomaly,pure
+241692,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.1585,Type6_Anomaly,pure
+241693,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.3356,Type6_Anomaly,pure
+241694,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.3988,Type6_Anomaly,pure
+241695,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.4358,Type6_Anomaly,pure
+241696,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.459,Type6_Anomaly,pure
+241697,Mg1 O1,Mg1 O1,F m -3 m,Failed,High_PT,Oxide,2015.0,RSC Advances,0.4869,Type6_Anomaly,pure
+657312,Mn0.91 O1,Mn0.91 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1042,Type3_Vacancy,pure
+657311,Mn0.944 O1,Mn0.944 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1233,Type3_Vacancy,pure
+657310,Mn0.959 O1,Mn0.959 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1338,Type3_Vacancy,pure
+657309,Mn0.965 O1,Mn0.965 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1379,Type3_Vacancy,pure
+657308,Mn0.977 O1,Mn0.977 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1461,Type3_Vacancy,pure
+657307,Mn0.986 O1,Mn0.986 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1502,Type3_Vacancy,pure
+657306,Mn0.99 O1,Mn0.99 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1523,Type3_Vacancy,pure
+657305,Mn0.995 O1,Mn0.995 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1543,Type3_Vacancy,pure
+657304,Mn0.999 O1,Mn0.999 O1,F m -3 m,Failed,High_PT,Oxide,1992.0,Journal of Physics and Chemistry of Solids,0.1563,Type3_Vacancy,pure
+76669,Ni1 O1,Ni1 O1,F m -3 m,Borderline,High_PT,Oxide,1984.0,Transactions and Journal of the British Ceramic Society,0.0748,,pure
+646096,Ni1 O1,Ni1 O1,F m -3 m,Failed,High_PT,Oxide,1948.0,Acta Crystallographica,0.0751,Type6_Anomaly,pure
+646098,Ni1 O1,Ni1 O1,F m -3 m,Validated,High_PT,Oxide,1968.0,Journal of the Physical Society of Japan,0.0269,,pure
+52825,Cd1 S1,Cd1 S1,F m -3 m,Failed,High_PT,Sulfide,1963.0,Physics Letters,0.1776,Type6_Anomaly,pure
+108230,Cd1 S1,Cd1 S1,F m -3 m,Validated,High_PT,Sulfide,1963.0,Journal of Physics and Chemistry of Solids,0.0013,,pure
+620320,Cd1 S1,Cd1 S1,F m -3 m,Failed,High_PT,Sulfide,1963.0,"Science (Washington, DC, United States)",0.1462,Type6_Anomaly,pure
+158648,Mn1 S1,Mn1 S1,F m -3 m,Failed,High_PT,Sulfide,1991.0,Physics and Chemistry of Minerals,0.1385,Type6_Anomaly,pure
+158649,Mn1 S1,Mn1 S1,F m -3 m,Failed,High_PT,Sulfide,1991.0,Physics and Chemistry of Minerals,0.2667,Type6_Anomaly,pure
+158650,Mn1 S1,Mn1 S1,F m -3 m,Failed,High_PT,Sulfide,1991.0,Physics and Chemistry of Minerals,0.3663,Type6_Anomaly,pure
+158651,Mn1 S1,Mn1 S1,F m -3 m,Failed,High_PT,Sulfide,1991.0,Physics and Chemistry of Minerals,0.452,Type6_Anomaly,pure
+158652,Mn1 S1,Mn1 S1,F m -3 m,Failed,High_PT,Sulfide,1991.0,Physics and Chemistry of Minerals,0.6221,Type6_Anomaly,pure
+643444,Mn1 S1,Mn1 S1,F m -3 m,Failed,High_PT,Sulfide,1968.0,Journal of the Physical Society of Japan,0.2164,Type6_Anomaly,pure
