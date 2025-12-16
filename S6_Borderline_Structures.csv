@@ -1,0 +1,80 @@
+ICSD Code,Formula,Chemical Formula,Space Group,Compound Class,Year,Mean Deviation (%),Mean |d1| (v.u.),GII,Disorder Type,Review Reason
+60283,Ag0.3 Cl1 Na0.7,Ag0.3 Cl1 Na0.7,F m -3 m,Chloride,1970.0,-14.98,0.1498,0.075,homovalent,Homovalent solid solution
+22170,Br0.4 Cl0.6 Rb1,Br0.4 Cl0.6 Rb1,F m -3 m,Chloride,1969.0,-10.85,0.1085,0.1085,pure,Borderline deviation (10-15%)
+119597,Br0.5 Cl0.5 K1,Br0.5 Cl0.5 K1,F m -3 m,Chloride,1966.0,-11.0,0.11,0.11,pure,Borderline deviation (10-15%)
+61670,Br0.7922 Cl0.2078 Na1,Br0.7922 Cl0.2078 Na1,F m -3 m,Chloride,1949.0,10.5,0.105,0.105,pure,Borderline deviation (10-15%)
+187221,Br0.8 Cl0.2 K1,Br0.8 Cl0.2 K1,F m -3 m,Chloride,2012.0,12.77,0.1277,0.1277,pure,Borderline deviation (10-15%)
+28947,Cl1 K0.0997 Na0.9003,Cl1 K0.0997 Na0.9003,F m -3 m,Chloride,1954.0,-11.42,0.1142,0.7578,homovalent,Homovalent solid solution
+240594,Cl1 K0.1 Na0.9,Cl1 K0.1 Na0.9,F m -3 m,Chloride,2004.0,-11.26,0.1126,0.7591,homovalent,Homovalent solid solution
+28695,Cl1 K0.92 Tl0.08,Cl1 K0.92 Tl0.08,F m -3 m,Chloride,1955.0,14.15,0.1415,0.2083,homovalent,Homovalent solid solution
+18014,Cl1 K1,Cl1 K1,F m -3 m,Chloride,1926.0,10.5,0.105,0.105,pure,Borderline deviation (10-15%)
+22156,Cl1 K1,Cl1 K1,F m -3 m,Chloride,1969.0,12.19,0.1219,0.1219,pure,Borderline deviation (10-15%)
+28938,Cl1 K1,Cl1 K1,F m -3 m,Chloride,1954.0,10.26,0.1026,0.1026,pure,Borderline deviation (10-15%)
+53825,Cl1 K1,Cl1 K1,F m -3 m,Chloride,1919.0,12.01,0.1201,0.1201,pure,Borderline deviation (10-15%)
+53841,Cl1 K1,Cl1 K1,F m -3 m,Chloride,1916.0,13.22,0.1322,0.1322,pure,Borderline deviation (10-15%)
+126365,Cl1 K1,Cl1 K1,F m -3 m,Chloride,1953.0,10.06,0.1006,0.1006,pure,Borderline deviation (10-15%)
+165593,Cl1 K1,Cl1 K1,F m -3 m,Chloride,2006.0,11.27,0.1127,0.1127,pure,Borderline deviation (10-15%)
+240502,Cl1 K1,Cl1 K1,F m -3 m,Chloride,2004.0,10.82,0.1082,0.1082,pure,Borderline deviation (10-15%)
+18016,Cl1 Rb1,Cl1 Rb1,F m -3 m,Chloride,1926.0,11.7,0.117,0.117,pure,Borderline deviation (10-15%)
+29128,F1 Na1,F1 Na1,F m -3 m,Fluoride,1920.0,-12.65,0.1265,0.1265,pure,Borderline deviation (10-15%)
+9865,Co1 O1,Co1 O1,F m -3 m,Oxide,1979.0,-5.29,0.1057,0.0529,pure,Borderline deviation (10-15%)
+61326,Co1 O1,Co1 O1,F m -3 m,Oxide,1968.0,-5.16,0.1032,0.0516,pure,Borderline deviation (10-15%)
+191776,Co1 O1,Co1 O1,F m -3 m,Oxide,2001.0,-5.0,0.1001,0.05,pure,Borderline deviation (10-15%)
+245320,Co1 O1,Co1 O1,F m -3 m,Oxide,2006.0,-6.29,0.1258,0.0629,pure,Borderline deviation (10-15%)
+245321,Co1 O1,Co1 O1,F m -3 m,Oxide,2006.0,-6.54,0.1308,0.0654,pure,Borderline deviation (10-15%)
+245322,Co1 O1,Co1 O1,F m -3 m,Oxide,2006.0,-5.41,0.1082,0.0541,pure,Borderline deviation (10-15%)
+245324,Co1 O1,Co1 O1,F m -3 m,Oxide,2006.0,-5.41,0.1082,0.0541,pure,Borderline deviation (10-15%)
+61545,Cu0.05 Ni0.95 O1,Cu0.05 Ni0.95 O1,F m -3 m,Oxide,1964.0,-5.39,0.1078,0.0442,homovalent,Homovalent solid solution
+61546,Cu0.1 Ni0.9 O1,Cu0.1 Ni0.9 O1,F m -3 m,Oxide,1964.0,-5.76,0.1152,0.0478,homovalent,Homovalent solid solution
+61547,Cu0.15 Ni0.85 O1,Cu0.15 Ni0.85 O1,F m -3 m,Oxide,1964.0,-6.22,0.1244,0.0524,homovalent,Homovalent solid solution
+61548,Cu0.2 Ni0.8 O1,Cu0.2 Ni0.8 O1,F m -3 m,Oxide,1964.0,-6.64,0.1327,0.0566,homovalent,Homovalent solid solution
+61549,Cu0.25 Ni0.75 O1,Cu0.25 Ni0.75 O1,F m -3 m,Oxide,1964.0,-6.115,0.12240000000000001,0.0612,homovalent,Homovalent solid solution
+60686,Fe0.664 Mn0.336 O1,Fe0.664 Mn0.336 O1,F m -3 m,Oxide,1945.0,-6.68,0.1337,0.0556,homovalent,Homovalent solid solution
+60685,Fe0.798 Mn0.202 O1,Fe0.798 Mn0.202 O1,F m -3 m,Oxide,1945.0,6.72,0.1344,0.0575,homovalent,Homovalent solid solution
+77759,Mg1 O1,Mg1 O1,F m -3 m,Oxide,1997.0,-6.68,0.1335,0.0668,pure,Borderline deviation (10-15%)
+259700,Mn0.02 Ni0.98 O1,Mn0.02 Ni0.98 O1,F m -3 m,Oxide,2016.0,-5.34,0.1067,0.1759,homovalent,Homovalent solid solution
+259702,Mn0.04 Ni0.96 O1,Mn0.04 Ni0.96 O1,F m -3 m,Oxide,2016.0,-5.64,0.1127,0.1756,homovalent,Homovalent solid solution
+259704,Mn0.06 Ni0.94 O1,Mn0.06 Ni0.94 O1,F m -3 m,Oxide,2016.0,-7.16,0.1432,0.1745,homovalent,Homovalent solid solution
+259706,Mn0.08 Ni0.92 O1,Mn0.08 Ni0.92 O1,F m -3 m,Oxide,2016.0,-5.55,0.1111,0.1757,homovalent,Homovalent solid solution
+61322,Mn0.75 Ni0.25 O1,Mn0.75 Ni0.25 O1,F m -3 m,Oxide,1964.0,5.7,0.114,0.1588,homovalent,Homovalent solid solution
+9864,Mn1 O1,Mn1 O1,F m -3 m,Oxide,1979.0,-5.79,0.1158,0.0579,pure,Borderline deviation (10-15%)
+29327,Mn1 O1,Mn1 O1,F m -3 m,Oxide,1935.0,-5.51,0.1102,0.0551,pure,Borderline deviation (10-15%)
+43459,Mn1 O1,Mn1 O1,F m -3 m,Oxide,1962.0,-5.57,0.1113,0.0557,pure,Borderline deviation (10-15%)
+60691,Mn1 O1,Mn1 O1,F m -3 m,Oxide,1945.0,-5.57,0.1113,0.0557,pure,Borderline deviation (10-15%)
+61319,Mn1 O1,Mn1 O1,F m -3 m,Oxide,1964.0,-5.34,0.1068,0.0534,pure,Borderline deviation (10-15%)
+76086,Mn1 O1,Mn1 O1,F m -3 m,Oxide,1968.0,-5.45,0.109,0.0545,pure,Borderline deviation (10-15%)
+128562,Mn1 O1,Mn1 O1,F m -3 m,Oxide,2023.0,-5.7,0.1139,0.057,pure,Borderline deviation (10-15%)
+162039,Mn1 O1,Mn1 O1,F m -3 m,Oxide,2007.0,-6.35,0.1271,0.0635,pure,Borderline deviation (10-15%)
+210500,Mn1 O1,Mn1 O1,F m -3 m,Oxide,2025.0,-6.24,0.1248,0.0624,pure,Borderline deviation (10-15%)
+643192,Mn1 O1,Mn1 O1,F m -3 m,Oxide,,-5.11,0.1022,0.0511,pure,Borderline deviation (10-15%)
+643195,Mn1 O1,Mn1 O1,F m -3 m,Oxide,1984.0,-5.57,0.1113,0.0557,pure,Borderline deviation (10-15%)
+77065,Ni0.85 O1 Zn0.15,Ni0.85 O1 Zn0.15,F m -3 m,Oxide,1946.0,-5.68,0.1135,0.0474,homovalent,Homovalent solid solution
+28911,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Oxide,1954.0,-6.62,0.1325,0.0474,homovalent,Homovalent solid solution
+260801,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Oxide,2010.0,-6.31,0.1261,0.0474,homovalent,Homovalent solid solution
+260802,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Oxide,2010.0,-6.11,0.1222,0.0474,homovalent,Homovalent solid solution
+260803,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Oxide,2010.0,-6.16,0.1231,0.0474,homovalent,Homovalent solid solution
+260804,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Oxide,2010.0,-6.65,0.1331,0.0474,homovalent,Homovalent solid solution
+260805,Ni0.9 O1 Zn0.1,Ni0.9 O1 Zn0.1,F m -3 m,Oxide,2010.0,-6.65,0.133,0.0474,homovalent,Homovalent solid solution
+9866,Ni1 O1,Ni1 O1,F m -3 m,Oxide,1979.0,-5.27,0.1054,0.0527,pure,Borderline deviation (10-15%)
+24018,Ni1 O1,Ni1 O1,F m -3 m,Oxide,1936.0,-5.54,0.1108,0.0554,pure,Borderline deviation (10-15%)
+28910,Ni1 O1,Ni1 O1,F m -3 m,Oxide,1954.0,-5.02,0.1005,0.0502,pure,Borderline deviation (10-15%)
+53931,Ni1 O1,Ni1 O1,F m -3 m,Oxide,1925.0,-5.54,0.1108,0.0554,pure,Borderline deviation (10-15%)
+61318,Ni1 O1,Ni1 O1,F m -3 m,Oxide,1964.0,-5.41,0.1081,0.0541,pure,Borderline deviation (10-15%)
+61324,Ni1 O1,Ni1 O1,F m -3 m,Oxide,1968.0,-5.15,0.1029,0.0515,pure,Borderline deviation (10-15%)
+73773,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2023.0,-5.27,0.1054,0.0527,pure,Borderline deviation (10-15%)
+112532,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2019.0,-5.3,0.106,0.053,pure,Borderline deviation (10-15%)
+144839,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2022.0,-5.79,0.1157,0.0579,pure,Borderline deviation (10-15%)
+147507,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2023.0,-5.35,0.107,0.0535,pure,Borderline deviation (10-15%)
+147509,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2023.0,-5.99,0.1198,0.0599,pure,Borderline deviation (10-15%)
+147511,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2023.0,-6.23,0.1247,0.0623,pure,Borderline deviation (10-15%)
+147513,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2023.0,-5.79,0.1157,0.0579,pure,Borderline deviation (10-15%)
+184918,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2012.0,-5.41,0.1081,0.0541,pure,Borderline deviation (10-15%)
+259698,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2016.0,-7.03,0.1405,0.0703,pure,Borderline deviation (10-15%)
+259812,Ni1 O1,Ni1 O1,F m -3 m,Oxide,2016.0,-6.18,0.1236,0.0618,pure,Borderline deviation (10-15%)
+190802,O1 Zn1,O1 Zn1,F m -3 m,Oxide,2014.0,-7.11,0.1423,0.0711,pure,Borderline deviation (10-15%)
+190803,O1 Zn1,O1 Zn1,F m -3 m,Oxide,2014.0,-7.11,0.1421,0.0711,pure,Borderline deviation (10-15%)
+190804,O1 Zn1,O1 Zn1,F m -3 m,Oxide,2014.0,-7.19,0.1437,0.0719,pure,Borderline deviation (10-15%)
+190805,O1 Zn1,O1 Zn1,F m -3 m,Oxide,2014.0,-7.3,0.146,0.073,pure,Borderline deviation (10-15%)
+148206,Mn1 S1,Mn1 S1,F m -3 m,Sulfide,2023.0,5.48,0.1096,0.0548,pure,Borderline deviation (10-15%)
+643453,Mn1 S1,Mn1 S1,F m -3 m,Sulfide,1938.0,5.84,0.1167,0.0584,pure,Borderline deviation (10-15%)
+643456,Mn1 S1,Mn1 S1,F m -3 m,Sulfide,1956.0,6.12,0.1224,0.0612,pure,Borderline deviation (10-15%)

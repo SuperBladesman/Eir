@@ -1,0 +1,96 @@
+Type,Formula,ICSD Code,Year,Mean Deviation (%),GII,Details
+3 - Vacancy Disorder,Br0.1018 Cl0.8982 Na1,61663,1949.0,51.87,0.5187,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.2 Cl0.8 K1,187225,2012.0,48.58,0.4858,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.2019 Cl0.7981 Na1,61664,1949.0,44.64,0.4464,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.2982 Cl0.7018 Na1,61665,1949.0,38.37,0.3837,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.4 Cl0.6 K1,187224,2012.0,44.25,0.4425,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.4 I0.6 K1,22172,1969.0,-26.3,0.263,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.4029 Cl0.5971 Na1,61666,1949.0,31.72,0.3172,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.4927 Cl0.5073 Na1,61667,1949.0,26.39,0.2639,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.5 Cl0.5 K1,187223,2012.0,40.06,0.4006,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.5977 Cl0.4023 Na1,61668,1949.0,20.48,0.2048,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.6 Cl0.4 K1,187222,2012.0,27.87,0.2787,Nonstoichiometric phase
+3 - Vacancy Disorder,Br0.7007 Cl0.2993 Na1,61669,1949.0,15.15,0.1515,Nonstoichiometric phase
+3 - Vacancy Disorder,Nd1 S0.89,645839,1983.0,49.19,0.4919,Nonstoichiometric phase
+3 - Vacancy Disorder,O0.9 V1,61630,1967.0,48.57,0.4857,Nonstoichiometric phase
+4 - Heterovalent (ΔV≥2),Co1 Li1 O2,164322,1994.0,-26.32,0.2855,ΔV = 2
+4 - Heterovalent (ΔV≥2),Co1 Li1 O2,164322,1994.0,35.24,0.2855,ΔV = 2
+4 - Heterovalent (ΔV≥2),Co1 Li1 O2,164323,1994.0,-24.17,0.2749,ΔV = 2
+4 - Heterovalent (ΔV≥2),Co1 Li1 O2,164323,1994.0,37.47,0.2749,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,28364,1964.0,-15.93,0.1776,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,28364,1964.0,23.27,0.1776,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,28365,1964.0,-16.16,0.1789,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,28365,1964.0,23.08,0.1789,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,63919,2022.0,-15.89,0.1775,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,63919,2022.0,23.3,0.1775,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,76657,,-14.75,0.1712,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,76657,,24.23,0.1712,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,155031,2006.0,-16.63,0.1814,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,155031,2006.0,22.7,0.1814,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,230832,2018.0,-16.07,0.1784,ΔV = 2
+4 - Heterovalent (ΔV≥2),Fe1 Li1 O2,230832,2018.0,23.15,0.1784,ΔV = 2
+4 - Heterovalent (ΔV≥2),Li3 Nb1 O4,109053,,17.83,0.2783,ΔV = 4
+4 - Heterovalent (ΔV≥2),Li3 Nb1 O4,109053,,-29.83,0.2783,ΔV = 4
+4 - Heterovalent (ΔV≥2),Li3 O4 Ta1,56138,2022.0,17.21,0.2946,ΔV = 4
+4 - Heterovalent (ΔV≥2),Li3 O4 Ta1,56138,2022.0,-31.91,0.2946,ΔV = 4
+4 - Heterovalent (ΔV≥2),Li3 O4 Ta1,109086,1964.0,18.84,0.2825,ΔV = 4
+4 - Heterovalent (ΔV≥2),Li3 O4 Ta1,109086,1964.0,-30.13,0.2825,ΔV = 4
+5 - Homovalent/Mixed Anion,Ag0.097 Cl1 Na0.903,60281,1970.0,-16.24,0.0886,Compositional disorder
+5 - Homovalent/Mixed Anion,Ag0.201 Cl1 Na0.799,60282,1970.0,-15.67,0.0824,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.0997 Na0.9003,28947,1954.0,140.15,0.7578,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.1 Na0.9,240594,2004.0,140.57,0.7591,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.1757 Na0.8243,28946,1954.0,122.98,0.7036,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.1757 Na0.8243,28946,1954.0,-17.75,0.7036,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.3 Rb0.7,22171,1969.0,-16.33,0.181,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.3 Rb0.7,22171,1969.0,19.87,0.181,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.301 Na0.699,28945,1954.0,98.35,0.6259,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.301 Na0.699,28945,1954.0,-26.83,0.6259,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.4019 Na0.5981,28944,1954.0,80.81,0.5706,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.4019 Na0.5981,28944,1954.0,-33.3,0.5706,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.4963 Na0.5037,28943,1954.0,66.12,0.5242,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.4963 Na0.5037,28943,1954.0,-38.72,0.5242,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.5001 Na0.4999,28942,1954.0,65.45,0.5221,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.5001 Na0.4999,28942,1954.0,-38.97,0.5221,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.6165 Na0.3835,28941,1954.0,49.69,0.4724,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.6165 Na0.3835,28941,1954.0,-44.78,0.4724,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.7 Na0.3,240568,2004.0,39.78,0.4411,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.7 Na0.3,240568,2004.0,-48.44,0.4411,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.7003 Na0.2997,28940,1954.0,39.32,0.4397,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.7003 Na0.2997,28940,1954.0,-48.61,0.4397,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.8 Na0.2,240534,2004.0,27.54,0.4025,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.8 Na0.2,240534,2004.0,-52.95,0.4025,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.8998 Na0.1002,28939,1954.0,18.96,0.3754,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.8998 Na0.1002,28939,1954.0,-56.12,0.3754,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.9 Na0.1,240531,2004.0,19.08,0.3758,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.9 Na0.1,240531,2004.0,-56.08,0.3758,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl1 K0.92 Tl0.08,28695,1955.0,27.52,0.2083,Compositional disorder
+5 - Homovalent/Mixed Anion,Cl2 K1 Rb1,76656,1950.0,31.72,0.1989,Compositional disorder
+5 - Homovalent/Mixed Anion,Co0.7 Fe0.3 O1,266257,2018.0,11.0,0.0666,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.02 Ni0.98 O1,119446,2007.0,14.73,0.0982,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.02 Ni0.98 O1,158835,2007.0,14.73,0.0982,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.05 Ni0.95 O1,119447,2007.0,14.74,0.0982,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.05 Ni0.95 O1,158836,2007.0,14.74,0.0982,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.099 Mn0.901 O1,60690,1945.0,-13.9,0.0905,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.198 Mn0.802 O1,60689,1945.0,-12.74,0.0777,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.331 Mn0.669 O1,60688,1945.0,-11.07,0.0594,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.497 Mn0.503 O1,60687,1945.0,-9.05,0.0533,Compositional disorder
+5 - Homovalent/Mixed Anion,Fe0.899 Mn0.101 O1,60684,1945.0,8.53,0.059,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.02 Ni0.98 O1,259700,2016.0,29.83,0.1759,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.02 Ni0.98 O1,259701,2016.0,31.79,0.1771,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.04 Ni0.96 O1,259702,2016.0,29.49,0.1756,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.04 Ni0.96 O1,259703,2016.0,37.77,0.1972,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.06 Ni0.94 O1,259704,2016.0,27.75,0.1745,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.06 Ni0.94 O1,259705,2016.0,31.64,0.177,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.08 Ni0.92 O1,259706,2016.0,29.58,0.1757,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.08 Ni0.92 O1,259707,2016.0,31.79,0.1771,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.25 Ni0.75 O1,61320,1964.0,25.02,0.1728,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.25 Ni0.75 O1,61320,1964.0,-9.54,0.1728,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.5 Ni0.5 O1,61321,1964.0,13.04,0.1645,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.5 Ni0.5 O1,61321,1964.0,-19.85,0.1645,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.63 Ni0.37 O1,186221,2012.0,34.78,0.1788,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.66 Ni0.34 O1,186217,2012.0,34.03,0.1784,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.66 Ni0.34 O1,186219,2012.0,35.64,0.1793,Compositional disorder
+5 - Homovalent/Mixed Anion,Mn0.75 Ni0.25 O1,61322,1964.0,-26.06,0.1588,Compositional disorder
+5 - Homovalent/Mixed Anion,Ni0.6 O1 Zn0.4,28914,1954.0,-10.7,0.0597,Compositional disorder
+5 - Homovalent/Mixed Anion,Ni0.7 O1 Zn0.3,28913,1954.0,-10.06,0.0532,Compositional disorder
+5 - Homovalent/Mixed Anion,Ni0.8 O1 Zn0.2,28912,1954.0,-8.36,0.0474,Compositional disorder

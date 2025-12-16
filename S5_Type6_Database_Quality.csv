@@ -1,0 +1,13 @@
+Type,ICSD Code,Formula,Year,Deviation (%),Issue,Reference
+6A - Pre-modern technique,53930,Ni1 O1,1920,-8.2,"Film technique, lattice parameter to 1 decimal place only",Davey & Hoffmann 1920
+6A - Pre-modern technique,53939,Mg1 S1,1923,12.2,"Film technique, no diffraction patterns shown",Holgersson 1923
+6A - Pre-modern technique,77682,O1 Sm1,1956,8.0,"Synthesis study, lattice parameters only, no R-value",Eick et al. 1956
+6A - Pre-modern technique,22171,Cl1 K0.3 Rb0.7,1969,64.0,Largest deviation from Vegards Law (ICSD metadata warning),Ahtee 1969
+6A - Pre-modern technique,60281,Ag0.1 Cl1 Na0.9,1970,-16.0,"Film data, lattice parameters only",Urusov & Blinov 1970
+6A - Pre-modern technique,60282,Ag0.2 Cl1 Na0.8,1970,-16.0,"Film data, lattice parameters only",Urusov & Blinov 1970
+6B - Thin film/non-bulk,77650,O1 Pd1,1989,-83.0,"Vacuum-deposited thin film, electron diffraction",Kumar & Saxena 1989
+6C - Multi-phase refinement,241420,Ni1 O1,2016,-32.6,<1% impurity phase in LiNi0.5Mn1.5O4 cathode study,Boulet-Roblin et al. 2016
+6C - Multi-phase refinement,131090,Ni1 O1,2019,-8.0,"Secondary phase in birnessite study, no ESDs",Shan et al. 2019
+6C - Multi-phase refinement,64415,Mg1 S1,2023,-27.8,7.5 wt% phase in Mg-S battery electrode (Sample 1),Sheha et al. 2023
+6C - Multi-phase refinement,64422,Mg1 S1,2023,-11.2,9.3 wt% phase in Mg-S battery electrode (Sample 2),Sheha et al. 2023
+6D - Miscategorized conditions,77710,O1 Yb1,1978,13.8,"Synthesized at 4-5 GPa, 873-1373 K, lacks P/T metadata",Leger et al. 1978
