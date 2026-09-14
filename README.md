@@ -1,4 +1,4 @@
-# Eir v1.2 - Automated Bond Valence Sum Analysis
+# Eir v2.0.41 - Automated Bond Valence Sum Analysis
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -45,7 +45,7 @@ pip install py3Dmol
 
 ### Method 1: Interactive Mode (No Config)
 
-1. Open `Eir_1_2.py` in Jupyter Notebook
+1. Open `Eir_2_0_41.ipynb` in Jupyter Notebook
 2. Place CIF files in a folder
 3. Run all cells
 4. Enter oxidation states when prompted
