@@ -849,29 +849,58 @@ def flag_same_source_entries(df):
     # Build structure-level lookup: one row per ICSD code
     struct_cols = ['icsd_code', 'authors', 'year', 'journal']
     available = [c for c in struct_cols if c in df.columns]
-    if 'icsd_code' not in available or 'authors' not in available:
-        # Not enough metadata to group — add empty columns and return
+
+    def _no_groups(df):
+        # Not enough metadata to group: every entry is a group of one
         df['source_group'] = None
         df['source_group_size'] = 1
         df['source_group_codes'] = df['icsd_code'] if 'icsd_code' in df.columns else None
         df['flag_multi_entry_source'] = False
         return df
-    
+
+    if 'icsd_code' not in available or 'authors' not in available:
+        return _no_groups(df)
+
+    # v2.0.46: TWO WAYS THIS STOPPED THE RUN, BOTH ON FILES THAT ARE NOT
+    # ICSD EXPORTS OR ARE INCOMPLETE ONES.
+    #
+    # 1. No ICSD code anywhere in the run - every Rietveld CIF, and any CIF
+    #    checked on its own. groupby drops the null codes, the lookup came
+    #    back empty, and DataFrame.apply on an empty frame returns a frame,
+    #    not a column: "Cannot set a DataFrame with multiple columns to the
+    #    single column source_group". Entries without a code cannot be
+    #    matched to a paper, so each is a group of one.
+    # 2. A code but no author or journal. groupby().first() gives NaN, which
+    #    is truthy, so `authors or ''` kept it and .split() raised. This is
+    #    the "CIF without an author field" fault noted since 2.0.41. An entry
+    #    with no first author is not grouped: grouping on year and journal
+    #    alone would join unrelated papers.
+    #
+    # Neither decided a verdict. Where neither arises the groups are those
+    # 2.0.45 formed.
+    if not df['icsd_code'].notna().any():
+        return _no_groups(df)
+
     other_cols = [c for c in available if c != 'icsd_code']
     struct_df = df.groupby('icsd_code')[other_cols].first().reset_index()
-    
+
+    def _text(v):
+        return '' if v is None or (isinstance(v, float) and v != v) else str(v)
+
     # Build source group key from first author surname + year + journal
     def make_source_key(row):
-        authors = row.get('authors', '') or ''
+        authors = _text(row.get('authors', ''))
         year = row.get('year', '') or ''
-        journal = row.get('journal', '') or ''
+        journal = _text(row.get('journal', ''))
         # Extract first author surname (before first comma or space)
         first_author = authors.split(',')[0].split(' ')[0].strip().lower()
+        if not first_author:
+            return None
         # Normalise journal (lowercase, strip whitespace)
         journal_norm = journal.strip().lower()[:40]  # truncate for matching
         return f"{first_author}|{year}|{journal_norm}"
-    
-    struct_df['source_group'] = struct_df.apply(make_source_key, axis=1)
+
+    struct_df['source_group'] = [make_source_key(r) for _, r in struct_df.iterrows()]
     
     # Count entries per source group
     group_counts = struct_df.groupby('source_group')['icsd_code'].agg(['count', list]).reset_index()
@@ -889,7 +918,18 @@ def flag_same_source_entries(df):
     merge_cols = ['icsd_code', 'source_group', 'source_group_size', 
                   'source_group_codes', 'flag_multi_entry_source']
     df = df.merge(struct_df[merge_cols], on='icsd_code', how='left')
-    
+
+    # v2.0.46: an entry left ungrouped - no code, or no first author - is a
+    # group of one, as in the no-metadata case, rather than a row of nulls.
+    # Column-wise rather than by .loc, so pandas 3's string columns accept it.
+    _alone = df['source_group'].isna()
+    if _alone.any():
+        df['source_group_size'] = df['source_group_size'].fillna(1)
+        df['source_group_codes'] = (df['source_group_codes'].astype(object)
+                                    .where(~_alone, df['icsd_code'].astype(object)))
+        df['flag_multi_entry_source'] = (df['flag_multi_entry_source']
+                                         .astype(object).where(~_alone, False))
+
     return df
 
 def extract_cif_oxidation_states(cif_path):
@@ -2864,6 +2904,29 @@ CATION_FLOOR_EXCLUDED_ELEMENTS = frozenset({'H', 'D'})
 SPLIT_SITE_MAX = 1.20         # A, closer than this with occupancies summing to
                               # <= 1 means one atom written as two positions
 
+# v2.0.46: ALTERNATIVE POSITIONS, AT ANY DISTANCE BELOW THE FLOOR.
+#
+# The rule above stopped at SPLIT_SITE_MAX, so two partly occupied positions
+# further apart were counted as a contact even where the model never fills
+# both. The two sodium positions of a P2-type layered oxide (2b and 2d) sit
+# a/sqrt(3), about 1.70 A, apart at occupancies near 0.2 and 0.45: ICSD
+# 253190, 253192 and 261554 came out EXPUNGE on G5 for a contact no sodium
+# layer contains. ICSD 291603, a rock-salt-derived CrO2 with Cr shared
+# between octahedral (0.667) and tetrahedral (0.167) interstices 1.77 A
+# apart, the same.
+#
+# What decides it is the occupancy sum, not the distance. Two sets of
+# positions can be filled without ever filling a close pair only if their
+# occupancies sum to no more than one; above that, some close pairs must be
+# filled together whatever the ordering, so the model implies the contact
+# and the gate stands. The rule therefore runs to the packing floor. Above
+# the floor no gate reads the contact, and the reported minimum is unchanged.
+#
+# A position refined to zero occupancy holds no atom and is left out of both
+# packing scans altogether (Richmond's anion-disorder pyrochlore models put O
+# on the empty 8b site at zero occupancy in 11 entries).
+ALTERNATIVE_OCC_SUM_MAX = 1.02
+
 # No cation-oxygen bond in any oxide is shorter than this. B-O runs to about
 # 1.37 A, C-O in carbonate to 1.28, Si-O to 1.60; 1.20 leaves clearance below
 # all of them. Like ANION_ANION_MIN this is a single constant with no
@@ -2923,6 +2986,10 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
     and ICSD 194733 does exactly that. Pairs closer than SPLIT_SITE_MAX whose
     occupancies sum to no more than unity are therefore skipped.
 
+    v2.0.46: and so are such pairs anywhere below the packing floor, which
+    the model can always fill one at a time, and positions refined to zero
+    occupancy. See ALTERNATIVE_OCC_SUM_MAX.
+
     Returns (anion_anion_min, cation_cation_min), either possibly None.
 
     v2.0.14: THREE FAULTS, EACH FOUND BY RUNNING THIS ON REAL FILES.
@@ -2981,6 +3048,8 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         for s in st.sites:
             occ = getattr(s, 'occ', 1.0)
             occ = 1.0 if occ is None else float(occ)
+            if occ <= 0:
+                continue                          # v2.0.46: no atom there
             for op in st.spacegroup.operations():
                 f = wrap_into_cell(op.apply_to_xyz(
                     [s.fract.x, s.fract.y, s.fract.z]))
@@ -3001,6 +3070,8 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
             el = s.element.name
             occ0 = getattr(s, 'occ', 1.0)
             occ0 = 1.0 if occ0 is None else float(occ0)
+            if occ0 <= 0:
+                continue                          # v2.0.46: no atom there
             o = site_centre(st.cell, s)
             p0 = _np.array([o.x, o.y, o.z])
             d = _np.linalg.norm(P - p0, axis=1)
@@ -3017,8 +3088,11 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                         and els[idx] in CATION_FLOOR_EXCLUDED_ELEMENTS):
                     continue                      # v2.0.15: not a packing sphere
                 dist = float(d[idx])
-                if dist < SPLIT_SITE_MAX and (occ0 + occs[idx]) <= 1.02:
-                    continue                      # one atom, two positions
+                # v2.0.46: alternatives to the floor, not to SPLIT_SITE_MAX
+                _floor = ANION_ANION_MIN if el_is_anion else CATION_CATION_MIN
+                if (dist < max(SPLIT_SITE_MAX, _floor)
+                        and (occ0 + occs[idx]) <= ALTERNATIVE_OCC_SUM_MAX):
+                    continue                      # never both filled
                 # v2.0.14: the bucket now asks the same question the filter
                 # asked, and asks it of the structure rather than of a list.
                 if el_is_anion:

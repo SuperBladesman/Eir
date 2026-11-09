@@ -689,6 +689,91 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
            f"octahedron {_s_reg}; pyrochlore B site at x = 0.38 in six "
            f"orientations and orders {[None if v is None else round(v, 6) for v in _vals]}")
 
+    # -- 25. v2.0.46: entries without an ICSD code, an author or a journal ---
+    # 2.0.45 stopped the run in flag_same_source_entries on both: with no
+    # ICSD code anywhere (every Rietveld CIF checked on its own), and with a
+    # code but a null author or journal.
+    try:
+        _g0 = flag_same_source_entries(pd.DataFrame({
+            'filename': ['a.cif', 'b.cif'], 'icsd_code': [None, None],
+            'authors': [None, None], 'year': [None, None],
+            'journal': [None, None]}))
+        _g1 = flag_same_source_entries(pd.DataFrame({
+            'filename': ['a.cif', 'b.cif', 'c.cif', 'd.cif'],
+            'icsd_code': [1, 2, 3, None],
+            'authors': ['Smith, J.', 'Smith, J.', np.nan, 'Jones, K.'],
+            'year': [2001, 2001, 2001, 2001],
+            'journal': ['J. Solid State Chem.', 'J. Solid State Chem.',
+                        np.nan, 'J. Solid State Chem.']}))
+        _sz25 = {k: int(v) for k, v in
+                 zip(_g1['filename'], _g1['source_group_size'])}
+        _ok25 = (list(_g0['source_group_size']) == [1, 1]
+                 and not _g0['flag_multi_entry_source'].astype(bool).any()
+                 and _sz25 == {'a.cif': 2, 'b.cif': 2, 'c.cif': 1, 'd.cif': 1})
+        _det25 = (f"no codes: sizes {list(_g0['source_group_size'])}; codes with "
+                  f"one author missing: {_sz25} (a and b together, c and d alone)")
+    except Exception as _e25:
+        _ok25, _det25 = False, f'{type(_e25).__name__}: {_e25}'
+    report('25. entries without an ICSD code, author or journal stand alone',
+           _ok25, _det25)
+
+    # -- 26. v2.0.46: alternative positions are not a contact ----------------
+    # A P2-type NaCoO2: Na on 2b and 2d, a/sqrt(3) = 1.634 A apart. At 0.40
+    # and 0.60 the model can fill them one at a time, and the cation floor
+    # must not fire; at 0.60 and 0.60 it cannot, and it must. A rock salt
+    # with an oxygen position refined to zero occupancy 1.82 A from O1 must
+    # pass the anion floor: there is no atom there.
+    _P2 = (
+        "data_eir_validation_p2\n_cell_length_a 2.8300\n_cell_length_b 2.8300\n"
+        "_cell_length_c 10.9000\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+        "_cell_angle_gamma 120.\n_space_group_IT_number 194\n"
+        "_symmetry_space_group_name_H-M 'P 63/m m c'\n"
+        "loop_\n_atom_type_symbol\n_atom_type_oxidation_number\n"
+        "Na1+ 1\nCo3+ 3\nO2- -2\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "_atom_site_occupancy\n"
+        "Co1 Co3+ 0 0 0 1.\nO1 O2- 0.33333 0.66667 0.0925 1.\n"
+        "Na1 Na1+ 0 0 0.25 {o1:.2f}\nNa2 Na1+ 0.66667 0.33333 0.25 {o2:.2f}\n")
+    _RS0 = (_ROCKSALT_CIF.format(a=4.20, cat=cat, cv=cv, oocc=1.0)
+            + "O2 O2- 8 c 0.25 0.25 0.25 0.5 0.0\n")
+    try:
+        _r26a = _run_cif(_P2.format(o1=0.40, o2=0.60))
+        _r26b = _run_cif(_P2.format(o1=0.60, o2=0.60))
+        _r26c = _run_cif(_RS0)
+        _ok26 = (_r26a.get('cation_packing_plausible') is True
+                 and _r26b.get('cation_packing_plausible') is False
+                 and _r26c.get('anion_packing_plausible') is True)
+        _det26 = (f"Na 0.40 + 0.60: cation floor {_r26a.get('cation_packing_plausible')} "
+                  f"(min {_r26a.get('cation_cation_min')}), want True; 0.60 + 0.60: "
+                  f"{_r26b.get('cation_packing_plausible')} (min "
+                  f"{_r26b.get('cation_cation_min')}), want False; zero-occupancy O: "
+                  f"anion floor {_r26c.get('anion_packing_plausible')} (min "
+                  f"{_r26c.get('anion_anion_min')}), want True")
+    except Exception as _e26:
+        _ok26, _det26 = False, f'{type(_e26).__name__}: {_e26}'
+    report('26. positions the model fills one at a time are not a contact',
+           _ok26, _det26)
+
+    # -- 27. v2.0.46: the bond-length columns are always written --------------
+    # Cr(4+)O6 has six measured bonds, too few for a minimum. 2.0.45 left
+    # bl_ratio_min out of the row, and a run with no other site stopped in
+    # the summary.
+    try:
+        _r27 = _run_cif(_ROCKSALT_CIF.format(a=3.90, cat='Cr', cv=4, oocc=1.0))
+        _s27 = (_r27.get('sites') or [{}])[0]
+        _ok27 = (_s27.get('bl_tier') is not None
+                 and all(k in _s27 for k in ('bl_delta_mean', 'bl_ratio_min',
+                                             'bl_delta_min'))
+                 and _s27.get('bl_ratio_min') is None)
+        _det27 = (f"Cr(4+) CN 6: bl_tier {_s27.get('bl_tier')}, keys present "
+                  f"{[k for k in ('bl_delta_mean', 'bl_ratio_min', 'bl_delta_min') if k in _s27]}, "
+                  f"bl_ratio_min {_s27.get('bl_ratio_min')} (want null)")
+    except Exception as _e27:
+        _ok27, _det27 = False, f'{type(_e27).__name__}: {_e27}'
+    report('27. the bond-length columns are written for every site', _ok27,
+           _det27)
+
     if verbose:
         print()
         print("=" * 70)

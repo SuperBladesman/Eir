@@ -617,8 +617,12 @@ def summarise_dataset(dfq, save_to=None, gii_threshold=0.20,
     reg = sub['polyhedron_regular'].dropna()
     if 'bl_tier' in dfq.columns and dfq['bl_tier'].notna().any():
         _bt = pd.to_numeric(dfq['bl_tier'], errors='coerce')
-        _bd = pd.to_numeric(dfq['bl_delta_mean'], errors='coerce')
-        _br = pd.to_numeric(dfq['bl_ratio_min'], errors='coerce')
+        # v2.0.46: read as optional, as bl_tier is above. Since 2.0.46 the
+        # batch always writes both, but an older results CSV may not.
+        _bd = pd.to_numeric(dfq.get('bl_delta_mean'), errors='coerce') \
+            if 'bl_delta_mean' in dfq.columns else pd.Series(dtype=float)
+        _br = pd.to_numeric(dfq.get('bl_ratio_min'), errors='coerce') \
+            if 'bl_ratio_min' in dfq.columns else pd.Series(dtype=float)
         out("  MEASURED BOND LENGTHS")
         out()
         out("  bl_expected_mean is the mean bond length observed for this exact")

@@ -137,6 +137,29 @@ PGRM_FULL_OCC = 0.98
 PGRM_PREMODERN_YEAR = 1950
 PGRM_HETEROVALENT_DV = 2
 
+# v2.0.46. G7: A SITE WHOSE SHELL IS TOO SMALL AND WHOSE SUM SAYS WHY.
+#
+# The coordination screen (cn_plausible) has been computed since v2.0.2 and
+# no gate read it. A CIF listing only the identity operation for Pm-3m
+# SrTiO3 gives Ti a shell of two oxygens and Sr one of four, sums of 1.354
+# and 0.748 v.u. and a GII of 2.07, and came out ACCEPT.
+#
+# A coordination number below the smallest Shannon tabulates is not a fault
+# on its own: the table is not exhaustive. On the 200-entry regression set
+# (spinels, sulfide spinels, rock salts, perovskites, layered oxides and
+# chromium oxides) it fires on two sites, Co(3+) at CN 4 as the minority
+# species of a spinel tetrahedral site and Ni(3+) at CN 4 in a sulfide
+# spinel, and neither is wrong. What separates missing bonds from an
+# untabulated coordination is the sum. A dominant species summing to less
+# than half its valence has lost bonds rather than lengthened them: no
+# dominant site in a sound tier of that set falls below -20%, and the two
+# sites above sit at -38% (a minority species) and -4%. The conjunction
+# fires on none of the 200.
+#
+# NOT YET MEASURED on the 3291-structure corpus. Measure it there before
+# quoting a G7 count.
+CN_DEFICIT_BVS_FRACTION = 0.50
+
 # The two packing floors come from CELL 1, where they are set from the
 # measured distributions. Re-declaring them here would be a second copy that
 # drifts: the structural self-check flagged exactly that when this cell first
@@ -341,6 +364,20 @@ def classify_site(row, struct):
                 return ('G4', 'split_shell_cause_unknown', _ev)
         if not _fall_through:
             return ('G4', 'cation_on_wrong_origin', _ev + '; not yet tested')
+
+    # v2.0.46: G7, see CN_DEFICIT_BVS_FRACTION. Asked after the tested
+    # origin hypothesis, which can explain a broken shell, and before the
+    # packing floors, because it says WHERE.
+    _cnmin = _pgrm_f(row.get('cn_shannon_min'))
+    _bpd = _pgrm_f(row.get('bvs_percent_diff'))
+    if (cn == cn and _cnmin == _cnmin and cn < _cnmin
+            and _bpd == _bpd and _bpd < -100.0 * CN_DEFICIT_BVS_FRACTION
+            and _pgrm_is_true(row.get('is_dominant_species'))):
+        return ('G7', 'coordination_incomplete',
+                f'{row.get("element")}({row.get("valence")}) at CN {int(cn)}, '
+                f'below the smallest tabulated ({int(_cnmin)}); bond valence '
+                f'sum {_pgrm_f(row.get("bvs")):.3f} for a valence of '
+                f'{row.get("valence")} ({_bpd:+.0f}%)')
 
     # ORDER WITHIN G. The packing floors are asked LAST, after the tested
     # origin hypothesis, because a supported shift EXPLAINS them.
@@ -635,15 +672,19 @@ def classify_pgrm(df):
     # contact resolves - so G4 outranks G5 even though both condemn. A
     # site-specific fault outranks a structure-level symptom for the same
     # reason: it says WHERE.
+    # v2.0.46: G7 ranks with G3, directly below it, and everything after
+    # is renumbered rather than squeezed, so every existing pair keeps its
+    # order.
     _code_rank = {'P1': 0, 'P2': 0, 'P3': 0,
                   'G4': 1,      # tested: the cation is on the wrong origin
                   'G1': 2,      # this contact, at this site, is impossible
                   'G6': 3,      # shorter than anything measured for this ion
                   'G3': 4,      # this site has no shell at all
-                  'G5': 5,      # the cation sublattice is too close somewhere
-                  'G2': 6,      # the anion sublattice is too close somewhere
+                  'G7': 5,      # this site's shell is missing bonds
+                  'G5': 6,      # the cation sublattice is too close somewhere
+                  'G2': 7,      # the anion sublattice is too close somewhere
                   # v2.0.37: R4 ranks below R1-R3, which say WHY.
-                  'R1': 7, 'R2': 8, 'R3': 9, 'R4': 10,
+                  'R1': 8, 'R2': 9, 'R3': 10, 'R4': 11,
                   # v2.0.22: M8 outranks the model codes for the same reason
                   # G1 outranks G5 - it says WHERE, and it is a measurement.
                   # v2.0.25: M2 and M3 sort LAST among the M codes. They are
@@ -655,8 +696,8 @@ def classify_pgrm(df):
                   # rest for the same reason M8 does - it says WHERE, and it
                   # is a measurement. The others are renumbered rather than
                   # squeezed, so every existing pair keeps its order.
-                  'M5': 11, 'M8': 12, 'M10': 13, 'M7': 14, 'M4': 15,
-                  'M1': 16, 'M6': 17, 'M3': 18, 'M2': 19, '-': 99}
+                  'M5': 12, 'M8': 13, 'M10': 14, 'M7': 15, 'M4': 16,
+                  'M1': 17, 'M6': 18, 'M3': 19, 'M2': 20, '-': 99}
     _w = df.assign(_s=df['pgrm_tier'].map(sev),
                    _r=df['pgrm_code'].map(_code_rank).fillna(50))
     worst = (_w.sort_values(['_s', '_r'], ascending=[True, False])
@@ -688,3 +729,55 @@ def apply_pgrm_suppression(df):
               f"a P or G gate. The evidence is in pgrm_reason and "
               f"pgrm_evidence; no bond valence result is reported for them.")
     return df
+
+
+# ---------------------------------------------------------------------------
+# v2.0.46: KNOWN-ANSWER TESTS OF THE GATES. Here rather than in VALIDATE(),
+# which runs in CELL 6, before this cell defines classify_site.
+def VALIDATE_GATES(verbose=True):
+    """Known-answer tests of the integrity gates. Raises if any fails."""
+    results = []
+
+    def report(name, ok, detail=''):
+        results.append(bool(ok))
+        if verbose:
+            print(f"  {'PASS' if ok else 'FAIL'}  {name}")
+            if detail:
+                print(f"        {detail}")
+
+    if verbose:
+        print('=' * 70)
+        print('EIR GATE TESTS')
+        print('=' * 70)
+
+    # G7. The identity-only SrTiO3: Ti at CN 2, summing to 1.354 for a
+    # valence of 4. The same row as a minority species must not fire, nor
+    # Ni(3+) at an untabulated CN 4 with a sound sum (the sulfide spinel).
+    _row = {'coords': '(0.0, 0.0, 0.0)', 'element': 'Ti', 'valence': 4,
+            'cn': 2, 'cn_shannon_min': 4, 'bvs': 1.354,
+            'bvs_percent_diff': -66.2, 'is_dominant_species': True,
+            'ligand_types': 'O'}
+    _c = classify_site(_row, {})
+    report('1. G7: a dominant site missing bonds is expunged',
+           _c[0] == 'G7', f'Ti(4) at CN 2, -66%: {_c[0]} ({_c[2]})')
+    _cm = classify_site(dict(_row, is_dominant_species=False), {})
+    report('2. G7 leaves a minority species to the other gates',
+           _cm[0] != 'G7', f'as a minority species: {_cm[0]}')
+    _cn = classify_site(dict(_row, element='Ni', valence=3, cn=4,
+                             cn_shannon_min=6, bvs=2.882,
+                             bvs_percent_diff=-3.9), {})
+    report('3. G7 does not fire on an untabulated CN with a sound sum',
+           _cn[0] != 'G7', f'Ni(3) at CN 4, -4%: {_cn[0]}')
+
+    ok = all(results)
+    if verbose:
+        print()
+        print(f"  {'ALL GATE TESTS PASSED' if ok else 'SOMETHING FAILED'}"
+              f"  ({sum(results)}/{len(results)})")
+    if not ok:
+        raise AssertionError('Eir gate tests failed. Re-run '
+                             'VALIDATE_GATES(verbose=True) for the detail.')
+    return True
+
+
+VALIDATE_GATES()

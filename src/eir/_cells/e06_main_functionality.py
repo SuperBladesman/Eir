@@ -4825,6 +4825,15 @@ def process_single_cif(file_path, user_oxidation_states=None):
                         site_result['bl_n_bonds'] = _bl['n_bonds']
                         site_result['bl_source'] = _bl['source']
                         site_result['bl_tier'] = _bl['tier']
+                        # v2.0.46: always present, null where not computable.
+                        # A configuration with too few bonds for a minimum
+                        # (Cr(4+)O6 has six) left bl_ratio_min out of the
+                        # row, so a run in which no site had one had no such
+                        # column, and CELL 14 stopped on it with a KeyError
+                        # (ICSD 35327, CrO2, run on its own).
+                        site_result['bl_delta_mean'] = None
+                        site_result['bl_ratio_min'] = None
+                        site_result['bl_delta_min'] = None
                         _obs_mean = site_result.get('avg_bond_length')
                         _obs_min = site_result.get('min_bond_length')
                         if _obs_mean is not None:
