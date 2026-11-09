@@ -2,6 +2,31 @@
 
 Every surviving version of Eir, newest first, with UK dates. Each released version has a tag (`v2.0.45`, `v1.2`, ...). [docs/HISTORY.md](docs/HISTORY.md) explains how the history was recovered and what is missing.
 
+## The eir-bvs package
+
+### eir-bvs 2.1.0 – unreleased
+
+**A command line, a Python interface and a one-page report, on the 2.0.45 engine**
+
+- `pip install` from GitHub; `eir check`, `eir batch` and `eir validate`
+  from the command line, and `eir.check()`, `eir.check_folder()` and
+  `eir.validate()` from Python.
+- One structure in, one page out: the verdict in plain English, the
+  evidence and code that decided it, the number to quote, the four facets,
+  the six geometry screens, every site against Gagné's measured bond
+  lengths, and a drawing of each coordination polyhedron.
+- Oxidation states from `--ox Na=1,Mn=4,O=-2` for Rietveld output, which
+  rarely carries them.
+- The engine is the notebook's own cells, copied by
+  `tools/build_engine.py`; CI fails if the two drift apart. No verdict, sum
+  or index changes. On 200 ICSD entries every output file matched the
+  notebook's, serially and in parallel (docs/PACKAGE.md).
+- Runs the 2.0.45 notebook stops on, where no file has an ICSD code or a
+  file with one has no author or journal, finish without grouping entries
+  by source paper, and say so.
+- Tested on Python 3.11 to 3.13 with pandas 2 and 3, on Linux, Windows
+  and macOS.
+
 ## Eir 2.0 series
 
 ### 2.0.45 – 23 October 2026

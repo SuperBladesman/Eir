@@ -1,6 +1,6 @@
 # Reference data
 
-Eir reads five tables from this folder. Keep the folder beside `Eir.ipynb`, or start Jupyter in the repository folder.
+Eir reads five tables from this folder. Keep the folder beside `Eir.ipynb`, or start Jupyter in the repository folder. The installed package carries a copy of this folder as `eir/data`; set `EIR_DATA_DIR` to use another.
 
 | File | What it holds | Source |
 |---|---|---|

@@ -48,21 +48,78 @@ The shift screen proposes and never corrects. Each proposal is applied to a copy
 
 ## Getting started
 
-You need Python 3.11 or later. Eir 2.0.45 has been tested with Python 3.11, 3.13 and 3.14, and with pandas 2.3 and 3.x.
+You need Python 3.11 or later. Eir is tested with Python 3.11 to 3.13 and with pandas 2 and 3, on Linux, Windows and macOS.
+
+```bash
+pip install "git+https://github.com/SuperBladesman/Eir.git"
+```
+
+### Check one structure
+
+```bash
+eir check examples/MgO.cif
+```
+
+```
+MgO.cif  ·  Mg O  ·  F m -3 m
+
+  ACCEPT               Nothing wrong found
+  Bond valence         Quote GII = 0.049 ± 0.000 v.u.
+
+  Report               examples/MgO.eir.html
+```
+
+The verdict comes first, in plain English, then the number to quote. Beside the CIF Eir writes a one-page report: the verdict and what decided it, the four facets, the six geometry screens, every site against the bond lengths measured for that ion, and a drawing of each coordination polyhedron.
+
+Most Rietveld programs write element symbols without charges, and Eir does not guess oxidation states. Give them with `--ox`, or put a `config.json` beside the file:
+
+```bash
+eir check refined.cif --ox Na=1,Ni=2,Mn=4,O=-2
+```
+
+Try it on the constructed structures in [examples/](examples/): `MgO.cif` passes, `MgO_wrong_cell.cif` carries a lattice parameter as a transcription error might, and `SrTiO3_refined.cif` needs `--ox Sr=2,Ti=4,O=-2`.
+
+### From Python
+
+```python
+import eir
+
+r = eir.check('examples/SrTiO3_refined.cif', oxidation_states={'Sr': 2, 'Ti': 4, 'O': -2})
+r.tier, r.code                 # ('ACCEPT', '-')
+r.quote                        # ('gii', 0.1774, 0.00033): the index to quote, its value, its sigma
+print(r.verdict())
+r.write_report()               # examples/SrTiO3_refined.eir.html; in Jupyter, r on its own shows it
+```
+
+### A folder of CIFs
+
+```bash
+eir batch my_cifs/ --reports
+```
+
+This runs the same pipeline as the notebook, on every CIF in the folder, and writes the same `outputs/` folder inside it (below), with one report per structure in `outputs/reports/` if asked. From Python, `eir.check_folder('my_cifs/')` returns the per-site and per-structure tables.
+
+### Check the installation
+
+```bash
+eir validate
+```
+
+runs the 24 tests against structures whose answers are known by hand, and the structural self-check. Run it again after changing anything.
+
+### The notebook
+
+`Eir.ipynb` is the source of the engine, and still runs as before:
 
 ```bash
 git clone https://github.com/SuperBladesman/Eir.git
 cd Eir
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt jupyterlab
 jupyter lab Eir.ipynb
 ```
 
-Then, in the notebook:
-
-1. **Run the cells from the top.** Eir reads its reference tables from `Data/`, so start Jupyter in the repository folder, or keep `Data/` beside the notebook.
-2. **Check the installation.** CELL 6 runs `VALIDATE()`: 24 tests against structures whose answers are known by hand, generated on the fly. It raises if any test fails. Run it again after changing anything.
+1. **Run the cells from the top.** Eir reads its reference tables from `Data/`, so start Jupyter in the repository folder.
+2. **Check the installation.** CELL 6 runs `VALIDATE()`. It raises if any test fails.
 3. **Point it at your CIFs.** CELL 9 asks for a folder and processes every CIF in it. Oxidation states come from a `config.json` in that folder, from the CIF itself, or interactively:
 
    ```json
@@ -70,6 +127,8 @@ Then, in the notebook:
    ```
 
 4. **Post-process.** CELLS 10 to 15 add provenance, coordination quality and the integrity gates, the per-structure table, triage, the shift tests, figures and the summary report. CELLS 16 and 17 look at one structure, or one family, in detail.
+
+The package runs the notebook's own cells, and gives its results file for file. [docs/PACKAGE.md](docs/PACKAGE.md) explains how, lists everything the package does differently, and describes how the two were compared.
 
 ICSD CIFs work as downloaded. Eir repairs the common faults in ICSD exports (non-ASCII bytes, reverse rhombohedral settings, symmetry given only as a space group number) before it parses anything.
 
@@ -88,6 +147,7 @@ outputs/
   eir_screens, eir_gii, eir_cation_anion,
   eir_gii_vs_wagii (.pdf and .png)              figures
   latest.txt                                    which run is the newest
+  reports/<name>.eir.html                       one page per structure (--reports)
 ```
 
 `_structures.csv` filtered to `structure_pgrm_tier == 'EXPUNGE'` is the list of reportable errors. Each row carries the ICSD code, year, journal, reason and measurement.
@@ -108,7 +168,7 @@ outputs/
 
 ## Versions
 
-The current version is **2.0.45** (23rd October 2026). Every surviving earlier version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one.
+The current engine is **2.0.45** (23rd October 2026), packaged as **eir-bvs 2.1.0**, which adds the command line, the Python interface and the report without changing a result. Every surviving earlier version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one.
 
 To reproduce the rock salt study, use the version that accompanied it:
 
@@ -123,7 +183,9 @@ The history in this repository was rebuilt in 2026 from dated copies of every ve
 ## Known limitations
 
 - Two ICSD entries, 213392 and 38769, are not yet caught by the gates.
-- A CIF with no author field is not yet handled and stops the run.
+- The notebook stops in `flag_same_source_entries` when no file in the folder has an ICSD code, which includes every Rietveld CIF, and when a file with a code has no author or journal. The package finishes these runs without grouping entries by source paper, which decides no verdict, and says so in the result and on the report.
+- The cation–cation packing gate (G5) treats two partly occupied positions as one atom on two places only when they are closer than 1.20 Å (`SPLIT_SITE_MAX`). Mutually exclusive positions further apart are counted as a contact, so P2-type sodium layered oxides, whose two Na positions sit about 1.7 Å apart, are expunged. Review G5 verdicts on such models by hand; the report flags them.
+- No gate reads the coordination screen on its own, so a structure whose cations all have implausible coordination numbers can still reach ACCEPT. The verdict and the report say when a screen has failed without deciding the verdict.
 - The anion–anion packing gate (G2) is conservative for anion-disorder models: it considers contacts between partially occupied anion positions that the model never fills together, and positions refined to zero occupancy. Review G2 verdicts on such models by hand.
 - On a position shared by two anions, the coordination-quality columns written by CELL 7 (`contact_anion`, `expected_contact`, `shortest_contact_ratio`) describe the first-listed species. The bond valence sums use every species.
 - An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, Pr⁴⁺, Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
