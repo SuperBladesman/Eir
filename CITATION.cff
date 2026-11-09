@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use Eir, please cite the paper below and name the version you used."
+title: "Eir: bond valence screening of crystal structures, with an integrity verdict"
+type: software
+authors:
+  - family-names: Reeves-McLaren
+    given-names: Nik
+    affiliation: University of Sheffield
+version: 2.0.45
+date-released: 2026-10-23
+license: MIT
+repository-code: "https://github.com/SuperBladesman/Eir"
+keywords:
+  - crystallography
+  - bond valence sum
+  - global instability index
+  - crystal structure validation
+  - ICSD
+  - CIF
+  - data integrity
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Reeves-McLaren
+      given-names: Nik
+      affiliation: University of Sheffield
+  title: "Automated Bond Valence Sum Analysis for Crystallographic Database Quality Assessment: A Systematic Study of Rock Salt Oxides, Halides, and Chalcogenides"
+  journal: "Dalton Transactions"
+  year: 2026
+  volume: 55
+  start: 2868
+  doi: "10.1039/D5DT03003J"

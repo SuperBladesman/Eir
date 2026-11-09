@@ -1,307 +1,147 @@
-# Eir v2.0.41 - Automated Bond Valence Sum Analysis
+# Eir
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+**Bond valence screening of crystal structures, with an integrity verdict.**
 
-Automated Bond Valence Sum (BVS) analysis tool for crystallographic structure validation and database quality assessment.
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+[![Paper: Dalton Trans. 2026](https://img.shields.io/badge/paper-Dalton%20Trans.%202026%2C%2055%2C%202868-informational.svg)](https://doi.org/10.1039/D5DT03003J)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
+![Version 2.0.45](https://img.shields.io/badge/version-2.0.45-green.svg)
 
-## Overview
+Eir reads a folder of CIF files and asks two questions of each structure:
 
-Eir performs high-throughput BVS analysis on crystal structures from ICSD CIF files or GSAS-II refinement outputs. The tool uses proper crystallographic symmetry operations via pymatgen to correctly handle all space groups, with particular robustness for high-symmetry cases (R-3m, P63/mmc) common in layered oxides and rock salt structures.
+1. **Can this entry be assessed at all?** Can the file be read, can the atoms be where it says, is there reference data, and is the deposited model unambiguous?
+2. **If so, what does the bond valence model say?**
 
-## Key Features
+The order matters. A bond valence sum is computed from bond lengths, so a length that cannot be right makes every number built on it meaningless, and often good-looking. ICSD 85235 (TbCrO₃) has a chromium octahedron within 0.0004 Å of the mean of every measured Cr³⁺–O bond, a global instability index (GII) of 0.0047, and two oxygens 2.191 Å apart against a family median of 2.750 Å. Judged on its chemistry it is the best structure in a 938-entry perovskite set; judged on its geometry it is impossible.
 
-- **Automatic coordination number detection** using adaptive gap analysis with Jahn-Teller awareness
-- **Mixed/partial occupancy support** for solid solutions and disordered structures
-- **3D visualization** of problematic sites (BVS deviation > 30%) using py3Dmol
-- **Batch processing** with summary CSV output
-- **Statistical analysis** with outlier detection and z-scores
-- **Ambient vs high-pressure separation** for condition-dependent analysis
-- **Publication metadata extraction** from ICSD CIF files
-- **Config file support** for hands-free batch processing
+Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.45, is a rebuild that checks the geometry before it reads the chemistry.
 
-## Installation
+## What Eir checks
 
-### Requirements
+Four facets, asked in order. The first failure stops the assessment.
 
-- Python 3.9 or higher
-- Jupyter Notebook (recommended for interactive use)
+| | Facet | Asks | On failure |
+|---|---|---|---|
+| **P** | Parse | Can the file be read? | EXPUNGE |
+| **G** | Geometry | Can the atoms be where the file puts them? | EXPUNGE |
+| **R** | Reference | Is there reference data to assess it? | NOT_ASSESSED |
+| **M** | Model | Is the deposited description unambiguous? | FLAG |
 
-### Install Dependencies
+EXPUNGE means no bond valence result should be quoted. NOT_ASSESSED means part of the analysis is missing, not wrong. FLAG means the analysis stands, with the ambiguity named. A structure that passes all four is ACCEPT, or one of three named caveat tiers: ACCEPT_HOMOVALENT and ACCEPT_HETEROVALENT for shared sites, and ACCEPT_IMPRECISE where the deposited uncertainties make the index imprecise.
+
+`structure_pgrm_tier` holds the verdict, `pgrm_reason` what failed, and `pgrm_evidence` the measurement that decided it.
+
+These gates replace and contain the six-type failure taxonomy of the *Dalton Transactions* paper (Type 2 → R1, 3 → M1, 4 → M3, 5 → M2, 6A → M6, 7 → M4). What they add is the G facet. The taxonomy was derived on rock salts, where every atom sits on a special position and a coordinate error is impossible by construction; in every family with positional freedom, geometry faults dominate.
+
+Six independent geometry screens feed the G and M facets, reported separately because they see different things:
+
+| Screen | What it sees |
+|---|---|
+| Radii ratio | Shortest cation–anion contact against the Shannon radii |
+| Bond-valence distance | The same contact against the ion's own parameters |
+| Anion–anion packing | Two anions closer than their electron clouds allow |
+| Cation–cation packing | The same for the cation sublattice |
+| Coordination | Whether bonds are missing, rather than too short |
+| Half-lattice shift | Whether a cation sits on the wrong origin |
+
+The shift screen proposes and never corrects. Each proposal is applied to a copy of the CIF and the whole analysis re-run, so `cation_on_wrong_origin` means the hypothesis was tested and held.
+
+## Getting started
+
+You need Python 3.11 or later. Eir 2.0.45 has been tested with Python 3.11, 3.13 and 3.14, and with pandas 2.3 and 3.x.
 
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/SuperBladesman/Eir.git
+cd Eir
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt jupyterlab
+jupyter lab Eir.ipynb
 ```
 
-### Optional: 3D Visualization
+Then, in the notebook:
 
-For interactive 3D visualization of problematic sites:
+1. **Run the cells from the top.** Eir reads its reference tables from `Data/`, so start Jupyter in the repository folder, or keep `Data/` beside the notebook.
+2. **Check the installation.** CELL 6 runs `VALIDATE()`: 24 tests against structures whose answers are known by hand, generated on the fly. It raises if any test fails. Run it again after changing anything.
+3. **Point it at your CIFs.** CELL 9 asks for a folder and processes every CIF in it. Oxidation states come from a `config.json` in that folder, from the CIF itself, or interactively:
+
+   ```json
+   {"Na": 1, "Ni": 2, "Mn": 4, "O": -2}
+   ```
+
+4. **Post-process.** CELLS 10 to 15 add provenance, coordination quality and the integrity gates, the per-structure table, triage, the shift tests, figures and the summary report. CELLS 16 and 17 look at one structure, or one family, in detail.
+
+ICSD CIFs work as downloaded. Eir repairs the common faults in ICSD exports (non-ASCII bytes, reverse rhombohedral settings, symmetry given only as a space group number) before it parses anything.
+
+## What a run produces
+
+Results are written to an `outputs/` folder inside the CIF folder:
+
+```
+outputs/
+  eir_batch_results_v<version>_<stamp>.csv      per site, raw
+  ..._quality.csv                               per site, screened
+  ..._structures.csv                            one row per structure
+  eir_batch_failed_v<version>_<stamp>.csv       parse failures, with reasons
+  eir_summary.txt                               the narrative summary
+  eir_shift_test_<stamp>.csv + shifted_cifs/    the audit trail for proposed shifts
+  eir_screens, eir_gii, eir_cation_anion,
+  eir_gii_vs_wagii (.pdf and .png)              figures
+  latest.txt                                    which run is the newest
+```
+
+`_structures.csv` filtered to `structure_pgrm_tier == 'EXPUNGE'` is the list of reportable errors. Each row carries the ICSD code, year, journal, reason and measurement.
+
+## Reading the results
+
+- **The tiers are integrity gates, not a bond valence pass or fail.** No gate fires on the GII, and ACCEPT structures can carry a high one. If the question is whether structures "fail BVS", choose a GII criterion and apply it to the ACCEPT tiers.
+- **Quote `gii_recommended_value`.** Eir reports three instability indices: `gii` weights every site equally, `wagii` weights by occupancy, and `gii_site_averaged` combines the sums on a shared site first. They agree whenever every cation site carries the same occupancy. `gii_recommended` names the right one for each structure, and the summary states the choice for the dataset.
+- **The GII is cation-only.**
+- **ACCEPT_HETEROVALENT means a valence span of 2 or more on one position**, so Y³⁺/Zr⁴⁺ and Gd³⁺/Ce⁴⁺ count as homovalent.
+- **GII thresholds depend on the family.** The often-quoted 0.20 v.u. comes from simple ordered structures; spinels and many perovskites routinely exceed it while being perfectly stable. Read the number against the family, and always beside the tier.
+- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback; not Brown and Altermatt (1985). This matters for any comparison with published GII values.
+- **Every threshold carries its measurement** in the comment beside it. Where one does not, the comment says so.
+
+## Reference data
+
+`Data/` holds the five tables Eir reads: bond valence parameters, Gagné's measured bond lengths, Shannon radii, common oxidation states and element categories. [Data/README.md](Data/README.md) gives the source of each.
+
+## Versions
+
+The current version is **2.0.45** (23rd October 2026). Every surviving earlier version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one.
+
+To reproduce the rock salt study, use the version that accompanied it:
 
 ```bash
-pip install py3Dmol
+git checkout v1.2
 ```
 
-## Quick Start
+The machine-readable results of that study are in [paper_data/](paper_data/). From 1.7.4 the GII follows the published root-mean-square definition; the 1.7.4 entry in the changelog describes the index reported before that, which Eir still reports as `gii_legacy`.
 
-### Method 1: Interactive Mode (No Config)
+The history in this repository was rebuilt in 2026 from dated copies of every version. [docs/HISTORY.md](docs/HISTORY.md) explains how, and lists what is missing.
 
-1. Open `Eir_2_0_41.ipynb` in Jupyter Notebook
-2. Place CIF files in a folder
-3. Run all cells
-4. Enter oxidation states when prompted
+## Known limitations
 
-### Method 2: Batch Mode (with Config File)
+- Two ICSD entries, 213392 and 38769, are not yet caught by the gates.
+- A CIF with no author field is not yet handled and stops the run.
+- The anion–anion packing gate (G2) is conservative for anion-disorder models: it considers contacts between partially occupied anion positions that the model never fills together, and positions refined to zero occupancy. Review G2 verdicts on such models by hand.
+- On a position shared by two anions, the coordination-quality columns written by CELL 7 (`contact_anion`, `expected_contact`, `shortest_contact_ratio`) describe the first-listed species. The bond valence sums use every species.
+- An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, Pr⁴⁺, Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
 
-Create `config.json` in your CIF directory:
+Each will gain a `VALIDATE()` test as it is addressed.
 
-```json
-{
-  "Na": 1,
-  "Ni": 2,
-  "Mn": 4,
-  "O": -2
-}
-```
+## Citing Eir
 
-Then run all cells - walks away for coffee! ☕
+If you use Eir, please cite the paper:
 
-## Input Files
+> N. Reeves-McLaren, Automated Bond Valence Sum Analysis for Crystallographic Database Quality Assessment: A Systematic Study of Rock Salt Oxides, Halides, and Chalcogenides, *Dalton Trans.*, 2026, **55**, 2868. https://doi.org/10.1039/D5DT03003J
 
-### ICSD CIF Files
-- Filename format: `YourCustomFileName_CollCode123456.cif`
-- CollCode automatically extracted from filename
-- Handles diverse CIF format variations
+and name the version you used. [CITATION.cff](CITATION.cff) has both in machine-readable form, and GitHub's "Cite this repository" button reads it.
 
-### GSAS-II Files
-- Requires both `.lst` (refinement output) and `.cif` files
-- Must have matching base names
-- Place in same directory
+Please also cite the sources of the reference data: Gagné and Hawthorne (2015) for the bond valence parameters, and Gagné's bond length surveys (listed in `Data/gagne_bond_lengths.json`).
 
-## Output
+## Licence
 
-### Main CSV File: `YYYYMMDD_HHMMSS_bvs_results.csv`
+MIT, © Nik Reeves-McLaren, University of Sheffield. See [LICENSE](LICENSE).
 
-Core columns:
-- `File`: Input filename
-- `CollCode/Phase`: ICSD CollCode or phase name
-- `Space_Group`: Crystallographic space group
-- `Element`: Chemical element analyzed
-- `Site_Label`: Crystallographic site label
-- `CN`: Coordination number (adaptive gap detection)
-- `BVS`: Calculated bond valence sum
-- `Formal_Charge`: Expected oxidation state
-- `Deviation`: BVS - Formal_Charge (valence units)
-- `GII`: Global Instability Index (structure-wide metric)
-
-Extended columns (if available):
-- `Year`, `Journal`, `Authors`: Publication metadata
-- `Measurement_Temperature_K`, `Measurement_Pressure_GPa`: Conditions
-- `R_factor`, `Density`: Refinement quality indicators
-
-### 3D Visualization
-- Automatically displays for sites with |deviation| > 30%
-- Interactive rotation and zooming in Jupyter
-- Bond colors indicate valence contributions
-- Helps diagnose coordination problems
-
-### Console Output
-- Measurement condition distribution
-- Ambient vs high-pressure statistics
-- Outlier detection with z-scores
-- Consensus values by element
-- Quality verdicts (VALIDATED / QUESTIONABLE / EXCLUDE)
-- Problematic sites summary
-
-## Interpreting Results
-
-### Bond Valence Sum (BVS)
-
-The BVS should approximately equal the formal oxidation state:
-
-- **|Deviation| < 0.2 v.u.**: Well-bonded, structurally sound ✓
-- **0.2 < |Deviation| < 0.3 v.u.**: Borderline, check for size mismatch or strain
-- **|Deviation| > 0.3 v.u.**: Over-bonded (negative) or under-bonded (positive) ⚠️
-- **|Deviation| > 0.5 v.u.**: Severe problem - inspect 3D visualization ⛔
-
-### Global Instability Index (GII)
-
-Structure-wide stability metric:
-
-- **GII < 0.20 v.u.**: Stable, well-ordered structure ✓
-- **0.20 < GII < 0.40 v.u.**: Moderate strain, possibly acceptable
-- **GII > 0.40 v.u.**: Significant structural instability ⚠️
-- **GII > 0.60 v.u.**: Severe problems - synthesis likely difficult ⛔
-
-**Note:** The traditional 0.2 v.u. threshold is system-dependent. See Miller & Rondinelli, *APL Mater.* **11** (2023) for discussion.
-
-### Coordination Numbers (CN)
-
-Expected values for common geometries:
-
-- **CN = 4**: Tetrahedral
-- **CN = 6**: Octahedral (most transition metals in oxides)
-- **CN = 8**: Cubic
-- **CN = 1-3**: Likely indicates missing bonds or structural problems
-
-## Common Issues & Solutions
-
-### Issue: "No bond valence parameters found"
-
-**Cause:** Element/oxidation state combination not in Gagné & Hawthorne database  
-**Solution:** Check oxidation state assignment or add parameters manually
-
-### Issue: Very high GII (>1.0) for literature structures
-
-**Possible causes:**
-- Mixed-phase sample (XRD refinement artefact)
-- Metastable structure
-- Genuine severe strain (synthesis should be difficult)
-- Check 3D visualization for coordination issues
-
-### Issue: High deviation but coordination looks correct
-
-**Solution:** 
-- Check 3D visualization
-- May be Jahn-Teller distortion (expected for Mn³⁺, Cu²⁺)
-- Consider wrong oxidation state assignment
-- For alkaline earth oxides (Ca, Sr, Ba), parameter inadequacy known
-
-### Issue: All structures show CN = 1-2 instead of 6
-
-**Solution:** Already fixed in v1.0+ using proper pymatgen symmetry operations. If still occurring, check CIF file quality.
-
-## Technical Details
-
-### Adaptive Gap Detection (v1.1+)
-
-Intelligently determines coordination sphere boundaries:
-
-- Considers both absolute gap size (default 0.05 Å minimum)
-- Evaluates relative gap ratio (gap/bond length)
-- Special handling for Jahn-Teller distorted ions (Mn³⁺, Cu²⁺)
-- Prevents over-splitting of distorted but valid coordination
-
-### 3D Visualization (v1.1+)
-
-- Automatic triggering for |deviation| > 30%
-- Shows central atom, coordinating atoms, and bonds
-- Bond colors encode valence contributions
-- Interactive rotation/zoom in Jupyter
-- Helps diagnose missing bonds, wrong oxidation states
-
-### High-Pressure Handling (v1.2+)
-
-- Automatic separation of ambient vs high-pressure structures
-- Condition-dependent statistics
-- Warnings for high-P structures (BVS parameters fitted to ambient)
-
-## Citation
-
-### Software
-
-If you use Eir in your research, please cite:
-
-```bibtex
-@software{reeves2025eir,
-  author = {Reeves-McLaren, Nik},
-  title = {Eir: Automated Bond Valence Sum Analysis Tool},
-  year = {2025},
-  version = {1.2},
-  url = {https://github.com/[username]/Eir}
-}
-```
-
-### Manuscript
-
-For the systematic database quality assessment methodology:
-
-```bibtex
-@article{reeves2026bvs,
-  author = {Reeves-McLaren, Nik},
-  title = {Automated Bond Valence Sum Analysis for Crystallographic Database 
-           Quality Assessment: A Systematic Study of Rock Salt Oxides, Halides, 
-           and Chalcogenides},
-  journal = {Dalton Transactions},
-  year = {2026},
-  doi = {[DOI to be added after publication]}
-}
-```
-
-### BVS Parameters
-
-Please also cite the underlying parameter compilation:
-
-```bibtex
-@article{gagne2015bvs,
-  author = {Gagné, Olivier Charles and Hawthorne, Frank Christopher},
-  title = {Comprehensive derivation of bond-valence parameters for ion pairs 
-           involving oxygen},
-  journal = {Acta Crystallographica Section B},
-  volume = {71},
-  number = {5},
-  pages = {562--578},
-  year = {2015},
-  doi = {10.1107/S2052520615016297}
-}
-```
-
-## Version History
-
-- **v1.2 (Dec 2025)**: Enhanced analysis with ambient/high-P separation, statistical outlier detection, quality verdicts
-- **v1.1 (Dec 2025)**: Config file support, 3D visualization, adaptive gap detection, consistent naming
-- **v1.0 (Dec 2025)**: Complete rewrite with pymatgen for proper crystallographic symmetry
-- **v0.4**: Experimental supercell approach
-- **v0.3**: Initial ICSD CIF compatibility (incomplete)
-- **v0.2**: Mixed occupancy support
-- **v0.1**: Original GSAS-II only version
-
-## Data Files from Manuscript
-
-The `paper_data/` directory contains processed validation results for 840 rock salt structures analyzed in the Dalton Transactions manuscript:
-
-- `All_Assessable_Structures.csv`: Complete validation results (612 structures)
-- `Excluded_No_Parameters.csv`: Structures lacking BVS parameters (154)
-- `Type1_Parameter_Inadequacy.csv`: Systematic parameter failures (107)
-- `Types3-5_Methodological_Limitations.csv`: Disorder-related failures (95)
-- `Type6_Database_Quality.csv`: Database quality issues (13)
-- `Borderline_Structures.csv`: Structures requiring manual review (79)
-
-See `paper_data/README.md` for detailed descriptions.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-**Nik Reeves-McLaren** 
-School of Chemical Materials and Biological Engineering  
-University of Sheffield  
-Email: nik.reeves-mclaren@sheffield.ac.uk
-
-## Acknowledgements
-
-- Bond valence parameters from Gagné & Hawthorne (2015) and Brown (2020)
-- Crystallographic operations via [pymatgen](https://pymatgen.org/)
-- CIF parsing via [PyCifRW](https://pypi.org/project/PyCifRW/) and [gemmi](https://gemmi.readthedocs.io/)
-- 3D visualization via [py3Dmol](https://pypi.org/project/py3Dmol/)
-
-## Contributing
-
-Bug reports and feature requests welcome! Please use the GitHub issue tracker.
-
-For major changes, please open an issue first to discuss what you would like to change.
-
-## Frequently Asked Questions
-
-**Q: Can I use this for non-rock salt structures?**  
-A: Yes! Eir works for any structure with available BVS parameters. The manuscript focused on rock salts but the tool is general-purpose.
-
-**Q: What do I do if my element/oxidation state lacks parameters?**  
-A: Check the Brown (2020) compilation at https://www.iucr.org/resources/data/datasets/bond-valence-parameters or consider alternative oxidation states.
-
-**Q: Can I use this for neutron diffraction data?**  
-A: Yes, if your CIF file contains proper atomic coordinates and symmetry information.
-
-**Q: How do I cite specific version 1.2?**  
-A: Include version number in software citation and consider creating a Zenodo release for permanent DOI.
+Questions and bug reports are welcome as GitHub issues.
