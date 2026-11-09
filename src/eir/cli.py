@@ -3,7 +3,7 @@
     eir check refined.cif                 verdict in the terminal, report beside the file
     eir check refined.cif --ox Na=1,Mn=3.5,O=-2
     eir batch my_cifs/ [--reports]        what the notebook does, on a folder
-    eir validate                          the 24 known-answer tests and the self-checks
+    eir validate                          the known-answer tests and the self-checks
 """
 
 import argparse

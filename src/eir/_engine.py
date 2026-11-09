@@ -97,9 +97,10 @@ def run_pipeline(directory, steps=None):
 
 
 def run_checks():
-    """The checks the notebook runs as it loads but the package defers:
-    the structural scan of the source (CELL 1c), then VALIDATE() and
-    VALIDATE_SETTINGS() (CELL 6)."""
+    """The checks the notebook runs as it loads: the structural scan of the
+    source (CELL 1c), then VALIDATE() and VALIDATE_SETTINGS() (CELL 6), which
+    the package defers, and VALIDATE_GATES() (CELL 7b), which it runs on
+    loading too."""
     import json as _json
     import tempfile as _tempfile
     cells = [{'cell_type': 'code', 'metadata': {}, 'outputs': [],
@@ -126,6 +127,8 @@ def run_checks():
                              + '; '.join(globals()['_fail']))
     VALIDATE()            # noqa: F821  (defined by the cells)
     VALIDATE_SETTINGS()   # noqa: F821
+    if 'VALIDATE_GATES' in globals():          # engine 2.0.46 onwards
+        VALIDATE_GATES()  # noqa: F821
     return True
 
 

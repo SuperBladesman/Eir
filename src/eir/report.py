@@ -279,9 +279,6 @@ def _verdict_section(result, x):
         rows.append('</dl>')
     if x.get('screen_note'):
         rows.append(f'<p class="caution">{ESC(x["screen_note"])}</p>')
-    caution = x.get('caution')
-    if caution:
-        rows.append(f'<p class="caution">{ESC(caution)}</p>')
     return f'''
 <section class="verdict {cls}">
   <div class="tierline"><span class="tier">{ESC(x["tier"] or "")}</span>
