@@ -6,7 +6,7 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ### eir-bvs 2.1.0 – unreleased
 
-**A command line, a Python interface and a one-page report, on the 2.0.45 engine**
+**A command line, a Python interface and a one-page report, on the 2.0.46 engine**
 
 - `pip install` from GitHub; `eir check`, `eir batch` and `eir validate`
   from the command line, and `eir.check()`, `eir.check_folder()` and
@@ -21,13 +21,36 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   `tools/build_engine.py`; CI fails if the two drift apart. No verdict, sum
   or index changes. On 200 ICSD entries every output file matched the
   notebook's, serially and in parallel (docs/PACKAGE.md).
-- Runs the 2.0.45 notebook stops on, where no file has an ICSD code or a
-  file with one has no author or journal, finish without grouping entries
-  by source paper, and say so.
 - Tested on Python 3.11 to 3.13 with pandas 2 and 3, on Linux, Windows
   and macOS.
 
 ## Eir 2.0 series
+
+### 2.0.46 – unreleased
+
+**Four faults found while packaging Eir**
+
+- A run in which no file has an ICSD code (every Rietveld CIF checked on its
+  own), or in which a file with a code has no author or journal, no longer
+  stops in `flag_same_source_entries`. Such entries are groups of one.
+- The packing gates leave out positions refined to zero occupancy, and any
+  pair below the floor whose occupancies sum to one or less, which the model
+  can fill one at a time. The rule used to stop at 1.20 Å. ICSD 253190,
+  253192 and 261554 (P2-type sodium layered oxides, Na 2b and 2d about
+  1.70 Å apart) and 291603 (CrO2, Cr on octahedral and tetrahedral
+  interstices) move from EXPUNGE (G5) to FLAG (M1).
+- New gate G7, `coordination_incomplete`: a dominant site with fewer
+  neighbours than the smallest coordination tabulated for it, summing to
+  less than half its valence, is expunged. A CIF giving only the identity
+  operation for Pm-3m SrTiO3 used to come out ACCEPT with a GII of 2.07.
+  Fires on none of the 200-entry regression set; not yet measured on the
+  full corpus.
+- `bl_delta_mean`, `bl_ratio_min` and `bl_delta_min` are written for every
+  site, null where not computable, so the summary no longer stops on a run
+  with no measured minimum (ICSD 35327, CrO2, on its own).
+- 27 VALIDATE tests, and three gate tests in CELL 7b (`VALIDATE_GATES()`,
+  which needs the gates defined); the new ones fail on 2.0.45. On 200 ICSD
+  entries the only changes are the four structures above.
 
 ### 2.0.45 – 23 October 2026
 

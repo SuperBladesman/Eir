@@ -12,7 +12,7 @@ eir.engine.look_at(85235, dfq=result.sites)
 eir.engine.PGRM_TIER_MEANING
 ```
 
-The version the engine reports, `EIR_VERSION`, is the notebook's, and it is what the output files are named after (`eir_batch_results_v2.0.45_...`), so Huginn reads a package run exactly as it reads a notebook run. The package has a version of its own (`eir-bvs 2.1.0`), because it adds a command line and a report but changes no result.
+The version the engine reports, `EIR_VERSION`, is the notebook's, and it is what the output files are named after (`eir_batch_results_v2.0.46_...`), so Huginn reads a package run exactly as it reads a notebook run. The package has a version of its own (`eir-bvs 2.1.0`), because it adds a command line and a report but changes no result.
 
 `python tools/build_engine.py --check` fails if the cells in `src/eir/_cells/` are not the notebook's. CI runs it on every push.
 
@@ -35,12 +35,6 @@ Every difference is listed here, and the build tool lists the edits it makes to 
 - `eir.check()` copies the one file into a scratch folder and runs CELLS 9 to 13b there. It stops before CELL 15, the dataset summary and figures, which describe a collection rather than one entry.
 - `eir.check_folder()` runs CELL 15 last. If it stops, every table has already been written, so the run is kept and the reason is recorded in `result.notes`.
 
-**Where the 2.0.45 engine stops**
-
-The engine groups entries deposited from one paper by ICSD code and first author (`flag_same_source_entries`). It stops the run with an exception in two cases: when no file in the run has an ICSD code, which is every Rietveld CIF checked on its own, and when some files have codes and one of them has no author or journal. The grouping decides no verdict: Eir only prints it and writes it to the tables. Where the engine stops there, the package gives the answer the function gives for metadata too thin to group on (no group found, for every entry) and records that it did so in `result.notes` and on the report. Wherever the engine does not stop, its result is used unchanged.
-
-This should be fixed in the notebook, and when it is, the package will simply stop needing the workaround.
-
 ## The report and the plain-English verdict
 
 `eir check` and `CheckResult.verdict()` print the verdict; `CheckResult.write_report()` writes a one-page HTML report. Both read the engine's columns and decide nothing themselves:
@@ -52,14 +46,11 @@ This should be fixed in the notebook, and when it is, the package will simply st
 - a drawing of every cation position's coordination polyhedron, from the symmetry expansion the sums use (`_viz_local_environment`);
 - provenance: versions, oxidation states and their source, parameters and settings.
 
-Two notes are added where the columns call for them. Neither changes the verdict.
-
-- **A failed screen that decided nothing.** If a geometry screen failed but the verdict does not rest on it, the report says so. The coordination screen is the usual case: no gate reads it on its own.
-- **Packing gates and partly occupied positions.** If G2 or G5 fired and the structure has partly occupied positions that could be mutually exclusive, the report asks for the closest pair to be checked by hand (see Known limitations in the README).
+One note is added where the columns call for it, without changing the verdict: if a geometry screen failed but the verdict does not rest on it, the report says so.
 
 ## How the equivalence was shown
 
-`tools/equivalence.py FOLDER` runs the notebook headless on one copy of a folder and the package on another, and compares every CSV in the two `outputs/` folders cell by cell, and the summary, oxidation-state record and run log line by line (less timings). Before 2.1.0 was proposed it was run on 200 ICSD entries: oxide and sulfide spinels, LiNi₀.₅Mn₁.₅O₄, rock salt KCl, CuCl and ZnO, cubic and tetragonal (Ba,Sr)TiO₃, NaFeO₂, sodium layered oxides in R3̄m and P6₃/mmc, and chromium oxides. They were run as one folder and as four separate subsets, and the 200 serially and with two worker processes. Every output was identical.
+`tools/equivalence.py FOLDER` runs the notebook headless on one copy of a folder and the package on another, and compares every CSV in the two `outputs/` folders cell by cell, and the summary, oxidation-state record and run log line by line (less timings). Before 2.1.0 was proposed it was run on 200 ICSD entries: oxide and sulfide spinels, LiNi₀.₅Mn₁.₅O₄, rock salt KCl, CuCl and ZnO, cubic and tetragonal (Ba,Sr)TiO₃, NaFeO₂, sodium layered oxides in R3̄m and P6₃/mmc, and chromium oxides. They were run as one folder and as four separate subsets, and the 200 serially and with two worker processes. Every output was identical. The 200 and the examples were compared again on engine 2.0.46, which runs the examples through the notebook for the first time; again every output was identical.
 
 ICSD entries cannot be redistributed, so CI cannot repeat this. It checks instead that the cells are the notebook's, runs the known-answer suites, and tests the package on the three constructed structures in `examples/`. Run `tools/equivalence.py` on your own sets after changing the engine.
 
