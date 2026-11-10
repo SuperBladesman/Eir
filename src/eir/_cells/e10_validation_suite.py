@@ -774,6 +774,81 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
     report('27. the bond-length columns are written for every site', _ok27,
            _det27)
 
+    # -- 28. v2.0.46: an anion the CIF states is an anion ---------------------
+    # A Zr(O,S)2 fluorite, O and S sharing 8c, Zr-(O,S) = a*sqrt(3)/4 = 2.21
+    # A. The CIF types S2-. 2.0.45 never gave the packing scan a valence, so
+    # beside oxygen S counted as a cation and Zr-S as a 2.21 A cation-cation
+    # contact (ICSD 84078). Nor may bond selection make S a cation bonded
+    # to O, which found no parameters and left such entries NOT_ASSESSED.
+    # SrS deposited with its signs inverted (ICSD 651062, "S2+ 2" and
+    # "Sr2- -2") must still put S on the anion side.
+    _ZROS = (
+        "data_eir_validation_zros\n_cell_length_a 5.1000\n_cell_length_b 5.1000\n"
+        "_cell_length_c 5.1000\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+        "_cell_angle_gamma 90.\n_space_group_IT_number 225\n"
+        "_symmetry_space_group_name_H-M 'F m -3 m'\n"
+        "loop_\n_atom_type_symbol\n_atom_type_oxidation_number\n"
+        "Zr4+ 4\nO2- -2\nS2- -2\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "_atom_site_occupancy\n"
+        "Zr1 Zr4+ 0 0 0 1.\nO1 O2- 0.25 0.25 0.25 0.8\n"
+        "S1 S2- 0.25 0.25 0.25 0.2\n")
+    _SRS = (
+        "data_eir_validation_srs\n_cell_length_a 6.0200\n_cell_length_b 6.0200\n"
+        "_cell_length_c 6.0200\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+        "_cell_angle_gamma 90.\n_space_group_IT_number 225\n"
+        "_symmetry_space_group_name_H-M 'F m -3 m'\n"
+        "loop_\n_atom_type_symbol\n_atom_type_oxidation_number\n"
+        "Sr2- -2\nS2+ 2\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "_atom_site_occupancy\n"
+        "Sr1 Sr2- 0 0 0 1.\nS1 S2+ 0.5 0.5 0.5 1.\n")
+    # And the fluorite oxyhydride SmHO: H(-) and O share 8c at 0.5 each,
+    # Sm-(O,H) = 2.37 A. Sm must be summed over both (3.14 for a valence of
+    # 3), not over O alone (1.88), as ICSD 434696 was.
+    _HOHO = (
+        "data_eir_validation_smho\n_cell_length_a 5.4695\n_cell_length_b 5.4695\n"
+        "_cell_length_c 5.4695\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+        "_cell_angle_gamma 90.\n_space_group_IT_number 225\n"
+        "_symmetry_space_group_name_H-M 'F m -3 m'\n"
+        "loop_\n_atom_type_symbol\n_atom_type_oxidation_number\n"
+        "Sm3+ 3\nO2- -2\nH1- -1\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "_atom_site_occupancy\n"
+        "Sm1 Sm3+ 0 0 0 1.\nO1 O2- 0.25 0.25 0.25 0.5\n"
+        "H1 H1- 0.25 0.25 0.25 0.5\n")
+    try:
+        _r28a = _run_cif(_ZROS)
+        _r28c = _run_cif(_HOHO)
+        _s28c = [s for s in (_r28c.get('sites') or []) if s.get('element') == 'Sm']
+        _b28c = float(_s28c[0].get('bvs')) if _s28c else float('nan')
+        _r28b = _run_cif(_SRS)
+        _a28 = 6.02 / math.sqrt(2.0)
+        _el28 = sorted({str(s.get('element')) for s in (_r28a.get('sites') or [])})
+        _ok28 = (_r28a.get('cation_packing_plausible') is True
+                 and _el28 == ['Zr']
+                 and abs(float(_r28a.get('cation_cation_min') or 0)
+                         - 5.10 / math.sqrt(2.0)) < 0.01
+                 and _r28b.get('anion_anion_min') is not None
+                 and abs(float(_r28b.get('anion_anion_min')) - _a28) < 0.01
+                 and abs(float(_r28b.get('cation_cation_min') or 0) - _a28) < 0.01
+                 and len(_s28c) == 1 and _b28c > 2.5)
+        _det28 = (f"Zr(O,S)2: cation floor {_r28a.get('cation_packing_plausible')} "
+                  f"(min {_r28a.get('cation_cation_min')}, want Zr-Zr 3.606), "
+                  f"cation sites {_el28} (want ['Zr']); "
+                  f"SrS with inverted signs: anion-anion "
+                  f"{_r28b.get('anion_anion_min')}, cation-cation "
+                  f"{_r28b.get('cation_cation_min')} (want S-S and Sr-Sr "
+                  f"{_a28:.3f}); SmHO: Sm sum {_b28c:.3f} (want over 2.5, "
+                  f"O and H both counted)")
+    except Exception as _e28:
+        _ok28, _det28 = False, f'{type(_e28).__name__}: {_e28}'
+    report('28. a species the CIF types as an anion is an anion to the packing '
+           'scan', _ok28, _det28)
+
     if verbose:
         print()
         print("=" * 70)

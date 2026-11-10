@@ -105,7 +105,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 27 tests against structures whose answers are known by hand, the three gate tests and the structural self-check. Run it again after changing anything.
+runs the 28 tests against structures whose answers are known by hand, the four gate tests and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 

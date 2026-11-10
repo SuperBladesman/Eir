@@ -156,8 +156,10 @@ PGRM_HETEROVALENT_DV = 2
 # sites above sit at -38% (a minority species) and -4%. The conjunction
 # fires on none of the 200.
 #
-# NOT YET MEASURED on the 3291-structure corpus. Measure it there before
-# quoting a G7 count.
+# Measured on 3,868 ICSD structures (the 1,881 spinels of the corpus, 1,254
+# pyrochlores and 733 fluorites): it fires once, on ICSD 69461, a Tb2Ti2O7
+# whose 48f x appears to be quoted for the other origin, so that Tb has two
+# neighbours. G2 expunged it already. The 938 perovskites are still to run.
 CN_DEFICIT_BVS_FRACTION = 0.50
 
 # The two packing floors come from CELL 1, where they are set from the
@@ -404,6 +406,16 @@ def classify_site(row, struct):
     if row.get('bvs') is None or _pgrm_f(row.get('bvs')) != _pgrm_f(row.get('bvs')):
         return ('R1', 'no_bond_valence_parameters',
                 f'{row.get("element")}({row.get("valence")}) to {row.get("ligand_types")}')
+    # v2.0.46: a sum that leaves out a species sharing one of this site's
+    # ligand positions, for want of its parameters, is missing bonds. The
+    # omission has been recorded since 2.0.44 and no gate read it: Ho(3+) in
+    # the oxyhydride HoHO summed O alone at its occupancy, -29%, and came out
+    # ACCEPT once the hydride was no longer read as a cation.
+    _cu = row.get('colocated_unparameterised')
+    if isinstance(_cu, str) and _cu.strip():
+        return ('R1', 'no_bond_valence_parameters',
+                f'{row.get("element")}({row.get("valence")}) to {_cu.strip()}, '
+                f'which shares a ligand position')
     if _pgrm_f(row.get('cn_shannon_min')) != _pgrm_f(row.get('cn_shannon_min')):
         return ('R2', 'no_ionic_radius',
                 f'{row.get("element")}({row.get("valence")}) not tabulated')
@@ -768,6 +780,15 @@ def VALIDATE_GATES(verbose=True):
                              bvs_percent_diff=-3.9), {})
     report('3. G7 does not fire on an untabulated CN with a sound sum',
            _cn[0] != 'G7', f'Ni(3) at CN 4, -4%: {_cn[0]}')
+
+    # R1 for a sum that leaves out a co-located species (Ho-H has no
+    # parameters; the hydride shares 8c with O in HoHO).
+    _cu = classify_site(dict(_row, element='Ho', valence=3, cn=8,
+                             cn_shannon_min=6, bvs=2.135,
+                             bvs_percent_diff=-28.8,
+                             colocated_unparameterised='H1 (H)'), {})
+    report('4. R1: a sum missing a co-located species is not assessed',
+           _cu[0] == 'R1', f'Ho(3) with H1 (H) unparameterised: {_cu[0]} ({_cu[2]})')
 
     ok = all(results)
     if verbose:

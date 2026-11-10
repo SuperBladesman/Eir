@@ -1198,12 +1198,19 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
         # the number of such images (1 at identical coordinates).
         _EIR_COLOCATED.clear()
         _coloc_alias = {}
+        # v2.0.46: and any species the CIF types as an anion. H is not in
+        # _ANION_SET, so the hydride sharing 8c with oxygen in a fluorite
+        # oxyhydride (LnHO) was never recorded and the cation summed O alone
+        # at its partial occupancy (Ho 2.14 for a valence of 3). Only a
+        # species within COLOCATED_TOL of another anion is affected: H(+) in
+        # a hydroxide sits about 0.97 A from its oxygen and is never there.
+        _coloc_set = set(_ANION_SET) | _stated_anions(cif_file_path)
         _an_sites = [s for s in small_struct.sites
-                     if s.element.name in _ANION_SET]
+                     if s.element.name in _coloc_set]
         if len(_an_sites) > 1:
             _an_imgs = {}
             for _a in supercell_atoms:
-                if _a['element'] in _ANION_SET:
+                if _a['element'] in _coloc_set:
                     _an_imgs.setdefault(_a['label'], []).append(_a['position'])
             for _i, _si in enumerate(_an_sites):
                 if _si.label in _coloc_alias:
@@ -3209,6 +3216,86 @@ def _cif_valence_is_usable(element, v):
         return False
     return True
 
+
+def _stated_anions(file_path):
+    """
+    v2.0.46. The amphoteric species (H, C, N, P, As, S, Se, Te, Si, B) the
+    CIF types with a usable negative valence, less any it types with both
+    signs. Used where a list of anions has to be decided before any bond is.
+    """
+    try:
+        _ox = extract_cif_oxidation_states(file_path)[0] or {}
+    except Exception:
+        return set()
+    _mixed = _mixed_sign_elements(file_path)
+    _out = set()
+    for _e, _v in _ox.items():
+        if (_e in AMPHOTERIC_ANION and _e not in _mixed
+                and _cif_valence_is_usable(_e, _v)):
+            try:
+                if float(_v) < 0:
+                    _out.add(_e)
+            except (TypeError, ValueError):
+                pass
+    return _out
+
+
+def _mixed_sign_elements(file_path):
+    """
+    v2.0.46. Elements the CIF's _atom_type loop types with both signs, such
+    as S(6+) and S(2-) in a thiosulfate. extract_cif_oxidation_states keeps
+    the first value it meets for each element, which for these says nothing.
+    """
+    try:
+        _tm = extract_cif_oxidation_states(file_path)[3] or {}
+    except Exception:
+        return set()
+    _signs = {}
+    for _sym, _v in _tm.items():
+        _el = re.sub(r'[0-9+-]+', '', str(_sym))
+        _el = _el.capitalize() if len(_el) > 1 else _el.upper()
+        try:
+            _f = float(_v)
+        except (TypeError, ValueError):
+            continue
+        if _f:
+            _signs.setdefault(_el, set()).add(_f > 0)
+    return {_el for _el, _s in _signs.items() if len(_s) > 1}
+
+
+def _packing_valences(file_path, pair_valences):
+    """
+    v2.0.46. The oxidation states the packing scan may trust.
+
+    anion_anion_contacts asks resolve_anions which species are anions, and
+    resolve_anions takes a stated valence as settling it for the amphoteric
+    species (S, Se, Te, N, P, As, H, C, Si, B). Until 2.0.46 the scan was
+    never given one, so beside oxygen every one of them was a cation, and
+    its bonds to the real cations were tested against the cation floor. The
+    oxynitride pyrochlores ICSD 172231 and 51587 (Mo-N 2.00 A), the
+    oxysulfide pyrochlore 14955 (Cd-S 2.28 A) and the Zr(O,S)2 fluorite 84078
+    (Zr-S 2.35 A) were each expunged on G5 for a bond.
+
+    The CIF's states, and any the user supplies, are passed less three kinds
+    that would mislead:
+      * a valence _cif_valence_is_usable rejects: zero (unset), or negative
+        on a species that cannot be an anion;
+      * both species of any pair whose signs were found inverted (ICSD
+        651062, SrS as "S2+ 2" and "Sr2- -2"), which the electronegativity
+        rule then decides as before;
+      * an element the CIF types with both signs (S(6+) and S(2-) in a
+        thiosulfate), which one valence per element cannot describe.
+    Whatever is left out falls back to the rule 2.0.45 applied to everything.
+    """
+    vals = {e: v for e, v in (pair_valences or {}).items()
+            if _cif_valence_is_usable(e, v)}
+    for _pair in _SIGN_INVERSIONS:
+        for _e in _pair:
+            vals.pop(_e, None)
+    for _el in _mixed_sign_elements(file_path):
+        vals.pop(_el, None)
+    return vals
+
 def auto_assign_valences(processed_data, user_oxidation_states=None, per_atom_valences=None):
     """
     Assign oxidation states with priority:
@@ -4369,6 +4456,9 @@ def process_single_cif(file_path, user_oxidation_states=None):
         _pair_valences = dict(_cif_ox or {})
         if user_oxidation_states:
             _pair_valences.update(user_oxidation_states)
+        # v2.0.46: before bond selection, which reads it (classify_bond_pair)
+        _MIXED_SIGN_ELEMENTS.clear()
+        _MIXED_SIGN_ELEMENTS.update(_mixed_sign_elements(file_path))
 
         # Step 2: Auto-select bond types
         data_with_selected_bonds = auto_select_bond_types(
@@ -5068,8 +5158,10 @@ def process_single_cif(file_path, user_oxidation_states=None):
             results['cif_sign_inversion_detail'] = None
 
         # anion-anion screen: the only test here that looks at the anion
-        # sublattice rather than outward from a cation
-        _aa, _cc = anion_anion_contacts(file_path)
+        # sublattice rather than outward from a cation. v2.0.46: told which
+        # species the CIF states are anions (see _packing_valences).
+        _aa, _cc = anion_anion_contacts(
+            file_path, valences=_packing_valences(file_path, _pair_valences))
         # v2.0.14: `if _aa` discards a measured 0.0 as though it were
         # absent. dedup_tol keeps 0.0 from arising today, so this is a
         # correctness fix rather than a behaviour change - but 'no value'
@@ -5457,6 +5549,7 @@ def _eir_prepare(cif_file, override_oxidation_states, fallback_oxidation_states)
     process. Nothing here reads or writes state shared with another file:
 
       _SIGN_INVERSIONS      cleared per structure since 2.0.27
+      _MIXED_SIGN_ELEMENTS  set per structure since 2.0.46
       _EIR_READ_FAILURES    returned as a delta and merged by the parent
       _NORMALISER_CACHE     a pure cache; a per-worker copy costs a little
       _ORIGIN_CHOICE_CACHE  repeated work and changes nothing

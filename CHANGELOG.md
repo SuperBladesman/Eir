@@ -28,7 +28,7 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ### 2.0.46 – unreleased
 
-**Four faults found while packaging Eir**
+**Five faults, four found while packaging Eir and one by running it on the corpus**
 
 - A run in which no file has an ICSD code (every Rietveld CIF checked on its
   own), or in which a file with a code has no author or journal, no longer
@@ -43,14 +43,31 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   neighbours than the smallest coordination tabulated for it, summing to
   less than half its valence, is expunged. A CIF giving only the identity
   operation for Pm-3m SrTiO3 used to come out ACCEPT with a GII of 2.07.
-  Fires on none of the 200-entry regression set; not yet measured on the
-  full corpus.
+  On 3,868 ICSD structures (1,881 spinels, 1,254 pyrochlores, 733
+  fluorites) it fires once, on ICSD 69461, a record already expunged on G2.
+- The packing scan is given the oxidation states the CIF states, so N(3-)
+  or S(2-) beside oxygen is an anion rather than a cation. 2.0.45 tested
+  their bonds against the cation floor and expunged ICSD 172231 and 51587
+  (Mo-N, oxynitride pyrochlores), 14955 (Cd-S, an oxysulfide pyrochlore)
+  and 84078 (Zr-S, a Zr(O,S)2 fluorite) on G5. Bond selection, likewise,
+  no longer pairs two species the CIF states are anions: N-O, S-O, H-O,
+  Se-S and Te-S were selected as bonds, found no bond valence parameters
+  and left the structure NOT_ASSESSED (R1). A hydride sharing a position
+  with oxygen (the fluorite oxyhydrides LnHO) is now summed with it, as the
+  other shared anions have been since 2.0.44; where the pair has no
+  parameters (Ho-H, Dy-H, Er-H), the site is NOT_ASSESSED (R1) rather than
+  summed without it. A valence of zero, a pair with inverted signs and an
+  element typed with both signs are left to the electronegativity rule, as
+  before.
 - `bl_delta_mean`, `bl_ratio_min` and `bl_delta_min` are written for every
   site, null where not computable, so the summary no longer stops on a run
   with no measured minimum (ICSD 35327, CrO2, on its own).
-- 27 VALIDATE tests, and three gate tests in CELL 7b (`VALIDATE_GATES()`,
+- 28 VALIDATE tests, and four gate tests in CELL 7b (`VALIDATE_GATES()`,
   which needs the gates defined); the new ones fail on 2.0.45. On 200 ICSD
-  entries the only changes are the four structures above.
+  entries the only verdicts that change are the four structures named under
+  the packing gates; the sulfoselenide spinel 640368 stays NOT_ASSESSED
+  (R1), now for the In-Se pair it has no parameters for rather than a Se-S
+  "bond".
 
 ### 2.0.45 – 23 October 2026
 

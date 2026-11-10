@@ -292,9 +292,17 @@ def is_anion(element, valence=None):
 # and the flag would have depended on which worker took which file.
 _SIGN_INVERSIONS = {}
 
+# v2.0.46. Elements the CIF being read types with both signs, S(6+) and S(2-)
+# in a thiosulfate. Set per structure by process_single_cif before bond
+# selection, and cleared with _SIGN_INVERSIONS. One valence per element
+# cannot describe such an element, so classify_bond_pair does not read two
+# stated negative valences as two anions where either belongs to this set.
+_MIXED_SIGN_ELEMENTS = set()
+
 
 def reset_sign_inversions():
     _SIGN_INVERSIONS.clear()
+    _MIXED_SIGN_ELEMENTS.clear()
 
 
 def _valence_signs_are_credible(el1, el2, v1, v2):
@@ -368,6 +376,17 @@ def classify_bond_pair(el1, el2, valences=None, elements_present=None):
                     return el2, el1
                 if f2 < 0 <= f1:
                     return el1, el2
+                # v2.0.46: two stated anions are not a bond. This fell
+                # through to rule 2, which makes the less electronegative
+                # one a cation whenever a more electronegative anion is
+                # present, so N(3-)-O in an oxynitride, S(2-)-O, H(-)-O in an
+                # oxyhydride and Se(2-)-S or Te(2-)-S in a mixed chalcogenide
+                # were selected as bonds, found no bond valence parameters,
+                # and left the structure NOT_ASSESSED (R1).
+                if (f1 < 0 and f2 < 0
+                        and el1 not in _MIXED_SIGN_ELEMENTS
+                        and el2 not in _MIXED_SIGN_ELEMENTS):
+                    return None, None
             except (TypeError, ValueError):
                 pass
  
