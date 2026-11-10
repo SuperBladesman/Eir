@@ -9,6 +9,7 @@ the level of the engine.
 """
 import json
 
+import pandas as pd
 import pytest
 
 import eir
@@ -182,10 +183,137 @@ def test_molecular_carbon_is_not_assessed_and_says_why(tmp_path):
     assert '<html' in r.report_html().lower()
 
 
-def test_an_item_given_twice_says_which(tmp_path):
+def test_an_item_given_twice_differently_says_which(tmp_path):
     r = run(tmp_path, sno2().replace('_cell_length_c', '_cell_length_a 4.70\n_cell_length_c'))
     assert not r.readable
-    assert '_cell_length_a more than once' in r.evidence
+    assert "_cell_length_a twice, as '4.7374' and '4.70'" in r.evidence
+
+
+def test_repeats_that_agree_are_read(tmp_path, tin_reference):
+    r = run(tmp_path, sno2().replace(
+        '_cell_length_c', '_cell_length_a 4.7374\n_cell_measurement_temperature 293\n'
+        '_cell_measurement_temperature 295\n_cell_length_c'))
+    assert tin(r) == pytest.approx(tin_reference, abs=1e-3)
+    assert 'with the same value: kept one' in notes(r)
+    assert 'kept the first (293)' in notes(r)
+
+
+def kclo4(cl_type='Cl7+', cl_state=7):
+    a = 5.0
+    x = round(1.43 / (3 ** 0.5 * a), 5)
+    return cif('kclo4', (a,) * 3 + (90,) * 3, 'P -4 3 m',
+               [('Cl1', cl_type, 0, 0, 0, 1), ('K1', 'K1+', 0.5, 0.5, 0.5, 1),
+                ('O1', 'O2-', x, x, x, 1)],
+               [(cl_type, cl_state), ('K1+', 1), ('O2-', -2)])
+
+
+def test_a_perchlorate_typed_cl7_is_not_expunged_for_its_own_bonds(tmp_path):
+    # 42 of 49 ICSD Li, Na and K chlorine oxysalts were expunged on G2 for
+    # their Cl-O bonds, read as two anions 1.43 A apart.
+    r = run(tmp_path, kclo4())
+    cl = r.sites[r.sites['element'] == 'Cl'].iloc[0]
+    assert float(cl['bvs']) == pytest.approx(7.0, abs=0.1)
+    assert r.code != 'G2'
+    assert float(r.structure['polyanion_edge_min']) == pytest.approx(2.335, abs=0.02)
+    assert str(r.structure['anion_worst_label']).startswith('O')
+
+
+def test_the_cations_of_a_perchlorate_are_not_bonded_to_its_cl(tmp_path):
+    # Li 3.46 A from Cl(7+), inside the bond search: Li-Cl was selected as a
+    # bond, and with no measured Li-Cl lengths the site was NOT_ASSESSED (R3)
+    a = 4.0
+    x = round(1.43 / (3 ** 0.5 * a), 5)
+    r = run(tmp_path, cif('liclo4', (a,) * 3 + (90,) * 3, 'P -4 3 m',
+                          [('Cl1', 'Cl7+', 0, 0, 0, 1), ('Li1', 'Li1+', 0.5, 0.5, 0.5, 1),
+                           ('O1', 'O2-', x, x, x, 1)],
+                          [('Cl7+', 7), ('Li1+', 1), ('O2-', -2)]))
+    li = r.sites[r.sites['element'] == 'Li'].iloc[0]
+    assert li['ligand_types'] == 'O'
+
+
+def test_alternative_positions_are_not_a_g1_contact(tmp_path):
+    # an orientationally disordered nitrite, N 1/6 and O 1/3 on the cube
+    # axes: two orientations put N and O 0.53 A apart, never together
+    r = run(tmp_path, cif('nano2', (4.4,) * 3 + (90,) * 3, 'P m -3 m',
+                          [('Na1', 'Na1+', 0, 0, 0, 1), ('N1', 'N3+', 0.5, 0.5, 0.58, 0.16667),
+                           ('O1', 'O2-', 0.5, 0.5, 0.70, 0.33333)],
+                          [('Na1+', 1), ('N3+', 3), ('O2-', -2)]))
+    assert r.code != 'G1'
+    assert 'N1-O1 0.528 A' in str(r.structure['alternative_contacts_set_aside'])
+
+
+def test_a_crushed_carbonate_is_still_caught(tmp_path):
+    import math
+    a, c0 = 8.0, 0.5
+    o = [(c0 + 1.28 * math.cos(math.radians(t)) / a,
+          c0 + 1.28 * math.sin(math.radians(t)) / a) for t in (0, 70, 190)]
+    sites = [('Ca1', 'Ca2+', 0.5, 0.5, 0.8, 1), ('C1', 'C4+', 0.5, 0.5, 0.5, 1)]
+    sites += [(f'O{k + 1}', 'O2-', round(x, 5), round(y, 5), 0.5, 1) for k, (x, y) in enumerate(o)]
+    r = run(tmp_path, cif('crushed', (a,) * 3 + (90,) * 3, 'P 1', sites,
+                          [('Ca2+', 2), ('C4+', 4), ('O2-', -2)]))
+    assert float(r.structure['anion_anion_min']) == pytest.approx(1.468, abs=0.01)
+    assert r.tier == 'EXPUNGE'
+
+
+def li2o(a):
+    return cif('li2o', (a,) * 3 + (90,) * 3, 'F m -3 m',
+               [('Li1', 'Li1+', 0.25, 0.25, 0.25, 1), ('O1', 'O2-', 0, 0, 0, 1)],
+               [('Li1+', 1), ('O2-', -2)])
+
+
+def test_li2o_is_not_expunged_for_its_li_li_contact(tmp_path):
+    # 15 of 20 ICSD Li2O entries were expunged on G5 at Li-Li 2.31 A
+    r = run(tmp_path, li2o(4.61))
+    assert r.code != 'G5'
+    assert 'Li1-Li1 2.305 A, floor 2.00 A' == r.structure['cation_cation_contact']
+
+
+def test_li3n_is_not_expunged_for_its_li_li_contact(tmp_path):
+    # and 30 of 34 Li3N at 2.10 A, the Li-Li distance of the Li2N layer
+    r = run(tmp_path, cif('li3n', (3.648, 3.648, 3.875, 90, 90, 120), 'P 6/m m m',
+                          [('N1', 'N3-', 0, 0, 0, 1), ('Li1', 'Li1+', 0, 0, 0.5, 1),
+                           ('Li2', 'Li1+', 0.33333, 0.66667, 0, 1)],
+                          [('N3-', -3), ('Li1+', 1)]))
+    assert r.code != 'G5'
+    assert str(r.structure['cation_cation_contact']).startswith('Li2-Li2 2.106 A')
+
+
+def test_lithium_closer_than_its_floor_is_still_caught(tmp_path):
+    r = run(tmp_path, li2o(3.60))
+    assert r.code == 'G5'
+    assert 'Li1-Li1 1.800 A, floor 2.00 A' in r.evidence
+
+
+def test_a_half_filled_nitrite_sums_its_oxygens_in_full(tmp_path):
+    # where the N of a disordered nitrite is, its two O are: ICSD 152184
+    # summed N(3+) to 1.44 at O weights of 0.5 and was expunged on G7
+    r = run(tmp_path, cif('half_nitrite', (6.0,) * 3 + (90,) * 3, 'P 1',
+                          [('Na1', 'Na1+', 0, 0, 0, 1), ('N1', 'N3+', 0.5, 0.5, 0.5, 0.5),
+                           ('O1', 'O2-', 0.6743, 0.5, 0.61105, 0.5),
+                           ('O2', 'O2-', 0.3257, 0.5, 0.61105, 0.5)],
+                          [('Na1+', 1), ('N3+', 3), ('O2-', -2)]))
+    n = r.sites[r.sites['element'] == 'N'].iloc[0]
+    assert float(n['bvs']) == pytest.approx(2.77, abs=0.05)
+    assert n['ligand_occupancy_conditional'] == 'O1, O2'
+
+
+def test_a_perchlorate_spread_over_four_orientations_keeps_plain_weights(tmp_path):
+    # 16 O at 0.25 around a Cl at 0.25: given Cl, that is more O than ClO4
+    # holds, so the plain weights stand (ICSD 117375 summed Cl(7+) to 53)
+    import math
+    a, d = 8.0, 1.43
+    dirs = [(sx, sy, sz) for sx in (1, -1) for sy in (1, -1) for sz in (1, -1)]
+    dirs += [(sx * math.sqrt(2), 0, sz) for sx in (1, -1) for sz in (1, -1)]
+    dirs += [(0, sy * math.sqrt(2), sz) for sy in (1, -1) for sz in (1, -1)]
+    f = d / (a * math.sqrt(3))
+    sites = [('K1', 'K1+', 0, 0, 0, 1), ('Cl1', 'Cl7+', 0.5, 0.5, 0.5, 0.25)]
+    sites += [(f'O{k + 1}', 'O2-', round(0.5 + x * f, 5), round(0.5 + y * f, 5),
+               round(0.5 + z * f, 5), 0.25) for k, (x, y, z) in enumerate(dirs)]
+    r = run(tmp_path, cif('spread_clo4', (a,) * 3 + (90,) * 3, 'P 1', sites,
+                          [('K1+', 1), ('Cl7+', 7), ('O2-', -2)]))
+    cl = r.sites[r.sites['element'] == 'Cl'].iloc[0]
+    assert float(cl['bvs']) == pytest.approx(7.0, abs=0.2)
+    assert pd.isna(cl['ligand_occupancy_conditional'])
 
 
 def test_a_template_with_no_atoms_says_so(tmp_path):

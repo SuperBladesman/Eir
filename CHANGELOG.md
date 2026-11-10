@@ -105,10 +105,12 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
     share a name;
   - a label used for several atoms (VESTA's `XX`, CrystalMaker's shared
     sites) is made unique;
-  - an unquoted value of several words is quoted, `data_` followed by a
-    space is read, and an item given twice keeps its first value. Given
-    twice where it defines the structure, the file is not read, and the
-    reason names the item;
+  - an unquoted value of several words is quoted, and `data_` followed by
+    a space is read. An item given twice with the same value is read once;
+    one given twice with different values keeps its first, unless it
+    defines the structure (a cell edge or angle, the space group, an atom
+    site or atom type column), when the file is not read and the reason
+    names the item and both values;
   - operations listed in an origin no table holds are moved to a tabulated
     setting, with every position moved by the same vector, which is the
     same structure exactly: CrystalMaker's majorite (AMCSD 0001231) lists
@@ -125,13 +127,54 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   `cif_read_from`, `cif_block` and `cif_reading_notes`, and decides
   nothing: 101 of the 212 had passed through COD, which rewrites what is
   deposited.
-- **A polyanion's own edge is not a packing contact.** Two anions bonded to
-  the same B, C, N, Si, P, S, As or Se centre and closer than the 2.35 Å
-  floor are not tested by G2, and the shortest such edge is reported as
-  `polyanion_edge_min`. Calcite-type carbonates were expunged for their CO3
-  edge (2.2 Å), and NaPF6 or LiBF4 would have been for their F-F edges
-  (2.26 and 2.25 Å). An edge at or above the floor, such as the O-O edge of
-  a silicate tetrahedron in a spinel, is tested as before.
+- **A polyanion's own edge is not a packing contact.** Two ligands bonded to
+  the same centre and closer than the 2.35 Å floor are not tested by G2,
+  and the shortest such edge is reported as `polyanion_edge_min`. Each
+  centre-ligand pair (C-O, N-O, B-O, B-F, Si-O, Si-F, P-O, P-F, S-O, Se-O,
+  As-O, Cl-O; `POLYANION_PAIRS`) has a longest bond and a smallest
+  ligand-centre-ligand angle, set above the longest bond in structures that
+  pass every other gate (C-O 1.42 Å in a pyrocarbonate bridge, N-O 1.40 Å in
+  an orthonitrate). The angle keeps a crushed polyanion on the floor: a CO3
+  at 70° has a 1.47 Å edge from ordinary bonds. Calcite-type carbonates were
+  expunged for their CO3 edge (2.2 Å), and NaPF6 or LiBF4 would have been
+  for their F-F edges (2.26 and 2.25 Å). An edge at or above the floor, such
+  as the O-O edge of a silicate tetrahedron in a spinel, is tested as
+  before.
+- **A halogen the CIF states is positive is a cation.** Cl, Br and I were
+  anions whatever the file said, so each Cl-O bond of a perchlorate,
+  chlorate or chlorite was read as two anions 1.4-1.8 Å apart: 42 of 49
+  ICSD lithium, sodium and potassium chlorine oxysalts were expunged on G2,
+  the anion-centred sums took Cl(7+) for an anion, and bond selection paired
+  the alkali cation with Cl. Two species the file states are both positive
+  are no longer a bond pair. An element the file types with both signs (a
+  chloride perchlorate) is left as before.
+- **G1 sets aside alternative positions.** A contact below the 1.20 Å floor
+  between two positions whose occupancies sum to one or less, within the
+  same allowance the packing gates use, is two orientations of one group
+  rather than a bond, and is listed in `alternative_contacts_set_aside`. The
+  anion-centred sums leave out the same pairs. 35 of 114 ICSD nitrates and
+  nitrites carried such a pair, 29 of them NaNO2, NaNO3, KNO2 and KNO3.
+- **A ligand that moves with its centre is weighted given the centre.** A
+  bond inside a polyanion (a `POLYANION_PAIRS` bond) counts at the far end's
+  occupancy over this site's, at most one, in the cation and anion sums
+  alike, because wherever a nitrite's N is, its two O are too. Every other
+  bond keeps the plain occupancy. ICSD 152184, NaNO2 with N and O each at
+  0.5, summed N(3+) to 1.44 and was expunged on G7 for bonds it has. Where
+  the conditional weights would give a centre more ligands than it can take
+  (four for ClO4, six for SiO6), or a ligand more than two centres, the
+  model spreads one group over more positions than any orientation fills,
+  and the plain occupancies stand: high-temperature cubic NaClO4 (ICSD
+  117375) would otherwise have summed Cl(7+) to 53. The ligands weighted
+  given their centre are listed in `ligand_occupancy_conditional`.
+- **Two monovalent cations may come closer.** The cation floor was measured
+  on perovskites, pyrochlores and spinels and expunged Li2O and Li3N on G5
+  for Li-Li contacts of 2.31 and 2.10 Å. A floor scaled by ionic radius does
+  not separate these from the faults G5 exists for: Li3N sits at 1.38 times
+  the radius sum, inside the 1.06 to 1.40 of the perovskites it condemns.
+  Charge does. A pair of cations of charge one or less (an alkali metal
+  whatever the file says) is held to 2.00 Å (`MONOVALENT_PAIR_MIN`); any
+  other pair stays at 2.40 Å. The contact that decides, with its floor, is
+  reported as `cation_cation_contact`.
 - **Molecular carbon is NOT_ASSESSED** (R1, `molecular_carbon`). Carbon
   bonded to C, H or N (a MOF linker, an organic or hybrid perovskite cation,
   a cyanide, a carbide's C2 unit) is outside what bond valence sums
@@ -147,20 +190,34 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   structure, including any that cannot be read, and the one-page report
   says how the file was read. A run in which nothing can be read still
   writes the failed-files table.
-- On the 212: EXPUNGE 40 to 9, the ACCEPT tiers 57 to 75, NOT_ASSESSED 17
+- On the 212: EXPUNGE 40 to 8, the ACCEPT tiers 57 to 75, NOT_ASSESSED 17
   to 65 (each with its reason), and "No M-X bonds found" 77 to 50, which
   are the elements, alloys and intermetallics, with no anion to bond to.
   On the 4,806 ICSD structures of the four sets nothing changes in any
   column: no entry needs the reading stage, none holds a polyanion edge
   below the floor or molecular carbon, and every label leads with its
   element.
-- 28 VALIDATE tests, four gate tests and 28 parsing tests in CELL 7b
+- On 870 ICSD entries exported to test the halogen, alternative-position,
+  conditional-weight, polyanion and lithium changes (polyanion salts,
+  lithium oxides and nitrides, and anions bonded to each other):
+  EXPUNGE 570 to 459, ACCEPT and FLAG 204 to 290, NOT_ASSESSED 72 to 97.
+  Li3N 33 expunged to 3, Li2O and related lithium oxides 18 to 4,
+  perchlorates, chlorates and chlorites 44 to 3, nitrates and nitrites 43
+  to 22 (21 to NOT_ASSESSED: no measured N(3+)-O bond lengths), carbonates
+  45 to 41. Peroxides, superoxides, disulfides, polysulfides and azides do
+  not change (see the README's known limitations). On the 4,806 and the
+  200 no verdict changes; the G5 evidence of 26 entries now names the pair
+  and its floor.
+- 28 VALIDATE tests, four gate tests and 40 parsing tests in CELL 7b
   (`VALIDATE_GATES()`, `VALIDATE_PARSING()`, which need the gates defined),
-  seventeen end-to-end parsing cases in `tests/test_parsing.py` and sixteen
+  seventeen end-to-end parsing cases in `tests/test_parsing.py` and 26
   end-to-end reading cases in `tests/test_reading.py`. The new tests fail on
   2.0.45, apart from the controls: one parsing test and six of the
-  seventeen cases, which 2.0.45 already got right. The sixteen reading
-  cases also fail on 2.0.46 as it stood before the reading stage. On 200 ICSD
+  seventeen cases, which 2.0.45 already got right. The first sixteen reading
+  cases also fail on 2.0.46 as it stood before the reading stage, and the
+  other ten (halogens, alternatives, polyanion limits, repeated items,
+  the lithium floor, the conditional weight) on 2.0.46 as it stood before
+  them. On 200 ICSD
   entries the only verdicts that change are the four structures named under
   the packing gates; the sulfoselenide spinel 640368 stays NOT_ASSESSED
   (R1), now for the In-Se pair it has no parameters for rather than a Se-S

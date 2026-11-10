@@ -405,8 +405,16 @@ def classify_site(row, struct):
     if aa == aa and aa < _PGRM_ANION_FLOOR:
         return ('G2', 'anion_packing_impossible',
                 f'shortest anion-anion {aa:.3f} A, floor {_PGRM_ANION_FLOOR} A')
+    # v2.0.46: the floor depends on the pair (MONOVALENT_PAIR_MIN), so the
+    # scan's verdict is read, with the contact that decided it. Results from
+    # before 2.0.46 carry no contact and are judged as they were.
     cc = _pgrm_f(struct.get('cation_cation_min'))
-    if cc == cc and cc < _PGRM_CATION_FLOOR:
+    _cct = struct.get('cation_cation_contact')
+    if _pgrm_has_value(_cct):
+        if _pgrm_is_false(struct.get('cation_packing_plausible')):
+            return ('G5', 'cation_packing_impossible',
+                    f'cation-cation contact {_cct}')
+    elif cc == cc and cc < _PGRM_CATION_FLOOR:
         return ('G5', 'cation_packing_impossible',
                 f'shortest cation-cation {cc:.3f} A, floor {_PGRM_CATION_FLOOR} A')
     # ---- R : can we assess it? -----------------------------------------
@@ -1154,8 +1162,18 @@ def VALIDATE_PARSING(verbose=True):
     def _t21():
         r = _parsing_run(_sno2.replace('_cell_length_c', '_cell_length_a 4.70\n_cell_length_c'))
         e = str(r.get('error'))
-        return (not r.get('success') and '_cell_length_a more than once' in e), e
-    _case(21, 'a cell edge given twice: not read, and the reason says which', _t21)
+        return (not r.get('success') and '_cell_length_a twice' in e
+                and "'4.7374'" in e and "'4.70'" in e), e
+    _case(21, 'a cell edge given twice, differently: not read, and the reason says which', _t21)
+
+    def _t21b():
+        t = _sno2.replace('_cell_length_c', '_cell_length_a 4.7374\n_cell_volume 71.5\n'
+                          '_cell_volume 71.5\n_cell_measurement_temperature 293\n'
+                          '_cell_measurement_temperature 295\n_cell_length_c')
+        r = _parsing_run(t)
+        return (_same_tin(r) and 'with the same value: kept one' in _notes(r)
+                and 'kept the first (293)' in _notes(r)), _notes(r)
+    _case('21b', 'repeats that agree, and a repeated temperature, are read', _t21b)
 
     def _t22():
         t = '\n'.join(l for l in _sno2.split('\n') if not l.startswith('_cell_'))
@@ -1227,6 +1245,160 @@ def VALIDATE_PARSING(verbose=True):
         rd = r['reading']
         return (not rd['changed'] and not rd['notes']), str(rd['notes'])
     _case(28, 'a file already in order is read exactly as it is', _t28)
+
+    # ---- v2.0.46: halogens, G1 alternatives, polyanion limits ----------
+    def _perchl(cl_type, cl_state):
+        a = 5.0
+        x = 1.43 / (3 ** 0.5 * a)
+        return _parsing_cif('kclo4', a, 'P -4 3 m',
+                            [('Cl1', cl_type, 0, 0, 0, 1), ('K1', 'K1+', 0.5, 0.5, 0.5, 1),
+                             ('O1', 'O2-', round(x, 5), round(x, 5), round(x, 5), 1)],
+                            loop=[(cl_type, cl_state), ('K1+', 1), ('O2-', -2)])
+
+    def _t29():
+        r = _parsing_run(_perchl('Cl7+', 7))
+        cl = _site(r, 'Cl')
+        aa, pe = r.get('anion_anion_min'), r.get('polyanion_edge_min')
+        ok = (cl is not None and abs(float(cl['bvs']) - 7.0) < 0.1
+              and (aa is None or aa >= ANION_ANION_MIN)
+              and pe is not None and abs(pe - 2.335) < 0.02)
+        return ok, f"Cl {None if cl is None else cl.get('bvs')}; anion_anion_min {aa}; edge {pe}"
+    _case(29, 'a perchlorate typed Cl(7+): Cl is the cation, ClO4 an edge, not a contact', _t29)
+
+    def _t30():
+        r = _parsing_run(_perchl('Cl7+', 7))
+        an = r.get('anion_summary') or {}
+        worst = an.get('anion_worst_label')
+        return (worst is None or not str(worst).startswith('Cl')), f'anion summary {an}'
+    _case(30, 'the anion-centred sums no longer take Cl(7+) for an anion', _t30)
+
+    def _t30b():
+        # Li 3.46 A from Cl(7+), inside the bond search, and 2.03 A from O
+        a = 4.0
+        x = round(1.43 / (3 ** 0.5 * a), 5)
+        r = _parsing_run(_parsing_cif(
+            'liclo4', a, 'P -4 3 m',
+            [('Cl1', 'Cl7+', 0, 0, 0, 1), ('Li1', 'Li1+', 0.5, 0.5, 0.5, 1),
+             ('O1', 'O2-', x, x, x, 1)],
+            loop=[('Cl7+', 7), ('Li1+', 1), ('O2-', -2)]))
+        li = _site(r, 'Li')
+        lig = None if li is None else str(li.get('ligand_types'))
+        return lig == 'O', f'Li ligands {lig}'
+    _case('30b', 'nor do the cations: Li is bonded to O, not to Cl(7+) 3.46 A away', _t30b)
+
+    def _t31():
+        # an orientationally disordered nitrite: N 1/6 and O 1/3 on the cube
+        # axes, 0.53 A apart where two orientations overlap
+        a = 4.4
+        t = _parsing_cif('nano2', a, 'P m -3 m',
+                         [('Na1', 'Na1+', 0, 0, 0, 1), ('N1', 'N3+', 0.5, 0.5, 0.58, 0.16667),
+                          ('O1', 'O2-', 0.5, 0.5, 0.70, 0.33333)],
+                         loop=[('Na1+', 1), ('N3+', 3), ('O2-', -2)])
+        r = _parsing_run(t)
+        n = _site(r, 'N')
+        alt = r.get('alternative_contacts_set_aside')
+        ok = (n is not None and n.get('contact_above_floor') is not False
+              and alt is not None and 'N1-O1' in alt)
+        return ok, f"N contact_above_floor {None if n is None else n.get('contact_above_floor')}; set aside {alt}"
+    _case(31, 'G1: N and O positions of two orientations, 0.53 A apart, are alternatives', _t31)
+
+    def _t32():
+        # a CO3 group crushed to an O-C-O angle of 70 degrees, from ordinary
+        # 1.28 A bonds: the edge, 1.47 A, is no longer excused
+        import math as _m
+        a = 8.0
+        c0 = (0.5, 0.5, 0.5)
+        ang = [0.0, _m.radians(70.0), _m.radians(190.0)]
+        o = [(c0[0] + 1.28 * _m.cos(t) / a, c0[1] + 1.28 * _m.sin(t) / a, 0.5) for t in ang]
+        sites = [('Ca1', 'Ca2+', 0.5, 0.5, 0.8, 1), ('C1', 'C4+', 0.5, 0.5, 0.5, 1)]
+        sites += [(f'O{k + 1}', 'O2-', round(x, 5), round(y, 5), z, 1) for k, (x, y, z) in enumerate(o)]
+        r = _parsing_run(_parsing_cif('crushed', a, 'P 1', sites,
+                                      loop=[('Ca2+', 2), ('C4+', 4), ('O2-', -2)]))
+        aa = r.get('anion_anion_min')
+        return (aa is not None and aa < ANION_ANION_MIN), f'anion_anion_min {aa}'
+    _case(32, 'a carbonate crushed to 70 degrees: its 1.47 A edge is a contact again', _t32)
+
+    # ---- v2.0.46: the floor for two monovalent cations; polyanion limits;
+    # ---- a ligand weighted given its centre -------------------------------
+    def _li2o(a):
+        return _parsing_cif('li2o', a, 'F m -3 m',
+                            [('Li1', 'Li1+', 0.25, 0.25, 0.25, 1), ('O1', 'O2-', 0, 0, 0, 1)],
+                            loop=[('Li1+', 1), ('O2-', -2)])
+
+    def _t33():
+        r = _parsing_run(_li2o(4.61))
+        c = r.get('cation_cation_contact') or ''
+        return (r.get('cation_packing_plausible') is True and 'floor 2.00' in c
+                and abs(float(r.get('cation_cation_min') or 0) - 2.305) < 0.01), \
+            f"plausible {r.get('cation_packing_plausible')}; {c}"
+    _case(33, 'Li2O: Li-Li 2.305 A between two Li(+) passes their floor', _t33)
+
+    def _t34():
+        t = _parsing_cif('li3n', 3.648, 'P 6/m m m',
+                         [('N1', 'N3-', 0, 0, 0, 1), ('Li1', 'Li1+', 0, 0, 0.5, 1),
+                          ('Li2', 'Li1+', 0.33333, 0.66667, 0, 1)],
+                         loop=[('N3-', -3), ('Li1+', 1)],
+                         cell=(3.648, 3.648, 3.875, 90, 90, 120))
+        r = _parsing_run(t)
+        c = r.get('cation_cation_contact') or ''
+        return (r.get('cation_packing_plausible') is True and 'Li2-Li2' in c
+                and abs(float(r.get('cation_cation_min') or 0) - 2.106) < 0.01), \
+            f"plausible {r.get('cation_packing_plausible')}; {c}"
+    _case(34, 'Li3N: Li-Li 2.106 A in the Li2N layer passes', _t34)
+
+    def _t35():
+        r = _parsing_run(_li2o(3.60))
+        c = r.get('cation_cation_contact') or ''
+        return (r.get('cation_packing_plausible') is False and 'floor 2.00' in c), \
+            f"plausible {r.get('cation_packing_plausible')}; {c}"
+    _case(35, 'Li2O compressed to Li-Li 1.80 A still fails', _t35)
+
+    def _t36():
+        # a nitrite with N and both O at half occupancy: where N is, its O are
+        a = 6.0
+        t = _parsing_cif('half_nitrite', a, 'P 1',
+                         [('Na1', 'Na1+', 0, 0, 0, 1), ('N1', 'N3+', 0.5, 0.5, 0.5, 0.5),
+                          ('O1', 'O2-', 0.6743, 0.5, 0.61105, 0.5),
+                          ('O2', 'O2-', 0.3257, 0.5, 0.61105, 0.5)],
+                         loop=[('Na1+', 1), ('N3+', 3), ('O2-', -2)])
+        r = _parsing_run(t)
+        n = _site(r, 'N')
+        b = None if n is None else n.get('bvs')
+        cnd = None if n is None else n.get('ligand_occupancy_conditional')
+        return (b is not None and float(b) > 2.2 and cnd is not None), \
+            f'N bvs {b}; weighted given N: {cnd}'
+    _case(36, 'a half-filled nitrite: N sums its two O at full weight', _t36)
+
+    def _t36b():
+        # a perchlorate at 0.25 spread over four orientations, 16 O at 0.25,
+        # all 1.43 A from Cl: given Cl, 16 O is more than ClO4 holds, so the
+        # plain weights stand and Cl sums near 7, not near 28
+        import math as _m
+        a, d = 8.0, 1.43
+        dirs = [(sx, sy, sz) for sx in (1, -1) for sy in (1, -1) for sz in (1, -1)]
+        dirs += [(sx * _m.sqrt(2), 0, sz) for sx in (1, -1) for sz in (1, -1)]
+        dirs += [(0, sy * _m.sqrt(2), sz) for sy in (1, -1) for sz in (1, -1)]
+        sites = [('K1', 'K1+', 0, 0, 0, 1), ('Cl1', 'Cl7+', 0.5, 0.5, 0.5, 0.25)]
+        for k, (x, y, z) in enumerate(dirs):
+            f = d / (a * _m.sqrt(3))
+            sites.append((f'O{k + 1}', 'O2-', round(0.5 + x * f, 5),
+                          round(0.5 + y * f, 5), round(0.5 + z * f, 5), 0.25))
+        r = _parsing_run(_parsing_cif('spread_clo4', a, 'P 1', sites,
+                                      loop=[('K1+', 1), ('Cl7+', 7), ('O2-', -2)]))
+        cl = _site(r, 'Cl')
+        b = None if cl is None else cl.get('bvs')
+        cnd = None if cl is None else cl.get('ligand_occupancy_conditional')
+        return (b is not None and abs(float(b) - 7.0) < 1.0 and cnd is None), \
+            f'Cl bvs {b}; weighted given Cl: {cnd}'
+    _case('36b', 'a perchlorate spread over four orientations keeps the plain weights', _t36b)
+
+    def _t37():
+        got = (polyanion_edge('C', 'O', 1.42, 1.24, 2.18),   # pyrocarbonate bridge
+               polyanion_edge('N', 'O', 1.39, 1.39, 2.26),   # orthonitrate
+               polyanion_edge('C', 'O', 1.28, 1.28, 1.47),   # crushed to 70 degrees
+               polyanion_edge('Si', 'O', 1.78, 1.81, 2.29))  # shared SiO6 edge, 79 deg
+        return got == (True, True, False, False), f'{got}'
+    _case(37, 'polyanion edges: C2O5 and NO4 kept, crushed CO3 and SiO6 at 79 deg not', _t37)
 
     ok = all(results)
     if verbose:

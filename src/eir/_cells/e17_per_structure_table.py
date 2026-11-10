@@ -108,6 +108,8 @@ def build_structure_table(df):
               'gii_all_sites',
               'gii_percentile_in_run', 'anion_anion_min', 'cation_cation_min',
               'polyanion_edge_min',                    # v2.0.46
+              'alternative_contacts_set_aside',        # v2.0.46
+              'cation_cation_contact',                 # v2.0.46
               'has_antisite_disorder', 'n_antisite_species', 'n_anion_sites',
               # the anion side, which the cation/anion diagnosis and its figure
               # both need and which was omitted from the first version of this

@@ -1014,6 +1014,23 @@ COLOCATED_TOL = 0.05          # A, the neighbour dedup's own tolerance
 COLOCATED_IMAGE_TOL = 0.02    # A, images closer than this are one atom, as
                               # ANION_DEDUP_TOL in CELL 3
 _EIR_COLOCATED = {}           # carrying label -> [(label, element, n), ...]
+# v2.0.46: pairs closer than CATION_ANION_ABSOLUTE_MIN that the model fills
+# one at a time, set aside by the bond finder: [(label, label, distance)]
+_EIR_ALTERNATIVES = []
+
+
+def _alternatives_summary():
+    """The pairs the bond finder set aside as alternatives, shortest
+    first, for the alternative_contacts_set_aside column; None if none."""
+    if not _EIR_ALTERNATIVES:
+        return None
+    best = {}
+    for a, b, d in _EIR_ALTERNATIVES:
+        k = tuple(sorted((a, b)))
+        best[k] = min(d, best.get(k, d))
+    items = sorted(best.items(), key=lambda kv: kv[1])
+    out = '; '.join(f'{a}-{b} {d:.3f} A' for (a, b), d in items[:6])
+    return out + (f' (+{len(items) - 6} more)' if len(items) > 6 else '')
 
 
 def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
@@ -1207,7 +1224,11 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
         # at its partial occupancy (Ho 2.14 for a valence of 3). Only a
         # species within COLOCATED_TOL of another anion is affected: H(+) in
         # a hydroxide sits about 0.97 A from its oxygen and is never there.
-        _coloc_set = set(_ANION_SET) | _stated_anions(cif_file_path)
+        # v2.0.46: and less a halogen the CIF states is positive, the central
+        # atom of a perchlorate or an iodate (_stated_positive_halogens).
+        _pos_hal = _stated_positive_halogens(cif_file_path)
+        _an_here = set(_ANION_SET) - _pos_hal
+        _coloc_set = (_an_here | _stated_anions(cif_file_path))
         _an_sites = [s for s in small_struct.sites
                      if s.element.name in _coloc_set]
         if len(_an_sites) > 1:
@@ -1237,6 +1258,18 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                     f"{_c} carries " + ", ".join(_l for _l, _e, _n in _v)
                     for _c, _v in _EIR_COLOCATED.items()))
 
+        # v2.0.46: G1's form of the packing gates' rule. Two positions closer
+        # than CATION_ANION_ABSOLUTE_MIN whose occupancies the model can fill
+        # one at a time are alternatives, not a bond. Disordered NaNO2, KNO2
+        # and KBF4 models put N and O positions 0.46 A apart at occupancies
+        # 1/6 and 1/3, and about 25 ICSD entries were expunged on G1 for a
+        # contact between two orientations that never coexist. Only below
+        # the floor: the real N-O bonds of the same disordered group also join
+        # partial positions. Hydrogen is left out: O-H is a bond at 0.97 A
+        # whatever the occupancies of a disordered hydroxyl.
+        _EIR_ALTERNATIVES.clear()
+        _alt_esd = _occupancy_esds(cif_file_path)
+
         # Now find neighbors by simple distance calculation
         for site in small_struct.sites:
             # v2.0.35: wrapped with its images. A site deposited at x = 1.288
@@ -1259,6 +1292,13 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                 # are both False while this is False, so a distance that is not
                 # a number is rejected here instead of silently admitted.
                 if not (0.01 <= distance <= max_bond_distance):
+                    continue
+                if (distance < CATION_ANION_ABSOLUTE_MIN
+                        and elem1_type not in CATION_FLOOR_EXCLUDED_ELEMENTS
+                        and atom_dict['element'] not in CATION_FLOOR_EXCLUDED_ELEMENTS
+                        and _are_alternatives(site, atom_dict['original_site'],
+                                              _alt_esd)):
+                    _EIR_ALTERNATIVES.append((elem1, atom_dict['label'], distance))
                     continue
 
                 neighbors_for_site.append({
@@ -1297,10 +1337,10 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                 unique_neighbors.append(neighbor)
 
             _dbg(f"  Debug: Site {site.label} ({site.element.name}) has {len(unique_neighbors)} neighbors in supercell")
-            if site.element.name not in _ANION_SET:
+            if site.element.name not in _an_here:
                 _c = site_orth
                 _an = [(n['distance'], (n['position'].x, n['position'].y, n['position'].z))
-                       for n in unique_neighbors if n['element'] in _ANION_SET]
+                       for n in unique_neighbors if n['element'] in _an_here]
                 if len(_an) >= 2:
                     # Provisional: no valence exists yet, so no canonical CN
                     # and no per-bond valences. The inputs are kept so the
@@ -3267,6 +3307,20 @@ def _stated_anions(file_path):
     return _out
 
 
+def _stated_positive_halogens(file_path):
+    """
+    v2.0.46. The halogens (Cl, Br, I) the CIF or the user types with a
+    positive valence, less any typed with both signs: the central atom of a
+    perchlorate, chlorate, bromate or iodate. See positive_halogens.
+    """
+    try:
+        _ox = dict(extract_cif_oxidation_states(file_path)[0] or {})
+    except Exception:
+        _ox = {}
+    _ox.update(_USER_VALENCES)
+    return positive_halogens(_ox) - _mixed_sign_elements(file_path)
+
+
 def _mixed_sign_elements(file_path):
     """
     v2.0.46. Elements the CIF's _atom_type loop types with both signs, such
@@ -3556,6 +3610,26 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                 if central_valence is None or ligand_valence is None:
                     continue
 
+                # v2.0.46: a bond inside a polyanion is weighted given this
+                # site (conditional_occupancy, CELL 3). _cond lists the
+                # ligands whose weight that changed.
+                _ph = []
+                for _l in site_info.get('labels') or ():
+                    _sd = site_occupancies.get(_l) or {}
+                    if _sd.get('element') == central_type:
+                        _o = _sd.get('occupancy')
+                        _ph.append(1.0 if _o is None else float(_o))
+                _ph = [min(1.0, sum(_ph)) if _ph else None]
+                _cond = []
+
+                def _w_here(label, distance, _ct=central_type, _lt=ligand_type,
+                            _ph=_ph, _cond=_cond):
+                    _o = _ligand_occupancy(label)
+                    _c = conditional_occupancy(_o, _ph[0], _ct, _lt, distance)
+                    if _c != _o and label not in _cond:
+                        _cond.append(label)
+                    return _c
+
                 # v2.0.3 (4b): THE CANONICAL SHELL.
                 #
                 # Everything below this point - Shannon radii, ionic potential,
@@ -3618,6 +3692,17 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                     # distinguishable in the output from one that was not.
                     _cn_method = ('gap_fallback_no_parameters' if _r0_c is None
                                   else 'gap_fallback_empty_shell')
+
+                # v2.0.46: given the centre, no more ligands than it can
+                # take, or the plain occupancies stand (conditional_ligand_count)
+                _most = POLYANION_MOST_LIGANDS.get((central_type, ligand_type))
+                if _ph[0] is not None and _most is not None and (
+                        conditional_ligand_count(
+                            [(_ligand_occupancy(_b.get('ligand_label')),
+                              _b['distance'], _b['count'])
+                             for _b in confirmed_bond_counts],
+                            _ph[0], central_type, ligand_type) > _most + 0.25):
+                    _ph[0] = None
 
                 element_calc_data = {'valence': central_valence,
                                      'ligand_valence': ligand_valence,
@@ -3698,7 +3783,7 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                         for bond_info in confirmed_bond_counts:
                             count = bond_info['count']
                             distance = bond_info['distance']
-                            occ = _ligand_occupancy(bond_info.get('ligand_label'))
+                            occ = _w_here(bond_info.get('ligand_label'), distance)
 
                             s = math.exp((r0_val - distance) / b_val)
                             bvs_total += (s * count * occ)
@@ -3742,7 +3827,7 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                                 for bond_info in confirmed_bond_counts:
                                     _l2 = bond_info.get('ligand_label')
                                     _t2 += (bond_info['count']
-                                            * _ligand_occupancy(_l2)
+                                            * _w_here(_l2, bond_info['distance'])
                                             * math.exp((_r2 - bond_info['distance'])
                                                        / _b2))
                                     if _l2 in colocated:
@@ -3769,7 +3854,8 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                         if _fs_bonds:
                             _fs_total = 0.0
                             for bond_info in _fs_bonds:
-                                _occ = _ligand_occupancy(bond_info.get('ligand_label'))
+                                _occ = _w_here(bond_info.get('ligand_label'),
+                                               bond_info['distance'])
                                 _s = math.exp((r0_val - bond_info['distance']) / b_val)
                                 _fs_total += (_s * bond_info['count'] * _occ)
                                 if bond_info.get('ligand_label') in colocated:
@@ -3802,7 +3888,8 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                         if _gap_bonds:
                             _gap_total = 0.0
                             for bond_info in _gap_bonds:
-                                _occ = _ligand_occupancy(bond_info.get('ligand_label'))
+                                _occ = _w_here(bond_info.get('ligand_label'),
+                                               bond_info['distance'])
                                 _s = math.exp((r0_val - bond_info['distance']) / b_val)
                                 _gap_total += (_s * bond_info['count'] * _occ)
                                 if bond_info.get('ligand_label') in colocated:
@@ -3847,7 +3934,8 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                             _ad_bonds = group_bond_counts(_cand, _ad_cn)
                             _ad_total = 0.0
                             for bond_info in _ad_bonds:
-                                _occ = _ligand_occupancy(bond_info.get('ligand_label'))
+                                _occ = _w_here(bond_info.get('ligand_label'),
+                                               bond_info['distance'])
                                 _s = math.exp((r0_val - bond_info['distance']) / b_val)
                                 _ad_total += (_s * bond_info['count'] * _occ)
                                 if bond_info.get('ligand_label') in colocated:
@@ -3886,11 +3974,13 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                     # v2.0.44: a shared position is one ligand whatever
                     # species hold it, so its occupancies are added.
                     element_calc_data['cn_occupancy_weighted'] = round(sum(
-                        b['count'] * (_ligand_occupancy(b.get('ligand_label'))
+                        b['count'] * (_w_here(b.get('ligand_label'), b['distance'])
                                       + sum(_n2 * _ligand_occupancy(_l2)
                                             for _l2, _e2, _n2 in colocated.get(
                                                 b.get('ligand_label'), ())))
                         for b in confirmed_bond_counts), 3)
+                    element_calc_data['ligand_occupancy_conditional'] = (
+                        ', '.join(_cond) or None)                    # v2.0.46
 
                 # --- Bond Length Distortion (BLD) ---
                 if confirmed_bond_counts and confirmed_cn > 0:
@@ -4439,6 +4529,7 @@ def process_single_cif(file_path, user_oxidation_states=None):
     # CIF that brings its own bond list never reaches that function, and
     # must not inherit the previous file's record.
     _EIR_COLOCATED.clear()
+    _EIR_ALTERNATIVES.clear()          # v2.0.46: likewise
     # v2.0.46: before parse_cif_file, which records shared anion positions.
     _USER_VALENCES.clear()
     _USER_VALENCES.update(user_oxidation_states or {})
@@ -4460,6 +4551,9 @@ def process_single_cif(file_path, user_oxidation_states=None):
     # Process first data block
     block_name = list(cif_obj.keys())[0]
     data_block = cif_obj[block_name]
+
+    # v2.0.46: the alternative positions the bond finder set aside (G1)
+    results['alternative_contacts_set_aside'] = _alternatives_summary()
 
     # Extract metadata
     results['metadata'] = {
@@ -4901,6 +4995,8 @@ def process_single_cif(file_path, user_oxidation_states=None):
                                                .get('valence_sources', {})
                                                .get(element)),
                         'colocated_ligands': elem_data.get('colocated_ligands'),
+                        'ligand_occupancy_conditional':                  # v2.0.46
+                            elem_data.get('ligand_occupancy_conditional'),
                         'colocated_unparameterised':
                             elem_data.get('colocated_unparameterised'),
                         'cn_before_void_guard':
@@ -5219,6 +5315,12 @@ def process_single_cif(file_path, user_oxidation_states=None):
         # switches a gate off.
         results['anion_anion_min'] = None if _aa is None else round(_aa, 4)
         results['cation_cation_min'] = None if _cc is None else round(_cc, 4)
+        # v2.0.46: the floor depends on the pair (MONOVALENT_PAIR_MIN), so
+        # the contact nearest its own floor decides, and is reported
+        _gv = _CATION_CONTACT.pop(str(file_path), None)
+        results['cation_cation_contact'] = (
+            None if _gv is None else
+            f'{_gv[2]}-{_gv[3]} {_gv[1]:.3f} A, floor {_gv[4]:.2f} A')
         # v2.0.46: the shortest polyanion edge the scan set aside, if any
         _pe = _POLYANION_EDGE_MIN.pop(str(file_path), None)
         results['polyanion_edge_min'] = None if _pe is None else round(_pe, 4)
@@ -5259,10 +5361,13 @@ def process_single_cif(file_path, user_oxidation_states=None):
         # every structure in the three reference families, none of which
         # contains hydrogen.
         results['cation_packing_plausible'] = (
-            None if _cc is None else bool(ge(_cc, CATION_CATION_MIN)))
+            None if _cc is None else
+            bool(ge(_gv[1], _gv[4])) if _gv is not None else
+            bool(ge(_cc, CATION_CATION_MIN)))
         if results['cation_packing_plausible'] is False:
-            print(f"\n  CATION CONTACT TOO SHORT: two cations {_cc:.3f} A "
-                  f"apart, below the {CATION_CATION_MIN} A floor.")
+            _d, _fl = (_gv[1], _gv[4]) if _gv is not None else (_cc, CATION_CATION_MIN)
+            print(f"\n  CATION CONTACT TOO SHORT: two cations {_d:.3f} A "
+                  f"apart, below the {_fl:.2f} A floor for the pair.")
             print(f"  Cations repel; edge- and face-sharing polyhedra bring "
                   f"them to 2.6-3.0 A and no closer. A contact below this is "
                   f"a coordinate or symmetry fault, not chemistry.")
@@ -6104,7 +6209,11 @@ def batch_process_directory(directory_path):
                     'cif_sign_inversion_detail': result.get('cif_sign_inversion_detail'),
                     'anion_anion_min': result.get('anion_anion_min'),
                     'polyanion_edge_min': result.get('polyanion_edge_min'),  # v2.0.46
+                    'alternative_contacts_set_aside': result.get(
+                        'alternative_contacts_set_aside'),                   # v2.0.46
                     'cation_cation_min': result.get('cation_cation_min'),
+                    'cation_cation_contact': result.get(
+                        'cation_cation_contact'),                            # v2.0.46
                     'anion_packing_plausible': result.get('anion_packing_plausible'),
         # v2.0.13a: computed and printed since v2.0.12 and never
         # exported, so the triage and summary both reported it as 0

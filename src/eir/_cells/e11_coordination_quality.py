@@ -2008,6 +2008,7 @@ def add_coordination_quality(batch_csv_path, cif_directory,
     df['cfg_gii_convention'] = 'cation_only'
     df['cfg_anion_anion_min_A'] = ANION_ANION_MIN
     df['cfg_cation_cation_min_A'] = CATION_CATION_MIN
+    df['cfg_monovalent_pair_min_A'] = MONOVALENT_PAIR_MIN       # v2.0.46
     df['cfg_bv_sum_cutoff'] = BV_SUM_CUTOFF
 
     # ------------------------------------------------------------------

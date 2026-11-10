@@ -304,6 +304,12 @@ def _expand_cell(st, rmax=None):
 SHELL_LIMIT_TOL = 0.01        # A
 
 
+import collections
+
+# v2.0.46: what _are_alternatives needs of a neighbour
+_AltSite = collections.namedtuple('_AltSite', 'label occ')
+
+
 def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
                         shell_limits=None):
     """
@@ -360,9 +366,24 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
     P = np.fromiter((c for a in pts for c in (a[3], a[4], a[5])),
                     dtype=np.float64, count=3 * len(pts)).reshape(-1, 3)
 
+    # v2.0.46: a halogen stated positive is a cation here, decided per site
+    # so that a chloride perchlorate keeps its chloride (positive_halogens).
+    def _is_anion_site(label, element):
+        if element not in ANION_ELEMENTS:
+            return False
+        v = valences.get(label, valences.get(element))
+        try:
+            return not (element in ALWAYS_ANION and float(v) > 0)
+        except (TypeError, ValueError):
+            return True
+
+    # v2.0.46: positions the model fills one at a time are not neighbours
+    # (_are_alternatives), as the cation side's bond finder already has it
+    _alt_esd = _occupancy_esds(cif_path)
+
     results = []
     for site in st.sites:
-        if site.element.name not in ANION_ELEMENTS:
+        if not _is_anion_site(site.label, site.element.name):
             continue
 
         o = site_centre(st.cell, site)
@@ -388,8 +409,13 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
         _Pl = P.tolist()
         for idx in cand:
             label, elem, occ = pts[idx][0], pts[idx][1], pts[idx][2]
-            if elem in ANION_ELEMENTS:
+            if _is_anion_site(label, elem):
                 continue
+            if (d[idx] < CATION_ANION_ABSOLUTE_MIN
+                    and elem not in CATION_FLOOR_EXCLUDED_ELEMENTS
+                    and site.element.name not in CATION_FLOOR_EXCLUDED_ELEMENTS
+                    and _are_alternatives(site, _AltSite(label, occ), _alt_esd)):
+                continue                          # v2.0.46
             _px, _py, _pz = _Pl[idx]
             _dd = kept.get(label)
             if _dd is None:
@@ -401,6 +427,14 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
 
         anion_elem = site.element.name
         expected = abs(valences.get(anion_elem, -2))
+        # v2.0.46: given this anion, no more polyanion centres than
+        # POLYANION_MOST_CENTRES, or the plain occupancies stand
+        _given = site.occ
+        if sum(conditional_occupancy(occ, _given, elem, anion_elem, dist)
+               for dist, label, elem, occ in neighbours
+               if polyanion_bond(elem, anion_elem, dist)
+               ) > POLYANION_MOST_CENTRES + 0.25:
+            _given = None
 
         total = 0.0
         total_unweighted = 0.0
@@ -446,9 +480,14 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
             # oxides are routinely 30-70% occupied, so it is essential: the
             # average oxygen sees only the occupied fraction of each cation
             # site. This is the same argument as WAGII, applied per bond.
-            total += occ * s
+            # v2.0.46: a bond inside a polyanion counts at the chance its
+            # cation is there given this anion is (conditional_occupancy)
+            _wt = conditional_occupancy(occ, _given, elem, anion_elem, dist)
+            total += _wt * s
             total_unweighted += s
-            parts.append(f"{elem}({label}) {dist:.3f}A occ{occ:.2f} s={s:.3f}")
+            parts.append(f"{elem}({label}) {dist:.3f}A occ{occ:.2f}"
+                         + (f" given this site {_wt:.2f}" if _wt != occ else '')
+                         + f" s={s:.3f}")
 
         # No gap cut is applied. Bond valence falls off exponentially and
         # terminates itself; cutting the shell at the largest geometric gap

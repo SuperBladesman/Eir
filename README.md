@@ -105,7 +105,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 28 tests against structures whose answers are known by hand, the four gate tests, the 28 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen) and the structural self-check. Run it again after changing anything.
+runs the 28 tests against structures whose answers are known by hand, the four gate tests, the 40 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor) and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 
@@ -184,9 +184,10 @@ The history in this repository was rebuilt in 2026 from dated copies of every ve
 
 - Two ICSD entries, 213392 and 38769, are not yet caught by the gates.
 - The packing gates (G2, G5) leave out positions refined to zero occupancy and any pair of positions the model can fill one at a time, whose occupancies sum to one or less. Where a close pair's occupancies sum to more than one, some such pairs must be filled together, so the model implies the contact and the gate stands. Anion-disorder models refined that way, such as pyrochlores with oxygen on the 8b site beside a nearly full 48f, are still expunged; review them by hand.
-- G7, which expunges a site missing bonds, was set on the 200-entry regression set, where it fires on nothing. It has not yet been measured on the full 3,291-structure corpus.
+- G7, which expunges a site missing bonds, was set on the 200-entry regression set, where it fires on nothing. On 4,806 ICSD spinels, perovskites, pyrochlores and fluorites it fires once, on ICSD 69461, which G2 already expunges.
+- Anions bonded to each other (peroxides, superoxides, disulfides such as pyrite, polysulfides, azides) are expunged on G2 for their own O-O, S-S or N-N bond, and their cations would be summed with parameters fitted for O(2-), S(2-) or N(3-), which on these compounds put cation sums up to 55% over valence. Cations bonded to each other (hyponitrite and dinitramide N-N, closo-borate B-B) are expunged on G5 the same way. Read any verdict on such a structure as not assessed.
 - On a position shared by two anions, the coordination-quality columns written by CELL 7 (`contact_anion`, `expected_contact`, `shortest_contact_ratio`) describe the first-listed species. The bond valence sums use every species.
-- An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, Pr⁴⁺, Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
+- An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, N³⁺ (nitrites), Pr⁴⁺, Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
 
 Each will gain a `VALIDATE()` test as it is addressed.
 

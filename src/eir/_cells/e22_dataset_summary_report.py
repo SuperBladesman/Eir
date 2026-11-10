@@ -171,7 +171,9 @@ def summarise_dataset(dfq, save_to=None, gii_threshold=0.20,
     out("    cation-cation packing  the same for the cation sublattice.")
     out("                           Edge- and face-sharing polyhedra reach")
     out(f"                           2.6-3.0 A and no closer; flagged below")
-    out(f"                           {CATION_CATION_MIN} A.")
+    out(f"                           {CATION_CATION_MIN} A, or {MONOVALENT_PAIR_MIN} A "
+        f"between two")
+    out("                           monovalent cations (Li3N, Li2O).")
     out()
     out("  These are the EVIDENCE. The verdict that follows from them is the")
     out("  PGRM integrity tier, reported below and carried per structure in")

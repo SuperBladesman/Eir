@@ -879,47 +879,90 @@ def _atom_sites_as_items(lines):
     return n > 1
 
 
-# Items that define the structure. Given twice, no reader can tell which is
-# meant, and the file is not read; anything else given twice keeps its first
-# value, as the CIF it was meant to be, and the note says so.
-_STRUCTURE_TAG_PREFIXES = ('_atom_site_', '_atom_type_', '_cell_', '_symmetry_',
-                           '_space_group_')
+# Items that define the structure. Given twice with DIFFERENT values, no
+# reader can tell which is meant, and the file is not read. Given twice with
+# the same value, or any other item given twice, the first is kept and the
+# note says so. (The first form of this step stopped on any repeated _cell_,
+# _symmetry_, _space_group_, _atom_site_ or _atom_type_ item, so a file that
+# repeats its measurement temperature, its cell volume or the same cell edge
+# was not read at all.)
+_DEFINING_TAGS = frozenset({
+    '_cell_length_a', '_cell_length_b', '_cell_length_c',
+    '_cell_angle_alpha', '_cell_angle_beta', '_cell_angle_gamma',
+    '_symmetry_space_group_name_h-m', '_space_group_name_h-m_alt',
+    '_symmetry_space_group_name_hall', '_space_group_name_hall',
+    '_symmetry_int_tables_number', '_space_group_it_number'})
+_DEFINING_PREFIXES = ('_atom_site_', '_atom_type_')
+
+
+def _item_value(lines, roles, i):
+    """(value, index of its last line) for the item on line i. The value is
+    on the same line, the next value line, or a ;-text field."""
+    rest = re.sub(r'\s#.*$', '', lines[i].strip()).split(None, 1)
+    if len(rest) == 2:
+        return _cif_value(rest[1]), i
+    j = i + 1
+    while j < len(lines) and roles[j] in ('blank', 'comment'):
+        j += 1
+    if j < len(lines) and roles[j] == 'value':
+        return _cif_value(lines[j].strip()), j
+    if j < len(lines) and roles[j] == 'field':
+        k = j + 1
+        while k < len(lines) and roles[k] == 'field' and not lines[k].startswith(';'):
+            k += 1
+        return '\n'.join(lines[j:k + 1]), min(k, len(lines) - 1)
+    return None, i
+
+
+def _same_value(a, b):
+    """Equal as written, or as numbers once uncertainties are set aside."""
+    if a is None or b is None:
+        return False
+    if a == b:
+        return True
+    try:
+        fa = float(re.sub(r'\(\d+\)$', '', a))
+        fb = float(re.sub(r'\(\d+\)$', '', b))
+        return abs(fa - fb) <= 1e-9 * max(1.0, abs(fa))
+    except (TypeError, ValueError):
+        return ' '.join(str(a).lower().split()) == ' '.join(str(b).lower().split())
 
 
 def _repeated_items(lines):
     """(lines, notes, error): an item given more than once in a block."""
     roles = _cif_line_roles(lines)
-    first, drop, notes = {}, set(), []
+    in_loop = set()
     for a, b, tags, _ in _cif_loop_spans(lines, roles):
-        for t in tags:
-            first.setdefault(t, 'loop')
+        in_loop.update(tags)
+    seen, drop, notes, said = {}, set(), [], set()
     for i, (line, role) in enumerate(zip(lines, roles)):
         if role != 'item':
             continue
         tag = line.strip().split()[0].lower()
-        if tag not in first:
-            first[tag] = i
+        defining = tag in _DEFINING_TAGS or tag.startswith(_DEFINING_PREFIXES)
+        val, last = _item_value(lines, roles, i)
+        if tag in in_loop:
+            if defining:
+                return lines, notes, (f'the file gives {tag} both in a loop and on '
+                                      f'its own, so no reader can tell which is meant')
+            drop.update(range(i, last + 1))
+            notes.append(f'{tag} is given both in a loop and on its own: kept the loop')
             continue
-        if tag.startswith(_STRUCTURE_TAG_PREFIXES):
-            return lines, notes, (f'the file gives {tag} more than once, so no '
-                                  f'reader can tell which value is meant')
-        drop.add(i)
-        j = i + 1
-        if len(re.sub(r'\s#.*$', '', line.strip()).split()) == 1:
-            while j < len(lines) and roles[j] in ('blank', 'comment'):
-                j += 1
-            if j < len(lines) and roles[j] == 'value':
-                drop.add(j)
-            elif j < len(lines) and roles[j] == 'field':
-                drop.add(j)
-                j += 1
-                while j < len(lines) and roles[j] == 'field':
-                    drop.add(j)
-                    if lines[j].startswith(';'):
-                        break
-                    j += 1
-        notes.append(f'{tag} is given more than once: kept the first')
-    return [l for i, l in enumerate(lines) if i not in drop], notes, None
+        if tag not in seen:
+            seen[tag] = val
+            continue
+        same = _same_value(seen[tag], val)
+        if defining and not same:
+            return lines, notes, (f'the file gives {tag} twice, as {seen[tag]!r} and '
+                                  f'{val!r}, so no reader can tell which is meant')
+        drop.update(range(i, last + 1))
+        if tag not in said:
+            said.add(tag)
+            first = str(seen[tag]).replace(';', ',')[:40]
+            notes.append(f'{tag} is given more than once'
+                         + (', with the same value: kept one' if same
+                            else f': kept the first ({first})'))
+    return [l for k, l in enumerate(lines) if k not in drop], notes, None
 
 
 def _has_tag(lines, tag):
@@ -1365,6 +1408,16 @@ def classify_bond_pair(el1, el2, valences=None, elements_present=None):
                 # were selected as bonds, found no bond valence parameters,
                 # and left the structure NOT_ASSESSED (R1).
                 if (f1 < 0 and f2 < 0
+                        and el1 not in _MIXED_SIGN_ELEMENTS
+                        and el2 not in _MIXED_SIGN_ELEMENTS):
+                    return None, None
+                # v2.0.46: nor are two stated cations. A halogen stated
+                # positive fell through to rule 2, which takes Cl, Br and I
+                # for anions whatever their charge, so in LiClO4 Li-Cl was
+                # selected as a bond: Li was summed over Cl(7+) 3.2 A away
+                # and, with no measured Li-Cl bond lengths, came out
+                # NOT_ASSESSED (R3). See positive_halogens.
+                if (f1 > 0 and f2 > 0
                         and el1 not in _MIXED_SIGN_ELEMENTS
                         and el2 not in _MIXED_SIGN_ELEMENTS):
                     return None, None
@@ -3888,6 +3941,48 @@ def VALIDATE_SHELL(verbose=True):
 # spinel cases.
 CATION_CATION_MIN = 2.40      # A, measured; see above
 
+# v2.0.46: TWO MONOVALENT CATIONS MAY COME CLOSER.
+#
+# The floor above was measured on perovskites, pyrochlores and spinels, which
+# hold no lithium-rich phase, and it expunged Li2O and Li3N: 13 of 16 ICSD
+# Li2O entries and 30 of 34 Li3N on G5, for Li-Li contacts of 2.31 and 2.10 A.
+#
+# A floor scaled by size does not separate them from the faults. Against the
+# sum of the two Shannon radii (CN 6), the Li-Li contacts of Li3N sit at 1.38
+# to 1.45, inside the range of the perovskites G5 condemns at 1.91 to 2.16 A
+# (1.06 to 1.40). What separates them is charge, as Pauling's third rule says
+# it should. Of every cation-cation contact below 2.40 A in the corpora and
+# the 870 ICSD entries, the only ones in otherwise sound structures are
+# between two Li(+): Li3N 2.10 to 2.20 A, Li2CO3 2.22 A, Li2O 2.31 to 2.39 A.
+# Below 2.40 A, every contact involving a cation of higher charge is one of
+# the known faults: shifted perovskites, pyrochlores with Bi and Ru 0.13 to
+# 0.16 A apart, spinels with over-full neighbouring sites.
+#
+# A pair of cations of charge one or less (an alkali metal counts whatever
+# the file states) is therefore held to MONOVALENT_PAIR_MIN, and any pair
+# with a cation of higher or unknown charge to CATION_CATION_MIN. Still
+# caught: the over-full Li positions of ICSD 164285 to 164287, 1.83 A apart,
+# and the Li2O model 216717 at 1.03 A. The heavier monovalent ions (Cu, Ag,
+# Hg, Tl) never come within 2.47 A of each other in these sets, so for them
+# the lower floor has been measured against nothing, and errs towards
+# passing.
+MONOVALENT_PAIR_MIN = 2.00    # A, measured; see above
+ALWAYS_MONOVALENT = frozenset({'Li', 'Na', 'K', 'Rb', 'Cs'})
+
+
+def cation_floor(el1, v1, el2, v2):
+    """The packing floor for one pair of cations; see MONOVALENT_PAIR_MIN.
+    v1 and v2 are the stated charges, or None."""
+    def _mono(el, v):
+        if el in ALWAYS_MONOVALENT:
+            return True
+        try:
+            return 0.0 < abs(float(v)) <= 1.0 + 1e-6
+        except (TypeError, ValueError):
+            return False
+    return (MONOVALENT_PAIR_MIN if _mono(el1, v1) and _mono(el2, v2)
+            else CATION_CATION_MIN)
+
 # v2.0.15: WHAT THIS FLOOR DOES NOT APPLY TO.
 #
 # All three families above are hydrogen-free, and the floor is meaningless for
@@ -3952,6 +4047,21 @@ ALTERNATIVE_OCC_SUM_MAX = 1.02
 OCC_ESD_K = 3.0
 
 
+def _are_alternatives(s1, s2, esd=None):
+    """v2.0.46. Can the model fill these two positions one at a time? Their
+    occupancies sum to one or less, within ALTERNATIVE_OCC_SUM_MAX or
+    OCC_ESD_K standard uncertainties of the deposited occupancies (doubled for
+    two images of one label). The packing gates' rule, for any two sites."""
+    import math as _m
+    esd = esd or {}
+    o1 = 1.0 if getattr(s1, 'occ', None) is None else float(s1.occ)
+    o2 = 1.0 if getattr(s2, 'occ', None) is None else float(s2.occ)
+    g1, g2 = esd.get(s1.label, 0.0), esd.get(s2.label, 0.0)
+    sig = 2.0 * g1 if s1.label == s2.label else _m.hypot(g1, g2)
+    allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * sig)
+    return (o1 + o2 - 1.0) <= allow + 1e-9
+
+
 def _occupancy_esds(cif_path):
     """{label: standard uncertainty of its occupancy}, 0.0 where none is
     given ("1." or "0.41583"). Read from the CIF text, because the parsed
@@ -3982,6 +4092,33 @@ def _occupancy_esds(cif_path):
 
 CATION_ANION_ABSOLUTE_MIN = 1.20
 
+# v2.0.46: A HALOGEN THE CIF STATES IS POSITIVE IS A CATION.
+#
+# ALWAYS_ANION was taken literally: Cl, Br and I were anions whatever the
+# file said. In a perchlorate (Cl(7+)), chlorate (Cl(5+)), chlorite
+# (Cl(3+)), bromate or iodate each X-O bond was then read as two anions
+# 1.4-1.8 A apart: of 49 ICSD lithium, sodium and potassium chlorine
+# oxysalts, 42 were expunged on G2 for their own Cl-O bonds, and the
+# anion-centred sums treated Cl(7+) as an anion with nothing bonded to it.
+# Bond selection follows the stated valence too (classify_bond_pair), so
+# the other cations are not bonded to Cl(7+). Only a valence the CIF or the
+# user states makes the change, and only for an element given one sign: a
+# chloride perchlorate, with Cl at -1 and +7, needs per-site valences, and
+# is left as before.
+def positive_halogens(valences):
+    """The species of ALWAYS_ANION that a stated positive valence makes
+    cations in this structure. Keys that are site labels are ignored."""
+    out = set()
+    for el, v in (valences or {}).items():
+        if el in ALWAYS_ANION:
+            try:
+                if float(v) > 0:
+                    out.add(el)
+            except (TypeError, ValueError):
+                pass
+    return out
+
+
 def resolve_anions(elements, valences=None):
     """
     Which elements are acting as anions IN THIS structure.
@@ -4005,7 +4142,8 @@ def resolve_anions(elements, valences=None):
     Returns the set of element symbols acting as anions.
     """
     els = {e for e in elements if e}
-    anions = {e for e in els if e in ALWAYS_ANION}
+    # v2.0.46: less a halogen stated positive (positive_halogens)
+    anions = {e for e in els if e in ALWAYS_ANION} - positive_halogens(valences)
     for e in els & set(AMPHOTERIC_ANION):
         v = (valences or {}).get(e)
         if v is not None:
@@ -4036,9 +4174,114 @@ def resolve_anions(elements, valences=None):
 # an edge at or above the floor, such as the O-O edge of a silicate
 # tetrahedron in a spinel, which IS part of the packing, is untouched. A
 # centre counts only where the structure makes it a cation.
-POLYANION_CENTRES = frozenset({'B', 'C', 'N', 'Si', 'P', 'S', 'As', 'Se'})
-POLYANION_BOND_MAX = 1.75   # A: longer than any centre-O or centre-F bond of these
+#
+# Each centre-ligand pair carries the longest bond it allows and the
+# smallest ligand-centre-ligand angle. The angle does the work: a carbonate
+# crushed to an O-C-O angle of 70 degrees has an edge of 1.47 A from
+# perfectly ordinary bonds, and no bond limit can see that. The bond limits
+# sit above the longest bond in structures that pass every other gate.
+# Measured on 870 ICSD entries and the four corpora:
+#
+#     pair    longest bond               smallest angle
+#     C-O     1.424 A (C2O5 bridge)      110.1
+#     N-O     1.397 A (Na3NO4, K3NO4)    108.6
+#     Si-O    1.830 A (SiO6)              86.0
+#     P-F     1.637 A                     87.8 (all NOT_ASSESSED: R3)
+#     B-F     1.416 A (95th percentile)  all NOT_ASSESSED or EXPUNGE
+#     Cl-O    1.70 A (95th percentile)   all NOT_ASSESSED or EXPUNGE
+#
+# Limits of 1.40 A for C-O and 1.35 A for N-O, tried first, expunged five
+# sodium and lithium pyrocarbonates and three orthonitrates on edges of
+# their own anions. Centres whose normal edges sit above the floor (SO4,
+# PO4, SiO4, SeO4, AsO4) stay in: a distorted tetrahedron or an
+# edge-sharing octahedron can still bring an edge below it, and the angle
+# still separates that from a crushed one. The same table says which bonds
+# hold a ligand to its centre (conditional_occupancy).
+POLYANION_PAIRS = {            # (centre, ligand): (longest bond A, smallest angle deg)
+    ('C', 'O'): (1.50, 100.0),     # CO3 120; C2O5 bridge 1.42
+    ('N', 'O'): (1.50, 100.0),     # NO3 120, NO2 115, NO4 109.5 at 1.39
+    ('B', 'O'): (1.60, 100.0),     # BO3 120, BO4 109.5
+    ('B', 'F'): (1.50, 100.0),     # BF4 109.5
+    ('Si', 'O'): (1.85, 80.0),     # SiO4 109.5, SiO6 cis 90
+    ('Si', 'F'): (1.80, 80.0),     # SiF6, cis 90
+    ('P', 'O'): (1.70, 95.0),      # PO4 109.5
+    ('P', 'F'): (1.70, 80.0),      # PF6, cis 90
+    ('S', 'O'): (1.60, 95.0),      # SO4 109.5, SO3 106
+    ('Se', 'O'): (1.80, 95.0),     # SeO4 109.5, SeO3 100-105
+    ('As', 'O'): (1.90, 80.0),     # AsO4 109.5, AsO6 cis 90
+    ('Cl', 'O'): (1.60, 95.0),     # ClO4 109.5, ClO3 106
+}
+POLYANION_CENTRES = frozenset(c for c, _ in POLYANION_PAIRS)
+POLYANION_BOND_MAX = max(b for b, _ in POLYANION_PAIRS.values())
+# v2.0.46: the most ligands each centre takes (conditional_occupancy), and
+# the most centres one ligand is bonded to (two, for the bridging O of a
+# pyro-anion)
+POLYANION_MOST_LIGANDS = {
+    ('C', 'O'): 4, ('N', 'O'): 4, ('B', 'O'): 4, ('B', 'F'): 4,
+    ('Si', 'O'): 6, ('Si', 'F'): 6, ('P', 'O'): 4, ('P', 'F'): 6,
+    ('S', 'O'): 4, ('Se', 'O'): 4, ('As', 'O'): 6, ('Cl', 'O'): 4}
+POLYANION_MOST_CENTRES = 2
 _POLYANION_EDGE_MIN = {}    # {cif_path: shortest edge set aside}, per call
+_CATION_CONTACT = {}        # {cif_path: (margin, d, label, label, floor)}, per call
+
+
+def polyanion_edge(centre, ligand, b1, b2, edge):
+    """Is a ligand-ligand distance `edge` the edge of a polyanion whose
+    centre is bonded to both at b1 and b2? See POLYANION_PAIRS."""
+    lim = POLYANION_PAIRS.get((centre, ligand))
+    if lim is None or b1 > lim[0] or b2 > lim[0]:
+        return False
+    import math as _m
+    c = (b1 * b1 + b2 * b2 - edge * edge) / (2.0 * b1 * b2)
+    ang = _m.degrees(_m.acos(max(-1.0, min(1.0, c))))
+    return ang >= lim[1]
+
+
+def polyanion_bond(centre, ligand, d):
+    """Is a centre-ligand distance d a bond inside one of the
+    POLYANION_PAIRS units?"""
+    lim = POLYANION_PAIRS.get((centre, ligand))
+    return lim is not None and d <= lim[0]
+
+
+# v2.0.46: A LIGAND THAT MOVES WITH ITS CENTRE.
+#
+# The bond valence sums weight each bond by the occupancy of the atom at its
+# far end (v1.8.3, A8), which assumes the two ends are filled independently.
+# Inside an orientationally disordered polyanion they are not: wherever the
+# nitrogen of a nitrite is, its two oxygens are too. ICSD 152184, NaNO2 with
+# N and O each at 0.5, summed N(3+) to 1.44 and was expunged on G7 for bonds
+# it has. So for a bond inside a POLYANION_PAIRS unit the weight is the
+# probability that the far end is filled GIVEN that this end is: its
+# occupancy over this site's, at most one. Every other bond keeps the plain
+# occupancy, because nothing says a sodium and its oxygen move together.
+#
+# That reading holds where each orientation has its own centre. Where the
+# model spreads one centre's ligands over more positions than any single
+# orientation fills, as high-temperature cubic NaClO4 does (ICSD 117375:
+# Cl on 4a and 32f, O on 96j, 96k and 32f, every occupancy below 0.34),
+# weighting every ligand in reach given the centre counted 47 oxygens and
+# summed Cl(7+) to 53. So the conditional weights are used only where they
+# give the centre no more ligands than it can take
+# (POLYANION_MOST_LIGANDS), and a ligand no more centres than
+# POLYANION_MOST_CENTRES; otherwise the plain occupancy stands, and the
+# average it gives is the honest figure. See conditional_ligand_count.
+def conditional_occupancy(p_far, p_here, centre, ligand, d):
+    """Weight of a bond in an occupancy-weighted sum, seen from a site of
+    occupancy p_here. centre and ligand name the pair as POLYANION_PAIRS
+    does, whichever end is summing."""
+    if (p_here is None or not 0.0 < p_here < 1.0 or p_far >= 1.0
+            or not polyanion_bond(centre, ligand, d)):
+        return p_far
+    return min(1.0, p_far / p_here)
+
+
+def conditional_ligand_count(bonds, p_here, centre, ligand):
+    """How many partners the conditional weights give one site: bonds is
+    [(far-end occupancy, distance, count)]. Only bonds inside a
+    POLYANION_PAIRS unit count."""
+    return sum(n * conditional_occupancy(p, p_here, centre, ligand, d)
+               for p, d, n in bonds if polyanion_bond(centre, ligand, d))
 
 
 def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
@@ -4097,8 +4340,9 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
     import numpy as _np
     import math as _math
     _edges = []         # v2.0.46: polyanion edges set aside (POLYANION_CENTRES)
+    _gov = [None]       # v2.0.46: the cation contact nearest its floor
 
-    def _scan(st, anion_set, rmax, esd=None):
+    def _scan(st, anion_set, rmax, esd=None, sv=None):
         # v2.0.14: the image range follows the search radius. At one image a
         # 6.5 A search in a 5 A cell cannot reach the neighbour it is looking
         # for, so widening rmax alone would have been a half fix.
@@ -4130,6 +4374,10 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         els = [p[0] for p in pts]
         occs = _np.array([p[4] for p in pts])
         labs = [p[5] for p in pts]
+        # v2.0.46: each position's stated charge, for its pair's floor
+        sv = sv or {}
+        _ev = valences or {}
+        vals = [sv.get(p[5], _ev.get(p[0])) for p in pts]
         sigs = _np.array([esd.get(p[5], 0.0) for p in pts])
         P = _np.array([[p[1], p[2], p[3]] for p in pts])
         is_anion = _np.array([e in anion_set for e in els])
@@ -4145,6 +4393,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
             if occ0 <= 0:
                 continue                          # v2.0.46: no atom there
             sig0 = esd.get(s.label, 0.0)
+            v0 = sv.get(s.label, _ev.get(el))
             o = site_centre(st.cell, s)
             p0 = _np.array([o.x, o.y, o.z])
             d = _np.linalg.norm(P - p0, axis=1)
@@ -4176,8 +4425,11 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                 # v2.0.46: an edge of this anion's own polyanion, held short
                 # by the bonds to its centre, is not a packing contact
                 if (el_is_anion and dist < ANION_ANION_MIN and len(_cen)
-                        and float(_np.min(_np.linalg.norm(P[_cen] - P[idx], axis=1)))
-                        <= POLYANION_BOND_MAX):
+                        and els[idx] == el
+                        and any(polyanion_edge(
+                            els[_j], el, float(d[_j]),
+                            float(_np.linalg.norm(P[_j] - P[idx])), dist)
+                            for _j in _cen)):
                     _edges.append(dist)
                     continue
                 # v2.0.14: the bucket now asks the same question the filter
@@ -4186,6 +4438,10 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                     aa = dist if aa is None else min(aa, dist)
                 else:
                     cc = dist if cc is None else min(cc, dist)
+                    # v2.0.46: judged against the floor for THIS pair
+                    _fl = cation_floor(el, v0, els[idx], vals[idx])
+                    if _gov[0] is None or dist - _fl < _gov[0][0]:
+                        _gov[0] = (dist - _fl, dist, s.label, labs[idx], _fl)
         return aa, cc
 
     try:
@@ -4199,17 +4455,25 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         _has_cation = bool(_els - _anion_set)
 
         _esd = _occupancy_esds(cif_path)
-        aa, cc = _scan(st, _anion_set, rmax, _esd)
+        # v2.0.46: each site's own stated charge, for the pair floors
+        try:
+            _sv = {k: d.get('explicit_valence') for k, d in
+                   (extract_per_atom_valences(cif_path) or {}).items()
+                   if d.get('explicit_valence') not in (None, 0)}
+        except (OSError, UnicodeDecodeError, ValueError):
+            _sv = {}
+        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv)
 
         # v2.0.14: one widened retry, and only where a bucket that SHOULD
         # have a member came back empty. A structure with no cations has no
         # cation-cation contact at any radius and is not a failure.
         if ((_has_anion and aa is None) or (_has_cation and cc is None)) \
                 and rmax < ANION_CONTACT_RMAX_WIDE:
-            aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd)
+            aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd, _sv)
             aa = aa if aa is not None else aa2
             cc = cc if cc is not None else cc2
         _POLYANION_EDGE_MIN[str(cif_path)] = min(_edges) if _edges else None
+        _CATION_CONTACT[str(cif_path)] = _gov[0]
         return aa, cc
     except (NameError, TypeError, AttributeError):
         # A defect in this function, not a property of the file. Fail loudly:
