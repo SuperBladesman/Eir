@@ -214,6 +214,284 @@ KNOWN_ANIONS = dict(ALWAYS_ANION)
 KNOWN_ANIONS.update(AMPHOTERIC_ANION)
 
 
+# ============================================================================
+# v2.0.46: ONE READING OF AN ATOM'S SYMBOL
+# ============================================================================
+# Eight functions each turned a type symbol or a label into an element, with
+# expressions that disagreed. On CIFs written the way other programs and
+# older files write them (VALIDATE_PARSING):
+#   'SN4+'    lost its charge, and Sn was summed as Sn(2+)
+#   'CO2+'    stopped the run: with no oxidation-number loop, a scan of EVERY
+#             line for 'X2+' read 'O2+' as oxygen at +2 ('HO3+' the same)
+#   'Mn2.5+'  became the element 'Mn2.' and the file failed
+#   no _atom_site_type_symbol column: the file produced nothing at all, not
+#             even an entry among the failures
+#   'D1+'     deuterium has no bond valence parameters and was dropped
+# parse_atom_symbol is now the one reading. normalise_atom_types rewrites the
+# atom_site and atom_type loops into the form ICSD writes ('Sn4+', 'O2-', and
+# 'Mn4+' with 3.5 in the oxidation-number loop) before anything else reads
+# the file, so every older parser sees the form it was written against, and
+# ICSD files themselves pass through unchanged.
+ELEMENT_SYMBOLS = frozenset(
+    gemmi.Element(_z).name for _z in range(1, 119)) | {'D'}
+
+
+def parse_atom_symbol(token, hint=None):
+    """
+    (element, charge) from a type symbol ('Sn4+', 'SN4+', 'Sn+4', 'O-2',
+    'Mn3.5+', 'D1+') or a label ('Sn1', 'SN1', 'OW1', 'Cl1a').
+
+    The element is the first one or two letters, whichever is a real element,
+    two letters first: 'SN4+' is tin, 'CO2+' cobalt, 'HO3+' holmium. Where
+    both readings are real and `hint` (the elements the file's formula names)
+    holds only the shorter, the shorter wins: the label 'HO1' in Mg(OH)2 is
+    hydrogen. charge is a float, or None where the token carries none ('Sn',
+    'Sn1', 'O1W'). (None, None) for a token that starts with no element.
+    """
+    s = str(token or '').strip().strip("'\"")
+    m = re.match(r'^([A-Za-z])([A-Za-z]?)', s)
+    if not m:
+        return None, None
+    one = m.group(1).upper()
+    two = (one + m.group(2).lower()) if m.group(2) else None
+    cands = [c for c in (two, one) if c and c in ELEMENT_SYMBOLS]
+    if not cands:
+        return None, None
+    el = cands[0]
+    if hint and len(cands) == 2 and cands[0] not in hint and cands[1] in hint:
+        el = cands[1]
+    rest = s[len(el):]
+    charge = None
+    m1 = re.match(r'^(\d+(?:\.\d+)?)?([+-])$', rest)
+    m2 = re.match(r'^([+-])(\d+(?:\.\d+)?)$', rest)
+    if m1:
+        charge = (float(m1.group(1)) if m1.group(1) else 1.0) * (
+            1 if m1.group(2) == '+' else -1)
+    elif m2:
+        charge = float(m2.group(2)) * (1 if m2.group(1) == '+' else -1)
+    return el, charge
+
+
+def canonical_type_symbol(element, charge):
+    """ICSD's form of a type symbol: 'Sn4+', 'O2-', 'Na0+'. A fractional
+    charge is written rounded away from zero, as ICSD writes 'Mn4+' for 3.5,
+    with the value itself in the oxidation-number loop. D is written as H:
+    for bond valence purposes deuterium is hydrogen."""
+    el = 'H' if element == 'D' else element
+    if charge is None:
+        return el
+    n = int(math.ceil(abs(charge) - 1e-9))
+    return f'{el}{n}{"+" if charge >= 0 else "-"}'
+
+
+def _cif_tokens(line):
+    return re.findall(r"'[^']*'|\"[^\"]*\"|\S+", line)
+
+
+def _formula_hint(content):
+    """Elements the file's formula names, where the formula is written in a
+    case that can be trusted ('O2 Sn1', 'SnO2'; not 'SNO2')."""
+    m = re.search(r"_chemical_formula_(?:sum|moiety)\s+(?:'([^']*)'|\"([^\"]*)\"|(\S+))",
+                  content)
+    if not m:
+        return None
+    f = next(g for g in m.groups() if g is not None).strip()
+    toks = f.split()
+    if toks and all(re.match(r'^[A-Z][a-z]?\d*\.?\d*$', t) for t in toks):
+        els = {re.match(r'^([A-Z][a-z]?)', t).group(1) for t in toks}
+    elif re.search(r'[a-z]', f) and re.match(r'^([A-Z][a-z]?\d*\.?\d*)+$', f):
+        els = set(re.findall(r'[A-Z][a-z]?', f))
+    else:
+        return None
+    els = {e for e in els if e in ELEMENT_SYMBOLS}
+    return els or None
+
+
+def _cif_loops(lines):
+    """[(loop_ line, [tag line indices], [tags], [row line indices] or None)].
+    Rows are None for a loop holding a text field, which is left alone."""
+    out, i, n = [], 0, len(lines)
+    while i < n:
+        if lines[i].strip().lower() == 'loop_':
+            j, tag_idx, tags = i + 1, [], []
+            while j < n and lines[j].strip().startswith('_'):
+                tag_idx.append(j)
+                tags.append(lines[j].strip().split()[0].lower())
+                j += 1
+            rows = []
+            while j < n:
+                t = lines[j].strip()
+                if t.lower().startswith(('loop_', 'data_')) or t.startswith('_'):
+                    break
+                if t.startswith(';'):
+                    rows = None
+                if rows is not None and t and not t.startswith('#'):
+                    rows.append(j)
+                j += 1
+            out.append((i, tag_idx, tags, rows))
+            i = j
+            continue
+        i += 1
+    return out
+
+
+def normalise_atom_types(content):
+    """
+    The atom_site and atom_type loops rewritten in ICSD's own forms. Returns
+    (content, notes); notes say what changed, for the run log.
+
+      * every type symbol in the form 'Sn4+' (see parse_atom_symbol and
+        canonical_type_symbol); a fractional charge also enters the
+        oxidation-number loop, which is added if the file has none;
+      * a missing _atom_site_type_symbol column is added, from the labels,
+        read against the formula where it can be trusted;
+      * a row that does not split into one value per column, or a loop
+        holding a text field, is left exactly as written.
+
+    A file already in ICSD's form is returned unchanged.
+    """
+    lines = content.split('\n')
+    hint = _formula_hint(content)
+    notes = []
+    loops = _cif_loops(lines)
+    site = [L for L in loops if '_atom_site_label' in L[2]
+            and '_atom_site_fract_x' in L[2]]
+    types = [L for L in loops if '_atom_type_symbol' in L[2]]
+    if len(site) != 1 or site[0][3] is None:
+        return content, notes
+    _, tag_idx, tags, rows = site[0]
+    toks = {r: _cif_tokens(lines[r]) for r in rows}
+    if any(len(t) != len(tags) for t in toks.values()):
+        return content, ['atom_site rows span lines; symbols left as written']
+
+    # what each symbol means, from wherever it appears
+    seen = {}
+    if '_atom_site_type_symbol' in tags:
+        k = tags.index('_atom_site_type_symbol')
+        raws = [toks[r][k] for r in rows]
+    else:
+        k = None
+        li = tags.index('_atom_site_label')
+        raws = [toks[r][li] for r in rows]
+    for t in types:
+        if t[3] is None:
+            continue
+        kk = t[2].index('_atom_type_symbol')
+        for r in t[3]:
+            tt = _cif_tokens(lines[r])
+            if len(tt) == len(t[2]):
+                raws.append(tt[kk])
+    for raw in raws:
+        if raw not in seen:
+            el, ch = parse_atom_symbol(raw, hint if k is None else None)
+            seen[raw] = (el, ch)
+    canon = {raw: canonical_type_symbol(el, ch)
+             for raw, (el, ch) in seen.items() if el is not None}
+    # two charges written as one symbol cannot both be kept: leave those
+    by_sym = {}
+    for raw, c in canon.items():
+        by_sym.setdefault(c, set()).add(seen[raw][1])
+    clash = {c for c, chs in by_sym.items() if len({x for x in chs if x is not None}) > 1}
+    for raw in [r for r, c in canon.items() if c in clash]:
+        canon[raw] = raw
+    if clash:
+        notes.append('kept ' + ', '.join(sorted(clash)) + ' as written (two charges)')
+    frac = {canon[raw]: ch for raw, (el, ch) in seen.items()
+            if raw in canon and canon[raw] != raw and ch is not None
+            and abs(ch - round(ch)) > 1e-6}
+
+    changed = 0
+    if k is None:
+        li = tags.index('_atom_site_label')
+        if not all(toks[r][li] in canon for r in rows):
+            return content, ['no _atom_site_type_symbol, and a label names no '
+                             'element; left as written']
+        lines[tag_idx[li]] = lines[tag_idx[li]] + '\n_atom_site_type_symbol'
+        for r in rows:
+            t = toks[r]
+            lines[r] = ' '.join(t[:li + 1] + [canon[t[li]]] + t[li + 1:])
+        notes.append('added _atom_site_type_symbol from the labels')
+    else:
+        for r in rows:
+            t = toks[r]
+            if t[k] in canon and canon[t[k]] != t[k]:
+                t[k] = canon[t[k]]
+                lines[r] = ' '.join(t)
+                changed += 1
+    for t in types:
+        if t[3] is None:
+            continue
+        kk = t[2].index('_atom_type_symbol')
+        for r in t[3]:
+            tt = _cif_tokens(lines[r])
+            if len(tt) == len(t[2]) and tt[kk] in canon and canon[tt[kk]] != tt[kk]:
+                tt[kk] = canon[tt[kk]]
+                lines[r] = ' '.join(tt)
+                changed += 1
+    if changed:
+        notes.append(f'rewrote {changed} type symbol{"s" if changed > 1 else ""} '
+                     'in ICSD form')
+    has_ox = any('_atom_type_oxidation_number' in t[2] for t in types)
+    if frac and not has_ox and sum(l.strip().lower().startswith('data_')
+                                   for l in lines) <= 1:
+        lines += ['loop_', '_atom_type_symbol', '_atom_type_oxidation_number']
+        lines += [f'{s} {v:g}' for s, v in sorted(frac.items())]
+        lines.append('')
+        notes.append('added the oxidation-number loop for '
+                     + ', '.join(f'{s} {v:g}' for s, v in sorted(frac.items())))
+    return '\n'.join(lines), notes
+
+
+def read_cif_text(cif_path):
+    """The file as every parser in Eir should read it: normalise_atom_types
+    applied. Raises OSError or UnicodeDecodeError as open() does."""
+    with open(cif_path, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.read()
+    return normalise_atom_types(content)[0]
+
+
+# v2.0.46: ONE RULE FOR AN AMPHOTERIC SPECIES WHOSE VALENCE IS NOT STATED.
+#
+# resolve_anions (the packing scan) and classify_bond_pair (bond selection)
+# decided it differently: the first made S, Se, Te, N, P ... anions unless
+# any of O, F, Cl, Br, I was present; the second made them cations whenever
+# any more electronegative anion former was. Without stated valences a
+# sulfoselenide therefore had Se as an anion in one and a cation bonded to S
+# in the other, and a thiophosphate had P as an anion in the packing scan.
+# The rule here, used by both: an amphoteric species is a cation if a more
+# electronegative O or F is present (sulfate, phosphate, borate, hydroxide),
+# or a more electronegative amphoteric species from ANOTHER group (P or As
+# against S, H against N, Si against C); otherwise it is an anion. Same-group
+# partners (S with Se and Te, N with P) and the heavier halides are anions
+# beside it: a sulfoselenide, a chalcohalide, a nitride chloride. A stated
+# valence still settles it, as before, wherever one exists.
+AMPHOTERIC_GROUP = {'H': 1, 'B': 13, 'C': 14, 'Si': 14, 'N': 15, 'P': 15,
+                    'As': 15, 'S': 16, 'Se': 16, 'Te': 16}
+DEMOTING_ANIONS = frozenset({'O', 'F'})
+
+
+def acts_as_anion(el, elements_present=None):
+    """Is `el` an anion in a structure holding `elements_present`, when no
+    valence says? See AMPHOTERIC_GROUP."""
+    if el in ALWAYS_ANION:
+        return True
+    if el not in AMPHOTERIC_ANION:
+        return False
+    if not elements_present:
+        return True
+    e = PAULING_EN.get(el, 0.0)
+    for other in elements_present:
+        if other == el or PAULING_EN.get(other, 0.0) <= e:
+            continue
+        if other in DEMOTING_ANIONS:
+            return False
+        if (other in AMPHOTERIC_ANION
+                and AMPHOTERIC_GROUP.get(other) != AMPHOTERIC_GROUP.get(el)):
+            return False
+    return True
+
+
+
 # Reads that failed, so a file that could not be parsed is distinguishable
 # from a file with nothing to report. Every metadata extractor below wrapped
 # its whole file read in a bare `except: return result`, which is why
@@ -299,10 +577,18 @@ _SIGN_INVERSIONS = {}
 # stated negative valences as two anions where either belongs to this set.
 _MIXED_SIGN_ELEMENTS = set()
 
+# v2.0.46. The oxidation states the user supplied (--ox, config.json) for the
+# structure being read, for the code that decides anions from the file before
+# bond selection (_stated_anions). Set by process_single_cif; cleared with
+# _SIGN_INVERSIONS. Without it a hydride given only as --ox H=-1 was never
+# recorded as sharing oxygen's position, and SmHO came out ACCEPT at 1.81.
+_USER_VALENCES = {}
+
 
 def reset_sign_inversions():
     _SIGN_INVERSIONS.clear()
     _MIXED_SIGN_ELEMENTS.clear()
+    _USER_VALENCES.clear()
 
 
 def _valence_signs_are_credible(el1, el2, v1, v2):
@@ -392,19 +678,8 @@ def classify_bond_pair(el1, el2, valences=None, elements_present=None):
  
     # --- 2. is each species acting as an anion here? -------------------------
     def _acts_as_anion(el):
-        if el in ALWAYS_ANION:
-            return True
-        if el not in AMPHOTERIC_ANION:
-            return False
-        if not elements_present:
-            return True            # no context supplied, fall back to old rule
-        e = PAULING_EN.get(el, 0.0)
-        for other in elements_present:
-            if other == el:
-                continue
-            if other in ANION_FORMERS and PAULING_EN.get(other, 0.0) > e:
-                return False       # something more electronegative is available
-        return True
+        # v2.0.46: the rule resolve_anions uses too (acts_as_anion).
+        return acts_as_anion(el, elements_present)
  
     a1, a2 = _acts_as_anion(el1), _acts_as_anion(el2)
     if a1 and not a2:
@@ -413,6 +688,13 @@ def classify_bond_pair(el1, el2, valences=None, elements_present=None):
         return el1, el2
  
     # --- 3. both could be anions: the more electronegative one is ------------
+    # v2.0.46: only where both are O or halogens, which is the oxyhalogen
+    # anion (IO3-, ClO4-, BrO3-) written without valences. Two amphoteric
+    # species both acting as anions (S and Se in a sulfoselenide), or one
+    # beside a halide (N and Cl in Ca2NCl, S and I in BiSI), are not bonded:
+    # rule 3 used to make the less electronegative one a cation.
+    if a1 and a2 and not (el1 in ALWAYS_ANION and el2 in ALWAYS_ANION):
+        return None, None
     if a1 and a2:
         e1 = PAULING_EN.get(el1)
         e2 = PAULING_EN.get(el2)
@@ -984,8 +1266,8 @@ def extract_cif_oxidation_states(cif_path):
     error_message = None
 
     try:
-        with open(cif_path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
+        # v2.0.46: as normalise_atom_types leaves it
+        lines = read_cif_text(cif_path).split('\n')
     except Exception as e:
         return {}, 'missing', f"Could not read CIF: {e}", {}
 
@@ -1050,15 +1332,26 @@ def extract_cif_oxidation_states(cif_path):
                         except ValueError:
                             pass
 
-    # Fallback: infer from atom_type_symbol pattern if loop values missing
+    # Fallback: the charges the type symbols carry, where no loop gives
+    # oxidation numbers. v2.0.46: read from the atom_site type column. This
+    # used to scan every line of the file for anything shaped like 'X2+', so
+    # a type written 'CO2+' gave oxygen a valence of +2 and a title or a
+    # chemical name could supply valences of its own.
     if not oxidation_states:
-        for line in lines:
-            line_stripped = line.strip()
-            matches = re.findall(r'([A-Z][a-z]?)(\d+)([+-])', line_stripped)
-            for elem, charge, sign in matches:
-                charge_val = int(charge) * (1 if sign == '+' else -1)
-                if elem not in oxidation_states:
-                    oxidation_states[elem] = charge_val
+        for _L in _cif_loops(lines):
+            if '_atom_site_type_symbol' not in _L[2] or _L[3] is None:
+                continue
+            _k = _L[2].index('_atom_site_type_symbol')
+            for _r in _L[3]:
+                _t = _cif_tokens(lines[_r])
+                if len(_t) != len(_L[2]):
+                    continue
+                _el, _ch = parse_atom_symbol(_t[_k])
+                if _el is None or _ch is None:
+                    continue
+                _el = 'H' if _el == 'D' else _el
+                if _el not in oxidation_states:
+                    oxidation_states[_el] = int(_ch) if _ch == int(_ch) else _ch
                     quality = 'inferred'
 
     if not oxidation_states:
@@ -1467,8 +1760,7 @@ def extract_per_atom_valences(cif_path):
         type_map = {}
 
     try:
-        with open(cif_path, 'r', errors='ignore') as f:
-            content = f.read()
+        content = read_cif_text(cif_path)      # v2.0.46
     except (OSError, UnicodeDecodeError) as _e:
         # v2.0.11: recorded, not swallowed. A file that could not be read is
         # not a file with nothing in it.
@@ -1657,8 +1949,7 @@ def extract_anion_parameter(cif_path, formula=None):
             anion_elements = {'O'}
     
     try:
-        with open(cif_path, 'r', errors='ignore') as f:
-            content = f.read()
+        content = read_cif_text(cif_path)      # v2.0.46
     except (OSError, UnicodeDecodeError) as _e:
         # v2.0.11: recorded, not swallowed. A file that could not be read is
         # not a file with nothing in it.
@@ -1981,8 +2272,7 @@ def extract_site_occupancies(cif_path):
     result = {}
     
     try:
-        with open(cif_path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
+        lines = [l + '\n' for l in read_cif_text(cif_path).split('\n')]  # v2.0.46
     except (OSError, UnicodeDecodeError) as _e:
         # v2.0.11: recorded, not swallowed. A file that could not be read is
         # not a file with nothing in it.
@@ -3030,9 +3320,9 @@ def resolve_anions(elements, valences=None):
                 continue
             except (TypeError, ValueError):
                 pass
-        # No stated oxidation state: anionic only if nothing more
-        # electronegative is present to take that role.
-        if not (els & set(ALWAYS_ANION)):
+        # No stated oxidation state. v2.0.46: the rule classify_bond_pair
+        # uses (acts_as_anion); it used to be 'no O, F, Cl, Br or I at all'.
+        if acts_as_anion(e, els):
             anions.add(e)
     return anions
 

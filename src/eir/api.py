@@ -29,6 +29,12 @@ __all__ = ['check', 'check_folder', 'validate', 'CheckResult', 'FolderResult',
            'OxidationStatesNeeded', 'EirError']
 
 
+# What engine 2.0.46 writes into a failure when the file types an element as
+# an anion that the bond valence table has no parameters for in that role
+# (_unsupported_anion_note).
+_UNSUPPORTED_ANION = 'typed as an anion'
+
+
 class EirError(RuntimeError):
     """Eir could not produce a result. The message says why."""
 
@@ -235,15 +241,28 @@ class CheckResult:
         return self.failure is None
 
     @property
+    def _unsupported_anion(self):
+        # Engine 2.0.46 names an anion it has no parameters for (Sn(4-) in
+        # Mg2Sn) in the failure. The file was read; it cannot be assessed,
+        # which is NOT_ASSESSED, not EXPUNGE.
+        return bool(self.failure) and _UNSUPPORTED_ANION in self.failure
+
+    @property
     def tier(self):
+        if self._unsupported_anion:
+            return 'NOT_ASSESSED'
         return 'EXPUNGE' if self.failure else self._get('structure_pgrm_tier')
 
     @property
     def code(self):
+        if self._unsupported_anion:
+            return 'R1'
         return 'P' if self.failure else self._get('structure_pgrm_code')
 
     @property
     def reason(self):
+        if self._unsupported_anion:
+            return 'unsupported_anion'
         return ('unreadable_file' if self.failure
                 else self._get('structure_pgrm_reason'))
 

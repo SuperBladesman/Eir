@@ -825,6 +825,8 @@ def clean_cif_for_gemmi(cif_file_path):
         # about bytes; unquoting second, because it is about tokens.
         content, _n_ascii = normalise_cif_to_ascii(content)
         content, _n_unquoted = _unquote_atom_site_numbers(content)
+        # v2.0.46: one reading of every atom's symbol (normalise_atom_types)
+        content, _type_notes = normalise_atom_types(content)
 
         # v1.8.3 (B13): the two repairs below are load-bearing, not cosmetic.
         # Without the _chemical_name_structure_type strip, 22 of the 142
@@ -840,6 +842,7 @@ def clean_cif_for_gemmi(cif_file_path):
         if _n_unquoted:
             _repairs.append(f'unquoted {_n_unquoted} atom_site numeric value'
                             f'{"s" if _n_unquoted > 1 else ""}')
+        _repairs.extend(_type_notes)
 
         # Fix non-standard reverse rhombohedral centering ('HR' suffix)
         # Some older ICSD CIFs encode symops in the reverse setting, which gemmi
@@ -3217,6 +3220,29 @@ def _cif_valence_is_usable(element, v):
     return True
 
 
+def _unsupported_anion_note(valences):
+    """
+    v2.0.46. Why a file found no bonds, where the reason is an anion Eir
+    cannot treat: Sn(4-) in Mg2Sn, Sb(3-) in InSb. The bond valence table
+    holds no parameters with Sn, Sb, Ge, Pb or Bi as the anion, so Zintl and
+    intermetallic phases cannot be assessed; before 2.0.46 they failed with
+    'No M-X bonds found' and no reason.
+    """
+    bad = []
+    for e, v in (valences or {}).items():
+        try:
+            if float(v) < 0 and e not in ANION_FORMERS:
+                bad.append(f'{e}({float(v):+g})')
+        except (TypeError, ValueError):
+            continue
+    if not bad:
+        return ''
+    return ('. ' + ', '.join(sorted(bad)) + (' is' if len(bad) == 1 else ' are')
+            + ' typed as an anion, and Eir has no bond valence parameters with '
+            + ('it' if len(bad) == 1 else 'them') + ' as the anion: Zintl and '
+            'intermetallic phases cannot be assessed')
+
+
 def _stated_anions(file_path):
     """
     v2.0.46. The amphoteric species (H, C, N, P, As, S, Se, Te, Si, B) the
@@ -3224,9 +3250,10 @@ def _stated_anions(file_path):
     signs. Used where a list of anions has to be decided before any bond is.
     """
     try:
-        _ox = extract_cif_oxidation_states(file_path)[0] or {}
+        _ox = dict(extract_cif_oxidation_states(file_path)[0] or {})
     except Exception:
-        return set()
+        _ox = {}
+    _ox.update(_USER_VALENCES)           # v2.0.46: and what the user supplied
     _mixed = _mixed_sign_elements(file_path)
     _out = set()
     for _e, _v in _ox.items():
@@ -4402,6 +4429,9 @@ def process_single_cif(file_path, user_oxidation_states=None):
     # CIF that brings its own bond list never reaches that function, and
     # must not inherit the previous file's record.
     _EIR_COLOCATED.clear()
+    # v2.0.46: before parse_cif_file, which records shared anion positions.
+    _USER_VALENCES.clear()
+    _USER_VALENCES.update(user_oxidation_states or {})
     cif_obj = parse_cif_file(file_path)
     if cif_obj is None:
         results['error'] = ("Failed to parse CIF file: "
@@ -4465,7 +4495,8 @@ def process_single_cif(file_path, user_oxidation_states=None):
             initial_extracted_data, valences=_pair_valences)
 
         if not data_with_selected_bonds[block_name].get('selected_bond_types_for_analysis'):
-            results['error'] = "No M-X bonds found"  # Updated to M-X (not just M-O)
+            results['error'] = ("No M-X bonds found"  # Updated to M-X (not just M-O)
+                                + _unsupported_anion_note(_pair_valences))
             return results
 
         # Step 3: Auto-analyse coordination
@@ -5291,8 +5322,12 @@ def process_single_cif(file_path, user_oxidation_states=None):
             # and no sum built on it means anything. The all_cations variant of
             # ICSD 11616 produced a Dy-O contact of 1.181 A, from which a shell
             # of one was built and the site reported as overbonded at 8.258 v.u.
+            # v2.0.46: not for hydrogen. O-H is about 0.97 A by neutrons and
+            # shorter by X-rays, and is a bond: Mg(OH)2 with its H located
+            # came out EXPUNGE on G1 at 0.979 A.
             _s['contact_above_floor'] = (
-                None if _d is None
+                None if (_d is None or _s.get('element')
+                         in CATION_FLOOR_EXCLUDED_ELEMENTS)
                 else bool(_d >= CATION_ANION_ABSOLUTE_MIN))
             if _s['contact_above_floor'] is False:
                 _s['cn_plausible'] = False
@@ -5550,6 +5585,7 @@ def _eir_prepare(cif_file, override_oxidation_states, fallback_oxidation_states)
 
       _SIGN_INVERSIONS      cleared per structure since 2.0.27
       _MIXED_SIGN_ELEMENTS  set per structure since 2.0.46
+      _USER_VALENCES        set per structure since 2.0.46
       _EIR_READ_FAILURES    returned as a delta and merged by the parent
       _NORMALISER_CACHE     a pure cache; a per-worker copy costs a little
       _ORIGIN_CHOICE_CACHE  repeated work and changes nothing

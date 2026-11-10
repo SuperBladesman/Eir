@@ -126,6 +126,10 @@ def _reason_sentence(code, reason, site):
     S = {
         'unreadable_file':
             'Eir could not read the file.',
+        'unsupported_anion':
+            'The file types an element as an anion that Eir has no bond '
+            'valence parameters for in that role, as in a Zintl or '
+            'intermetallic phase, so nothing in it can be assessed.',
         'no_position':
             f'{_a_site(site)} has no coordinates, so nothing can be computed '
             f'for it.',

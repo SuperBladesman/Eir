@@ -1616,7 +1616,10 @@ def add_coordination_quality(batch_csv_path, cif_directory,
         _spread = (pd.to_numeric(df['avg_bond_length'], errors='coerce')
                    - pd.to_numeric(df['min_bond_length'], errors='coerce'))
     else:
-        _spread = pd.Series([None] * len(df), index=df.index)
+        # v2.0.46: a float column. [None] * n is an object column, whose
+        # round() raises TypeError, and a batch whose table had no bond
+        # lengths at all stopped here.
+        _spread = pd.Series([float('nan')] * len(df), index=df.index, dtype=float)
     df['cn_shell_spread'] = _spread.round(4)
     df['cn_fault'] = [cn_fault(c, r, g, spread=s) for c, r, g, s in
                       zip(df['cn'], df['cn_relative'], _geo, _spread)]

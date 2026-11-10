@@ -67,7 +67,10 @@ PLAN = [
                  '\n\n# VALIDATE_SETTINGS()   # eir package: run by '
                  'eir.validate()')]),
     dict(cell=11, name='c11_coordination_quality', role='engine'),
-    dict(cell=12, name='c12_pgrm_integrity_gates', role='engine'),
+    dict(cell=12, name='c12_pgrm_integrity_gates', role='engine',
+         edits=[('\n\n\nVALIDATE_PARSING()\n',
+                 '\n\n\n# VALIDATE_PARSING()   # eir package: run by '
+                 'eir.validate()\n')]),
     dict(cell=13, name='c13_shadowing_check', role='engine'),
     dict(cell=14, name='c14_run_batch_analysis', role='run', run='batch',
          edits=[('EIR_CIF_DIRECTORY = select_directory()',

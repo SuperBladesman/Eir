@@ -23,7 +23,7 @@ Every difference is listed here, and the build tool lists the edits it makes to 
 **On loading**
 
 - The cells' printed output while loading is kept in `eir.engine.IMPORT_LOG` rather than shown, because every worker process in a parallel batch loads the engine.
-- The structural self-check (CELL 1c), `VALIDATE()` and `VALIDATE_SETTINGS()` are not run on loading, for the same reason. `eir validate` (or `eir.validate()`) runs all three. The structural self-check scans the packaged cells in notebook order, as it scans the saved notebook.
+- The structural self-check (CELL 1c), `VALIDATE()`, `VALIDATE_SETTINGS()` and (2.0.46) `VALIDATE_PARSING()` are not run on loading, for the same reason. `eir validate` (or `eir.validate()`) runs them, and `VALIDATE_GATES()`, which does run on loading. The structural self-check scans the packaged cells in notebook order, as it scans the saved notebook.
 - The reference tables are read from the package (`eir/data`, built from `Data/`) rather than from `./Data` in the working directory. `EIR_DATA_DIR` overrides this.
 - The cell that installs py3Dmol with pip is left out; py3Dmol is an optional dependency (`pip install "eir-bvs[viz]"`).
 

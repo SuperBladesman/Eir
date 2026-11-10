@@ -306,6 +306,13 @@ def classify_site(row, struct):
     if _coords is None or isinstance(_coords, float) or _coords == '':
         return 'P1', 'no_position', 'site parsed without coordinates'
 
+    # v2.0.46: a hydrogen site is summed and reported, and gates nothing.
+    # X-ray H positions sit 0.1-0.2 A short of the nucleus, so no floor or
+    # table measured on heavier ions applies to them; a hydroxide is judged
+    # on its other sites.
+    if row.get('element') in CATION_FLOOR_EXCLUDED_ELEMENTS:
+        return ('-', '', '')
+
     # ---- G : can the atoms be where it says? ----------------------------
     if _pgrm_is_false(row.get('contact_above_floor')):
         d = _pgrm_f(row.get('min_bond_length'))
@@ -802,3 +809,234 @@ def VALIDATE_GATES(verbose=True):
 
 
 VALIDATE_GATES()
+
+
+# ---------------------------------------------------------------------------
+# v2.0.46: KNOWN-ANSWER TESTS OF HOW A FILE IS READ. Every case is a way a
+# real CIF is written by some program or some era that Eir got wrong before
+# 2.0.46: symbols in upper case or with the sign first, decimals in the
+# symbol, no type column, deuterium, hydrides given only as --ox, Zintl
+# anions, hydroxides with their H located, and the anion rule without
+# stated valences. Add a case here whenever a new way of writing a file
+# turns up; tests/test_parsing.py runs the same cases end to end.
+def _parsing_cif(name, a, sg, sites, loop=None, type_col=True, cell=None,
+                 formula=None):
+    a_, b_, c_, al, be, ga = cell or (a, a, a, 90, 90, 90)
+    s = [f'data_{name}', f'_cell_length_a {a_}', f'_cell_length_b {b_}',
+         f'_cell_length_c {c_}', f'_cell_angle_alpha {al}',
+         f'_cell_angle_beta {be}', f'_cell_angle_gamma {ga}',
+         f"_symmetry_space_group_name_H-M '{sg}'"]
+    if formula:
+        s.append(f"_chemical_formula_sum '{formula}'")
+    if loop:
+        s += ['loop_', '_atom_type_symbol', '_atom_type_oxidation_number']
+        s += [f'{t} {v}' for t, v in loop]
+    s += ['loop_', '_atom_site_label'] + (['_atom_site_type_symbol'] if type_col else [])
+    s += ['_atom_site_fract_x', '_atom_site_fract_y', '_atom_site_fract_z',
+          '_atom_site_occupancy']
+    for lab, typ, x, y, z, occ in sites:
+        s.append(' '.join([lab] + ([typ] if type_col else [])
+                          + [str(x), str(y), str(z), str(occ)]))
+    return '\n'.join(s) + '\n'
+
+
+def _parsing_run(text, states=None):
+    """process_single_cif on CIF text, quietly, with --ox style states."""
+    global PY3DMOL_AVAILABLE
+    d = tempfile.mkdtemp()
+    p = os.path.join(d, 'eir_parsing.cif')
+    _viz_was = globals().get('PY3DMOL_AVAILABLE', False)
+    try:
+        PY3DMOL_AVAILABLE = False
+        with open(p, 'w', encoding='utf-8') as f:
+            f.write(text)
+        reset_sign_inversions()
+        with contextlib.redirect_stdout(io.StringIO()):
+            return process_single_cif(p, user_oxidation_states=states)
+    finally:
+        PY3DMOL_AVAILABLE = _viz_was
+        try:
+            os.unlink(p)
+            os.rmdir(d)
+        except OSError:
+            pass
+
+
+def _parsing_sites(r):
+    return [(s.get('element'), s.get('valence'), s.get('bvs'))
+            for s in (r.get('sites') or [])]
+
+
+def VALIDATE_PARSING(verbose=True):
+    """Known-answer tests of symbol parsing and anion rules. Raises if any
+    fails."""
+    results = []
+
+    def report(name, ok, detail=''):
+        results.append(bool(ok))
+        if verbose:
+            print(f"  {'PASS' if ok else 'FAIL'}  {name}")
+            if detail:
+                print(f"        {detail}")
+
+    if verbose:
+        print('=' * 70)
+        print('EIR PARSING TESTS')
+        print('=' * 70)
+
+    # 1. The one reading of a symbol.
+    _want = {('Sn4+', None): ('Sn', 4.0), ('SN4+', None): ('Sn', 4.0),
+             ('Sn+4', None): ('Sn', 4.0), ('O-2', None): ('O', -2.0),
+             ('O2-', None): ('O', -2.0), ('Mn3.5+', None): ('Mn', 3.5),
+             ('CO2+', None): ('Co', 2.0), ('HO3+', None): ('Ho', 3.0),
+             ('D1+', None): ('D', 1.0), ('Na0+', None): ('Na', 0.0),
+             ('Sn1', None): ('Sn', None), ('SN1', None): ('Sn', None),
+             ('CL1', None): ('Cl', None), ('Se1', None): ('Se', None),
+             ('S1', None): ('S', None), ('OW1', None): ('O', None),
+             ('HO1', frozenset({'H', 'Mg', 'O'})): ('H', None),
+             ('HO1', frozenset({'Ho', 'O'})): ('Ho', None),
+             ('X1', None): (None, None)}
+    _bad = {k: parse_atom_symbol(*k) for k, v in _want.items()
+            if parse_atom_symbol(*k) != v}
+    report(f'1. {len(_want)} symbols and labels read as meant', not _bad,
+           f'wrong: {_bad}' if _bad else '')
+
+    # 2. ICSD's own form, and a file already in it left byte for byte.
+    _c = [canonical_type_symbol('Mn', 3.5), canonical_type_symbol('D', 1.0),
+          canonical_type_symbol('Na', 0.0), canonical_type_symbol('O', -2.0)]
+    _icsd = _parsing_cif('icsd', 4.7374, 'P 42/m n m',
+                         [('Sn1', 'Sn4+', 0, 0, 0, 1), ('O1', 'O2-', 0.3056, 0.3056, 0, 1)],
+                         loop=[('Sn4+', 4), ('O2-', -2)], cell=(4.7374, 4.7374, 3.1864, 90, 90, 90))
+    _n0 = normalise_atom_types(_icsd)
+    report("2. ICSD's form written, and an ICSD file left unchanged",
+           _c == ['Mn4+', 'H1+', 'Na0+', 'O2-'] and _n0 == (_icsd, []),
+           f'{_c}; ICSD file changed: {_n0[0] != _icsd}')
+
+    # 3. A file without a type column gains one, read against the formula.
+    _bru = _parsing_cif('bru', 3.142, 'P -3 m 1',
+                        [('MG1', None, 0, 0, 0, 1), ('O1', None, 0.33333, 0.66667, 0.2221, 1),
+                         ('HO1', None, 0.33333, 0.66667, 0.4275, 1)],
+                        type_col=False, cell=(3.142, 3.142, 4.766, 90, 90, 120),
+                        formula='H2 Mg1 O2')
+    _n3, _notes3 = normalise_atom_types(_bru)
+    _types3 = re.findall(r'^(?:MG1|O1|HO1) (\S+)', _n3, re.M)
+    report('3. no type column: added from the labels, HO1 read as H in Mg(OH)2',
+           _types3 == ['Mg', 'O', 'H'], f'types {_types3}; notes {_notes3}')
+
+    # 4. One anion rule for packing and bonds, where no valence is stated.
+    _r4 = [sorted(resolve_anions({'Pb', 'S', 'Se'})), sorted(resolve_anions({'Li', 'P', 'S'})),
+           sorted(resolve_anions({'Ca', 'N', 'Cl'})), sorted(resolve_anions({'Mg', 'O', 'H'})),
+           classify_bond_pair('Se', 'S', None, {'Pb', 'S', 'Se'}),
+           classify_bond_pair('P', 'S', None, {'Li', 'P', 'S'}),
+           classify_bond_pair('N', 'Cl', None, {'Ca', 'N', 'Cl'}),
+           classify_bond_pair('I', 'O', None, {'K', 'I', 'O'})]
+    _w4 = [['S', 'Se'], ['S'], ['Cl', 'N'], ['O'], (None, None), ('P', 'S'),
+           (None, None), ('I', 'O')]
+    report('4. sulfoselenide, thiophosphate, nitride chloride, hydroxide, iodate',
+           _r4 == _w4, f'got {_r4}')
+
+    RUT = (4.7374, 4.7374, 3.1864, 90, 90, 90)
+
+    def rut(tsn, to, lsn='Sn1', type_col=True, loop=None):
+        return _parsing_cif('sno2', 4.7374, 'P 42/m n m',
+                            [(lsn, tsn, 0, 0, 0, 1), ('O1', to, 0.3056, 0.3056, 0, 1)],
+                            loop=loop, type_col=type_col, cell=RUT)
+
+    # 5-7. Upper case, sign first, no type column.
+    for _n, _what, _txt, _st in (
+            (5, "an upper-case 'SN4+' keeps its charge", rut('SN4+', 'O2-'), None),
+            (6, "GSAS-II's 'Sn+4' and 'O-2'", rut('Sn+4', 'O-2'), None),
+            (7, 'no type column, label SN1, states supplied',
+             rut(None, None, 'SN1', type_col=False), {'Sn': 4, 'O': -2})):
+        try:
+            _s = _parsing_sites(_parsing_run(_txt, _st))
+            _ok = len(_s) == 1 and _s[0][0] == 'Sn' and float(_s[0][1]) == 4.0
+        except Exception as _e:
+            _s, _ok = f'{type(_e).__name__}: {_e}', False
+        report(f'{_n}. {_what}', _ok, f'sites {_s}')
+
+    # 8. 'CO2+' with no oxidation-number loop used to stop the run: the
+    # fallback read 'O2+' out of it as oxygen at +2.
+    _coo = _parsing_cif('coo', 4.26, 'F m -3 m',
+                        [('Co1', 'CO2+', 0, 0, 0, 1), ('O1', 'O2-', 0.5, 0.5, 0.5, 1)])
+    try:
+        _s8 = _parsing_sites(_parsing_run(_coo))
+        _d8 = tempfile.mkdtemp()
+        _p8 = os.path.join(_d8, 'coo.cif')
+        with open(_p8, 'w', encoding='utf-8') as _f8:
+            _f8.write(_coo)
+        _ox8 = extract_cif_oxidation_states(_p8)[0]
+        os.unlink(_p8)
+        os.rmdir(_d8)
+        _ok8 = (_s8 and _s8[0][0] == 'Co' and float(_s8[0][1]) == 2.0
+                and _ox8.get('Co') == 2 and _ox8.get('O') == -2)
+    except Exception as _e:
+        _s8, _ox8, _ok8 = f'{type(_e).__name__}: {_e}', None, False
+    report("8. 'CO2+' is cobalt(2+), and oxygen stays oxygen(2-)", _ok8,
+           f'sites {_s8}; states read {_ox8}')
+
+    # 9. A decimal in the symbol.
+    try:
+        _s9 = _parsing_sites(_parsing_run(_parsing_cif(
+            'mno', 4.445, 'F m -3 m', [('Mn1', 'Mn2.5+', 0, 0, 0, 1), ('O1', 'O2-', 0.5, 0.5, 0.5, 1)])))
+        _ok9 = _s9 and _s9[0][0] == 'Mn' and abs(float(_s9[0][1]) - 2.5) < 1e-6
+    except Exception as _e:
+        _s9, _ok9 = f'{type(_e).__name__}: {_e}', False
+    report("9. 'Mn2.5+' is manganese at 2.5", _ok9, f'sites {_s9}')
+
+    # 10. A hydride given only as a supplied state shares oxygen's position.
+    _smho = lambda ts, to, th: _parsing_cif(
+        'smho', 5.4695, 'F m -3 m', [('Sm1', ts, 0, 0, 0, 1), ('O1', to, 0.25, 0.25, 0.25, 0.5),
+                                     ('H1', th, 0.25, 0.25, 0.25, 0.5)])
+    try:
+        _s10 = _parsing_sites(_parsing_run(_smho('Sm', 'O', 'H'), {'Sm': 3, 'O': -2, 'H': -1}))
+        _ok10 = _s10 and _s10[0][0] == 'Sm' and float(_s10[0][2]) > 2.5
+    except Exception as _e:
+        _s10, _ok10 = f'{type(_e).__name__}: {_e}', False
+    report('10. SmHO with H=-1 supplied: Sm summed over O and H', _ok10, f'sites {_s10}')
+
+    # 11. A hydroxide with its H located is not condemned for its O-H bond,
+    # and deuterium is hydrogen.
+    _br = lambda th: _parsing_cif(
+        'bru', 3.142, 'P -3 m 1',
+        [('Mg1', 'Mg2+', 0, 0, 0, 1), ('O1', 'O2-', 0.33333, 0.66667, 0.2221, 1),
+         ('H1', th, 0.33333, 0.66667, 0.4275, 1)],
+        loop=[('Mg2+', 2), ('O2-', -2), (th, 1)], cell=(3.142, 3.142, 4.766, 90, 90, 120))
+    try:
+        _r11 = _parsing_run(_br('H1+'))
+        _r11d = _parsing_run(_br('D1+'))
+        _h = [s for s in _r11['sites'] if s.get('element') == 'H']
+        _hd = [s for s in _r11d['sites'] if s.get('element') == 'H']
+        _row = dict(_h[0], coords=str(_h[0].get('coords')), contact_above_floor=False) if _h else {}
+        _c11 = classify_site(_row, {}) if _h else None
+        _ok11 = (len(_h) == 1 and _h[0].get('contact_above_floor') is not False
+                 and len(_hd) == 1 and _c11 and _c11[0] == '-')
+        _d11 = (f"H: contact_above_floor {_h[0].get('contact_above_floor') if _h else '-'}, "
+                f"gate {_c11 and _c11[0]}; D read as H: {len(_hd) == 1}")
+    except Exception as _e:
+        _ok11, _d11 = False, f'{type(_e).__name__}: {_e}'
+    report('11. Mg(OH)2 with H located: H summed, not gated; D read as H', _ok11, _d11)
+
+    # 12. A Zintl anion fails, and says why.
+    try:
+        _r12 = _parsing_run(_parsing_cif(
+            'mg2sn', 6.765, 'F m -3 m', [('Sn1', 'Sn4-', 0, 0, 0, 1), ('Mg1', 'Mg2+', 0.25, 0.25, 0.25, 1)],
+            loop=[('Sn4-', -4), ('Mg2+', 2)]))
+        _ok12 = 'Zintl' in str(_r12.get('error'))
+        _d12 = str(_r12.get('error'))
+    except Exception as _e:
+        _ok12, _d12 = False, f'{type(_e).__name__}: {_e}'
+    report('12. Mg2Sn: no bonds, and the reason is the Sn(4-) anion', _ok12, _d12)
+
+    ok = all(results)
+    if verbose:
+        print()
+        print(f"  {'ALL PARSING TESTS PASSED' if ok else 'SOMETHING FAILED'}"
+              f"  ({sum(results)}/{len(results)})")
+    if not ok:
+        raise AssertionError('Eir parsing tests failed. Re-run '
+                             'VALIDATE_PARSING(verbose=True) for the detail.')
+    return True
+
+
+# VALIDATE_PARSING()   # eir package: run by eir.validate()

@@ -28,7 +28,7 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ### 2.0.46 – unreleased
 
-**Five faults, four found while packaging Eir and one by running it on the corpus**
+**Faults found while packaging Eir, by running it on the corpus, and by a battery of CIFs written the way other programs write them**
 
 - A run in which no file has an ICSD code (every Rietveld CIF checked on its
   own), or in which a file with a code has no author or journal, no longer
@@ -63,11 +63,37 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   summed without it. A valence of zero, a pair with inverted signs and an
   element typed with both signs are left to the electronegativity rule, as
   before.
+- Every type symbol and label is read one way (`parse_atom_symbol`), and the
+  atom_site and atom_type loops are rewritten into ICSD's own form before
+  anything else reads the file (`normalise_atom_types`; an ICSD file passes
+  through unchanged). 2.0.45 summed an upper-case `SN4+` as Sn(2+), stopped
+  the run on `CO2+` (a scan of every line read `O2+` as oxygen at +2),
+  failed on `Mn2.5+`, dropped a file with no `_atom_site_type_symbol` column
+  without recording a failure, and did not recognise deuterium. Labels are
+  read against the formula, so `HO1` in Mg(OH)2 is hydrogen.
+- One rule decides which species are anions where no valence is stated, in
+  the packing scan and in bond selection alike: an amphoteric species is a
+  cation beside a more electronegative O or F, or beside a more
+  electronegative amphoteric species of another group (P or As against S),
+  and otherwise an anion (a sulfoselenide, a chalcohalide, a nitride
+  chloride). Two such anions are no longer paired as a bond.
+- A hydride given only as a supplied oxidation state (`--ox H=-1`) is now
+  summed where it shares oxygen's position.
+- Hydrogen sites are summed and reported but gate nothing, so a hydroxide
+  refined with its H located is no longer expunged on G1 for its O-H bond.
+- A Zintl anion (Sn(4-), Sb(3-); the bond valence table has no parameters
+  with Sn, Sb, Ge, Pb or Bi as the anion) fails with that reason, and the
+  package reports it as NOT_ASSESSED (R1, `unsupported_anion`) rather than
+  as an unreadable file.
+- CELL 11 no longer stops on a table with no bond lengths.
 - `bl_delta_mean`, `bl_ratio_min` and `bl_delta_min` are written for every
   site, null where not computable, so the summary no longer stops on a run
   with no measured minimum (ICSD 35327, CrO2, on its own).
-- 28 VALIDATE tests, and four gate tests in CELL 7b (`VALIDATE_GATES()`,
-  which needs the gates defined); the new ones fail on 2.0.45. On 200 ICSD
+- 28 VALIDATE tests, four gate tests and twelve parsing tests in CELL 7b
+  (`VALIDATE_GATES()`, `VALIDATE_PARSING()`, which need the gates defined),
+  and seventeen end-to-end parsing cases in `tests/test_parsing.py`. The new
+  tests fail on 2.0.45, apart from the controls: one parsing test and six
+  of the seventeen cases, which 2.0.45 already got right. On 200 ICSD
   entries the only verdicts that change are the four structures named under
   the packing gates; the sulfoselenide spinel 640368 stays NOT_ASSESSED
   (R1), now for the In-Se pair it has no parameters for rather than a Se-S
