@@ -1516,7 +1516,7 @@ def add_coordination_quality(batch_csv_path, cif_directory,
     for _, row in df.iterrows():
         fn = row.get('filename')
         el = row.get('element')
-        path = os.path.join(cif_directory, fn) if isinstance(fn, str) else None
+        path = cif_path_for(cif_directory, fn) if isinstance(fn, str) else None   # v2.0.46
 
         if path and path not in cache:
             # v2.0.28: the cache is filled above, so this is now a safety net
@@ -1926,7 +1926,7 @@ def add_coordination_quality(batch_csv_path, cif_directory,
         # touches the frame, which does not belong in a worker.
         _ga_jobs = []
         for fn, g in df.groupby('filename'):
-            path = os.path.join(cif_directory, fn)
+            path = cif_path_for(cif_directory, fn)      # v2.0.46: as read
             # v2.0.13: keyed by SITE LABEL as well as element. Keying it by
             # element alone gave every site of an element whichever valence
             # came last, so in Co3O4 the 8a Co(2+) and the 16d Co(3+) were

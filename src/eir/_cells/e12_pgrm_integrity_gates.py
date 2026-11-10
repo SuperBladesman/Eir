@@ -840,23 +840,46 @@ def _parsing_cif(name, a, sg, sites, loop=None, type_col=True, cell=None,
     return '\n'.join(s) + '\n'
 
 
-def _parsing_run(text, states=None):
-    """process_single_cif on CIF text, quietly, with --ox style states."""
+def _parsing_run(text, states=None, every=False):
+    """process_single_cif on CIF text, quietly, with --ox style states,
+    after the reading stage, as a batch reads it (v2.0.46). Each result
+    carries its reading record under 'reading'. every=True returns one
+    result per structure the text holds; otherwise the first."""
     global PY3DMOL_AVAILABLE
     d = tempfile.mkdtemp()
     p = os.path.join(d, 'eir_parsing.cif')
+    written = [p]
     _viz_was = globals().get('PY3DMOL_AVAILABLE', False)
     try:
         PY3DMOL_AVAILABLE = False
         with open(p, 'w', encoding='utf-8') as f:
             f.write(text)
-        reset_sign_inversions()
-        with contextlib.redirect_stdout(io.StringIO()):
-            return process_single_cif(p, user_oxidation_states=states)
+        out = []
+        for rec in read_cif_structures(p):
+            if rec['error']:
+                out.append({'success': False, 'error': rec['error'],
+                            'reading': rec})
+                continue
+            q = p
+            if rec['changed']:
+                q = os.path.join(d, 'as_read_' + rec['name'])
+                with open(q, 'w', encoding='utf-8', errors='surrogateescape') as f:
+                    f.write(rec['text'])
+                written.append(q)
+            reset_sign_inversions()
+            with contextlib.redirect_stdout(io.StringIO()):
+                r = process_single_cif(q, user_oxidation_states=states)
+            r['reading'] = rec
+            out.append(r)
+        return out if every else out[0]
     finally:
         PY3DMOL_AVAILABLE = _viz_was
+        for w in written:
+            try:
+                os.unlink(w)
+            except OSError:
+                pass
         try:
-            os.unlink(p)
             os.rmdir(d)
         except OSError:
             pass
@@ -1027,6 +1050,183 @@ def VALIDATE_PARSING(verbose=True):
     except Exception as _e:
         _ok12, _d12 = False, f'{type(_e).__name__}: {_e}'
     report('12. Mg2Sn: no bonds, and the reason is the Sn(4-) anion', _ok12, _d12)
+
+    # ---- v2.0.46: the reading stage (CELL 3) ---------------------------
+    # Each case is a feature of a file, not of the program that wrote it.
+    # Every one but the last was read wrongly, or not at all, before.
+    _rut = (4.7374, 4.7374, 3.1864, 90, 90, 90)
+    _sno2 = _parsing_cif('sno2', 4.7374, 'P 42/m n m',
+                         [('Sn1', 'Sn4+', 0, 0, 0, 1),
+                          ('O1', 'O2-', 0.3056, 0.3056, 0, 1)],
+                         loop=[('Sn4+', 4), ('O2-', -2)], cell=_rut)
+    _bonds = ('loop_\n_geom_bond_atom_site_label_1\n_geom_bond_atom_site_label_2\n'
+              '_geom_bond_distance\n_geom_bond_site_symmetry_2\n')
+
+    def _site(r, el):
+        s = [x for x in (r.get('sites') or []) if x.get('element') == el]
+        return s[0] if s else None
+
+    def _notes(r):
+        return '; '.join((r.get('reading') or {}).get('notes') or [])
+
+    def _case(n, name, fn):
+        try:
+            ok, detail = fn()
+        except Exception as _e:
+            ok, detail = False, f'{type(_e).__name__}: {_e}'
+        report(f'{n}. {name}', ok, detail)
+
+    try:
+        _SN = float(_site(_parsing_run(_sno2), 'Sn')['bvs'])
+    except Exception:
+        _SN = None
+
+    def _same_tin(r):
+        s = _site(r, 'Sn')
+        return (_SN is not None and s is not None and s.get('bvs') is not None
+                and abs(float(s['bvs']) - _SN) < 0.005)
+
+    def _t13():
+        r = _parsing_run(_sno2 + _bonds + '? ? ? ?\n')
+        return (_same_tin(r) and 'placeholders' in _notes(r)), _notes(r)
+    _case(13, "a bond list of '?' is set aside; Sn summed from the positions", _t13)
+
+    def _t14():
+        srt = _parsing_cif('srtio3', 3.905, 'P m -3 m',
+                           [('Sr1', 'Sr2+', 0.5, 0.5, 0.5, 1), ('Ti1', 'Ti4+', 0, 0, 0, 1),
+                            ('O1', 'O2-', 0.5, 0, 0, 1)],
+                           loop=[('Sr2+', 2), ('Ti4+', 4), ('O2-', -2)])
+        r = _parsing_run(srt + _bonds + 'Ti1 O1 1.9525 .\n')
+        s = _site(r, 'Sr')
+        return (s is not None and s.get('bvs') is not None
+                and 'set aside' in _notes(r)), f"Sr {None if s is None else s.get('bvs')}; {_notes(r)}"
+    _case(14, "an author's list of Ti-O only: Sr is summed too", _t14)
+
+    def _t15():
+        rs = _parsing_run("data_global\n_journal_name_full 'Test'\n\n" + _sno2, every=True)
+        return (len(rs) == 1 and _same_tin(rs[0])
+                and rs[0]['reading']['name'] == 'eir_parsing.cif'
+                and 'holds no atom sites' in _notes(rs[0])), _notes(rs[0])
+    _case(15, "a 'global' block and a phase block: one structure, the file's name", _t15)
+
+    def _t16():
+        rs = _parsing_run(_sno2 + '\n' + _sno2, every=True)
+        names = [r['reading']['name'] for r in rs]
+        return (len(rs) == 2 and all(_same_tin(r) for r in rs)
+                and names == ['eir_parsing__sno2.cif', 'eir_parsing__sno2_2.cif']), str(names)
+    _case(16, 'two structures in one file, under one block name: both read', _t16)
+
+    def _t17():
+        r = _parsing_run(_parsing_cif('sno2', 4.7374, 'P 42/m n m',
+                                      [('XX', 'Sn4+', 0, 0, 0, 1),
+                                       ('XX', 'O2-', 0.3056, 0.3056, 0, 1)],
+                                      loop=[('Sn4+', 4), ('O2-', -2)], cell=_rut))
+        return _same_tin(r) and 'renamed XX_1 to XX_2' in _notes(r), _notes(r)
+    _case(17, "one dummy label 'XX' for every atom: each read as itself", _t17)
+
+    def _t18():
+        r = _parsing_run(_parsing_cif('mgnio', 4.20, 'F m -3 m',
+                                      [('Mg1', 'Mg2+', 0, 0, 0, 0.5),
+                                       ('Mg1', 'Ni2+', 0, 0, 0, 0.5),
+                                       ('O1', 'O2-', 0.5, 0.5, 0.5, 1)],
+                                      loop=[('Mg2+', 2), ('Ni2+', 2), ('O2-', -2)]))
+        rows = [s for s in r.get('sites') or []
+                if s.get('bvs') is not None and s.get('valence') is not None
+                and float(s['valence']) > 0 and float(s.get('occupancy') or 1) != 0]
+        rebuilt = (sum((float(s['bvs']) - float(s['valence'])) ** 2 for s in rows)
+                   / len(rows)) ** 0.5 if rows else None
+        ni = _site(r, 'Ni')
+        return (ni is not None and rebuilt is not None and r.get('gii') is not None
+                and abs(rebuilt - float(r['gii'])) < 1e-3), (
+            f"gii {r.get('gii')}, rebuilt from the sites {rebuilt}; {_notes(r)}")
+    _case(18, "Ni sharing a position under the label 'Mg1': the index sums Ni as Ni", _t18)
+
+    def _t19():
+        r = _parsing_run(_sno2.replace("'P 42/m n m'", 'P 42/m n m'))
+        return _same_tin(r) and 'quoted' in _notes(r), _notes(r)
+    _case(19, "an unquoted space group, 'P 42/m n m': quoted and read", _t19)
+
+    def _t20():
+        r = _parsing_run(_sno2.replace('data_sno2', 'data_ SnO2 rutile'))
+        return _same_tin(r) and 'space after data_' in _notes(r), _notes(r)
+    _case(20, "'data_ SnO2 rutile', with a space: read", _t20)
+
+    def _t21():
+        r = _parsing_run(_sno2.replace('_cell_length_c', '_cell_length_a 4.70\n_cell_length_c'))
+        e = str(r.get('error'))
+        return (not r.get('success') and '_cell_length_a more than once' in e), e
+    _case(21, 'a cell edge given twice: not read, and the reason says which', _t21)
+
+    def _t22():
+        t = '\n'.join(l for l in _sno2.split('\n') if not l.startswith('_cell_'))
+        r = _parsing_run(t)
+        e = str(r.get('error'))
+        return (not r.get('success') and 'no cell' in e), e
+    _case(22, 'atom sites and no cell: not read, and the reason says so', _t22)
+
+    def _t23():
+        sh, inv = gemmi.Op('x+1/4,y+1/4,z'), gemmi.Op('x-1/4,y-1/4,z')
+        ops = [(inv * o * sh).wrap().triplet()
+               for o in gemmi.find_spacegroup_by_name('P 42/m n m').operations()]
+        t = ['data_sno2_shifted'] + [f'_cell_{k} {v}' for k, v in zip(
+            ('length_a', 'length_b', 'length_c', 'angle_alpha', 'angle_beta',
+             'angle_gamma'), _rut)]
+        t += ['loop_', '_symmetry_equiv_pos_as_xyz'] + [f"'{o}'" for o in ops]
+        t += ['loop_', '_atom_type_symbol', '_atom_type_oxidation_number',
+              'Sn4+ 4', 'O2- -2', 'loop_', '_atom_site_label', '_atom_site_type_symbol',
+              '_atom_site_fract_x', '_atom_site_fract_y', '_atom_site_fract_z',
+              '_atom_site_occupancy', 'Sn1 Sn4+ 0.75 0.75 0 1',
+              'O1 O2- 0.0556 0.0556 0 1']
+        r = _parsing_run('\n'.join(t) + '\n')
+        return _same_tin(r) and 'moved the origin' in _notes(r), _notes(r)
+    _case(23, 'operations in an untabulated origin: moved, with every position', _t23)
+
+    def _t24():
+        r = _parsing_run(_parsing_cif('calcite', 4.9896, 'R -3 c',
+                                      [('Ca1', 'Ca2+', 0, 0, 0, 1), ('C1', 'C4+', 0, 0, 0.25, 1),
+                                       ('O1', 'O2-', 0.2578, 0, 0.25, 1)],
+                                      loop=[('Ca2+', 2), ('C4+', 4), ('O2-', -2)],
+                                      cell=(4.9896, 4.9896, 17.061, 90, 90, 120)))
+        aa, pe = r.get('anion_anion_min'), r.get('polyanion_edge_min')
+        return (r.get('success') and (aa is None or aa >= ANION_ANION_MIN)
+                and pe is not None and abs(pe - 2.228) < 0.02), f'anion_anion_min {aa}, polyanion_edge_min {pe}'
+    _case(24, "calcite: the CO3 edge is not tested against the anion floor", _t24)
+
+    def _t25():
+        r = _parsing_run(_parsing_cif('napf6', 7.61, 'F m -3 m',
+                                      [('P1', 'P5+', 0, 0, 0, 1), ('Na1', 'Na1+', 0.5, 0.5, 0.5, 1),
+                                       ('F1', 'F1-', 0.2103, 0, 0, 1)],
+                                      loop=[('P5+', 5), ('Na1+', 1), ('F1-', -1)]))
+        aa, pe = r.get('anion_anion_min'), r.get('polyanion_edge_min')
+        return (r.get('success') and (aa is None or aa >= ANION_ANION_MIN)
+                and pe is not None and abs(pe - 2.263) < 0.02), f'anion_anion_min {aa}, polyanion_edge_min {pe}'
+    _case(25, 'NaPF6: nor are the F-F edges of PF6', _t25)
+
+    def _t26():
+        t = _parsing_cif('mapbi3', 6.33, 'P 1',
+                         [('Pb1', 'Pb2+', 0, 0, 0, 1), ('I1', 'I1-', 0.5, 0, 0, 1),
+                          ('I2', 'I1-', 0, 0.5, 0, 1), ('I3', 'I1-', 0, 0, 0.5, 1),
+                          ('C1', 'C', 0.383, 0.5, 0.5, 1), ('N1', 'N', 0.617, 0.5, 0.5, 1)])
+        r = _parsing_run(t, states={'Pb': 2, 'I': -1, 'C': -4, 'N': -3})
+        e = str(r.get('error'))
+        return (not r.get('success') and MOLECULAR_CARBON_NOTE in e
+                and 'C1-N1' in e), e
+    _case(26, 'carbon bonded to N: not assessed, and the bond named', _t26)
+
+    def _t27():
+        t = ('###  FullProf-generated CIF output file  (version: May 2011)  ###\n'
+             + _sno2.replace('data_sno2', "data_sno2\n_cod_database_code 1000000\n"
+                             "_computing_structure_refinement 'FULLPROF'"))
+        p = cif_provenance(t)
+        return (p == {'written_by': 'FullProf (May 2011)', 'refined_with': 'FULLPROF',
+                      'database': 'COD 1000000'}), str(p)
+    _case(27, 'provenance recorded: writer, refinement program, database', _t27)
+
+    def _t28():
+        r = _parsing_run(_sno2)
+        rd = r['reading']
+        return (not rd['changed'] and not rd['notes']), str(rd['notes'])
+    _case(28, 'a file already in order is read exactly as it is', _t28)
 
     ok = all(results)
     if verbose:

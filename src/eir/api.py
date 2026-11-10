@@ -34,6 +34,14 @@ __all__ = ['check', 'check_folder', 'validate', 'CheckResult', 'FolderResult',
 # (_unsupported_anion_note).
 _UNSUPPORTED_ANION = 'typed as an anion'
 
+# Failures that mean the file was read and cannot be assessed, which is
+# NOT_ASSESSED rather than EXPUNGE: (phrase the engine writes, code, reason).
+_NOT_ASSESSED_FAILURES = (
+    (_UNSUPPORTED_ANION, 'R1', 'unsupported_anion'),
+    # engine 2.0.46, molecular_carbon: MOFs, organic cations, cyanides
+    ('Not assessed: molecular carbon', 'R1', 'molecular_carbon'),
+)
+
 
 class EirError(RuntimeError):
     """Eir could not produce a result. The message says why."""
@@ -241,28 +249,38 @@ class CheckResult:
         return self.failure is None
 
     @property
+    def _not_assessed(self):
+        # Engine 2.0.46 says in the failure when a file was read and cannot
+        # be assessed: an anion it has no parameters for (Sn(4-) in Mg2Sn),
+        # or molecular carbon (a MOF). That is NOT_ASSESSED, not EXPUNGE.
+        if not self.failure:
+            return None
+        for phrase, code, reason in _NOT_ASSESSED_FAILURES:
+            if phrase in self.failure:
+                return code, reason
+        return None
+
+    @property
     def _unsupported_anion(self):
-        # Engine 2.0.46 names an anion it has no parameters for (Sn(4-) in
-        # Mg2Sn) in the failure. The file was read; it cannot be assessed,
-        # which is NOT_ASSESSED, not EXPUNGE.
-        return bool(self.failure) and _UNSUPPORTED_ANION in self.failure
+        na = self._not_assessed
+        return na is not None and na[1] == 'unsupported_anion'
 
     @property
     def tier(self):
-        if self._unsupported_anion:
+        if self._not_assessed:
             return 'NOT_ASSESSED'
         return 'EXPUNGE' if self.failure else self._get('structure_pgrm_tier')
 
     @property
     def code(self):
-        if self._unsupported_anion:
-            return 'R1'
+        if self._not_assessed:
+            return self._not_assessed[0]
         return 'P' if self.failure else self._get('structure_pgrm_code')
 
     @property
     def reason(self):
-        if self._unsupported_anion:
-            return 'unsupported_anion'
+        if self._not_assessed:
+            return self._not_assessed[1]
         return ('unreadable_file' if self.failure
                 else self._get('structure_pgrm_reason'))
 
@@ -408,6 +426,10 @@ def check(cif, oxidation_states=None, *, output_dir=None, verbose=False):
             outdir = dest
     run = FolderResult(cif.parent, dfq, dfs, failed, outdir, summary, log, ox)
     if dfs is None or not len(dfs):
+        if len(failed) > 1:
+            # engine 2.0.46: a file holding several structures, none readable
+            return [CheckResult(cif, None, None, run, failure=why)
+                    for why in failed.values()]
         reason = failed.get(cif.name) or next(iter(failed.values()), None)
         if reason is None:
             reason = 'the file produced no sites to assess'
@@ -415,6 +437,10 @@ def check(cif, oxidation_states=None, *, output_dir=None, verbose=False):
     results = run.results()
     for r in results:
         r.cif = cif
+    # engine 2.0.46: a file holding several structures, some unreadable
+    done = set(dfs['filename'].astype(str))
+    results += [CheckResult(cif, None, None, run, failure=why)
+                for name, why in failed.items() if name not in done]
     return results[0] if len(results) == 1 else results
 
 

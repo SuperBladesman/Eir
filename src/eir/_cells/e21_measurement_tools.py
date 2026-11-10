@@ -183,7 +183,7 @@ def compare_shell_rules(quality_csv=None, cif_directory=None):
     cache, rows = {}, []
     for _, r in df.iterrows():
         fn = r['filename']
-        path = os.path.join(cif_directory, fn)
+        path = cif_path_for(cif_directory, fn)      # v2.0.46: as read
         if path not in cache:
             try:
                 cache[path] = neighbour_distances(path)
@@ -299,7 +299,7 @@ def sweep_anion_cutoff(quality_csv=None, cif_directory=None, limit=None):
             print(f'    cut-off {cut} ...', end='', flush=True)
             for fn in files:
                 try:
-                    sites = calculate_anion_bvs(os.path.join(cif_directory, fn),
+                    sites = calculate_anion_bvs(cif_path_for(cif_directory, fn),
                                                 valences[fn])
                 except Exception:
                     failed += 1

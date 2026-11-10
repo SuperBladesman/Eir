@@ -227,7 +227,7 @@ def test_proposed_shifts(dfq, cif_directory, output_dir=None, verbose=True):
 
     rows, written, skipped = [], [], []
     for fn, grp in prop.groupby('filename'):
-        src = os.path.join(cif_directory, fn)
+        src = cif_path_for(cif_directory, fn)      # v2.0.46: as read
         if not os.path.exists(src):
             skipped.append((fn, 'CIF not found'))
             rows.append({'filename': fn, 'verdict': 'not tested: CIF not found'})
@@ -526,7 +526,7 @@ def resolve_cif_directory(dfq, explicit=None, ask=True):
 
     def _ok(d):
         try:
-            return bool(d) and os.path.exists(os.path.join(str(d), probe))
+            return bool(d) and os.path.exists(cif_path_for(str(d), probe))
         except (TypeError, ValueError):
             return False
 

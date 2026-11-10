@@ -98,12 +98,16 @@ def build_structure_table(df):
     # constant within a structure: take the first non-null
     _const = ['icsd_code', 'chemical_formula', 'space_group', 'year', 'journal',
               'authors', 'measurement_conditions', 'gii', 'wagii',
+              # v2.0.46: how the file was read (CELL 3, the reading stage)
+              'cif_read_from', 'cif_block', 'cif_written_by',
+              'cif_refined_with', 'cif_database', 'cif_reading_notes',
               # v2.0.25: the VALUE as well as the name. Leaving it off this
               # explicit whitelist is how n_sites_below_floor and
               # u_parameter failed to reach the CSV; three times is enough.
               'gii_site_averaged', 'gii_recommended', 'gii_recommended_value',
               'gii_all_sites',
               'gii_percentile_in_run', 'anion_anion_min', 'cation_cation_min',
+              'polyanion_edge_min',                    # v2.0.46
               'has_antisite_disorder', 'n_antisite_species', 'n_anion_sites',
               # the anion side, which the cation/anion diagnosis and its figure
               # both need and which was omitted from the first version of this

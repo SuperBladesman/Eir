@@ -89,11 +89,78 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 - `bl_delta_mean`, `bl_ratio_min` and `bl_delta_min` are written for every
   site, null where not computable, so the summary no longer stops on a run
   with no measured minimum (ICSD 35327, CrO2, on its own).
-- 28 VALIDATE tests, four gate tests and twelve parsing tests in CELL 7b
+- **A reading stage before anything else reads a file**
+  (`read_cif_structures`, CELL 3). 212 CIFs written by thirteen other
+  programs (FullProf, Jana2006, Jana2020, GSAS-II, EXPGUI, TOPAS, MAUD,
+  VESTA, CrystalMaker, Materials Studio, pymatgen, and COD and AMCSD files)
+  failed in a handful of ways, and no way belonged to one program, so each
+  step tests the file for one feature and repairs that, whoever wrote it:
+  - a bond list is set aside and bonds are computed from the positions, as
+    for every ICSD entry. A loop of `?` placeholders (FullProf, Jana) left
+    no bonds at all, and an author's partial list (a Jana2006 Sr3LiRuO6,
+    Ru-O only) left Sr and Li out of the sums;
+  - each data block holding atom sites is a structure of its own, reported
+    as `<file>__<block>.cif`. Only the first block was read, and the first
+    block FullProf and Jana write, `global`, holds no atoms. Two blocks may
+    share a name;
+  - a label used for several atoms (VESTA's `XX`, CrystalMaker's shared
+    sites) is made unique;
+  - an unquoted value of several words is quoted, `data_` followed by a
+    space is read, and an item given twice keeps its first value. Given
+    twice where it defines the structure, the file is not read, and the
+    reason names the item;
+  - operations listed in an origin no table holds are moved to a tabulated
+    setting, with every position moved by the same vector, which is the
+    same structure exactly: CrystalMaker's majorite (AMCSD 0001231) lists
+    I41/a with its origin half a lattice vector out, and stopped with "No
+    M-X bonds found";
+  - a file with no atom sites (a GSAS-II template), atom sites written as
+    single items, Cartesian coordinates only, or a block with no cell is a
+    failure that says so.
+  Where anything changes, the file as read is written to
+  `outputs/as_read/`, and every later cell reads it there (`cif_path_for`).
+  An ICSD entry is read unchanged: all 4,807 in the four corpora pass
+  through byte for byte. Who wrote, refined and deposited the file is
+  recorded (`cif_written_by`, `cif_refined_with`, `cif_database`), with
+  `cif_read_from`, `cif_block` and `cif_reading_notes`, and decides
+  nothing: 101 of the 212 had passed through COD, which rewrites what is
+  deposited.
+- **A polyanion's own edge is not a packing contact.** Two anions bonded to
+  the same B, C, N, Si, P, S, As or Se centre and closer than the 2.35 Å
+  floor are not tested by G2, and the shortest such edge is reported as
+  `polyanion_edge_min`. Calcite-type carbonates were expunged for their CO3
+  edge (2.2 Å), and NaPF6 or LiBF4 would have been for their F-F edges
+  (2.26 and 2.25 Å). An edge at or above the floor, such as the O-O edge of
+  a silicate tetrahedron in a spinel, is tested as before.
+- **Molecular carbon is NOT_ASSESSED** (R1, `molecular_carbon`). Carbon
+  bonded to C, H or N (a MOF linker, an organic or hybrid perovskite cation,
+  a cyanide, a carbide's C2 unit) is outside what bond valence sums
+  describe. 39 such structures among the 212 came out EXPUNGE on G7, G1 or
+  G2, or failed; the reason now names the bond. A carbonate, or a carbide's
+  isolated carbon, is assessed as before.
+- The GII takes each label's element from its type symbol before its first
+  letters. CrystalMaker labels the Si on majorite's octahedral position
+  `MgOc2`; the index took magnesium's sum for it, and post-processing
+  stopped on its own consistency check. ICSD labels lead with their element,
+  so there the two agree.
+- `eir.check()` on a file holding several structures returns one result per
+  structure, including any that cannot be read, and the one-page report
+  says how the file was read. A run in which nothing can be read still
+  writes the failed-files table.
+- On the 212: EXPUNGE 40 to 9, the ACCEPT tiers 57 to 75, NOT_ASSESSED 17
+  to 65 (each with its reason), and "No M-X bonds found" 77 to 50, which
+  are the elements, alloys and intermetallics, with no anion to bond to.
+  On the 4,806 ICSD structures of the four sets nothing changes in any
+  column: no entry needs the reading stage, none holds a polyanion edge
+  below the floor or molecular carbon, and every label leads with its
+  element.
+- 28 VALIDATE tests, four gate tests and 28 parsing tests in CELL 7b
   (`VALIDATE_GATES()`, `VALIDATE_PARSING()`, which need the gates defined),
-  and seventeen end-to-end parsing cases in `tests/test_parsing.py`. The new
-  tests fail on 2.0.45, apart from the controls: one parsing test and six
-  of the seventeen cases, which 2.0.45 already got right. On 200 ICSD
+  seventeen end-to-end parsing cases in `tests/test_parsing.py` and sixteen
+  end-to-end reading cases in `tests/test_reading.py`. The new tests fail on
+  2.0.45, apart from the controls: one parsing test and six of the
+  seventeen cases, which 2.0.45 already got right. The sixteen reading
+  cases also fail on 2.0.46 as it stood before the reading stage. On 200 ICSD
   entries the only verdicts that change are the four structures named under
   the packing gates; the sulfoselenide spinel 640368 stays NOT_ASSESSED
   (R1), now for the In-Se pair it has no parameters for rather than a Se-S

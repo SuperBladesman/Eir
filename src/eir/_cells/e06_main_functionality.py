@@ -4141,11 +4141,21 @@ def calculate_global_instability_index(calculated_results, cif_path=None, site_o
             for label in site_labels:
                 # Resolve element for this label
                 element = None
+                # v2.0.46: from the type symbol first. A label need not begin
+                # with its element: CrystalMaker labels the Si sharing
+                # majorite's octahedral position 'MgOc2', the prefix test below
+                # read it as Mg, and the index took magnesium's sum for it.
+                # ICSD labels lead with their element, so there the two agree.
+                if per_atom_valences and label in per_atom_valences:
+                    _pel = per_atom_valences[label].get('element')
+                    if _pel in site_data['elements']:
+                        element = _pel
                 # v1.8.3 (A4): longest symbol first. site_data['elements'] is
                 # sorted alphabetically, so a one-letter symbol is otherwise
                 # tested before a two-letter one beginning with it - C before
                 # Cr, N before Na, B before Ba - and "Cr1" resolves to carbon.
-                for elem in sorted(site_data['elements'], key=len, reverse=True):
+                for elem in (sorted(site_data['elements'], key=len, reverse=True)
+                             if element is None else ()):
                     if label.upper().startswith(elem.upper()):
                         element = elem
                         break
@@ -4432,6 +4442,15 @@ def process_single_cif(file_path, user_oxidation_states=None):
     # v2.0.46: before parse_cif_file, which records shared anion positions.
     _USER_VALENCES.clear()
     _USER_VALENCES.update(user_oxidation_states or {})
+    # v2.0.46: outside what bond valence sums describe, said before any of it
+    # is computed (molecular_carbon, CELL 3)
+    _mc = molecular_carbon(file_path)
+    if _mc is not None:
+        results['error'] = (f'Not assessed: {MOLECULAR_CARBON_NOTE}, '
+                            f'{_mc[0]}-{_mc[1]} {_mc[2]:.3f} A. Covalent C-C, '
+                            f'C-H and C-N bonds are outside what bond valence '
+                            f'sums describe.')
+        return results
     cif_obj = parse_cif_file(file_path)
     if cif_obj is None:
         results['error'] = ("Failed to parse CIF file: "
@@ -5200,6 +5219,9 @@ def process_single_cif(file_path, user_oxidation_states=None):
         # switches a gate off.
         results['anion_anion_min'] = None if _aa is None else round(_aa, 4)
         results['cation_cation_min'] = None if _cc is None else round(_cc, 4)
+        # v2.0.46: the shortest polyanion edge the scan set aside, if any
+        _pe = _POLYANION_EDGE_MIN.pop(str(file_path), None)
+        results['polyanion_edge_min'] = None if _pe is None else round(_pe, 4)
 
         # v2.0.12: the anion's free positional parameter, where the structure
         # type defines one. Computed since v1.8.3 and never wired: it was
@@ -5784,6 +5806,15 @@ def batch_process_directory(directory_path):
         print(f"No CIF files found in {directory_path}")
         return None
 
+    # v2.0.46: THE READING STAGE (CELL 3). Every file is read once, here, and
+    # everything after reads what it produced: the file itself where nothing
+    # needed changing, which is every ICSD entry, or a corrected copy in
+    # outputs/as_read/, one per structure, where something did. A structure
+    # that cannot be read at all is a failure with its reason, recorded with
+    # the others below, rather than whatever the first parser to meet it said.
+    cif_files, _read_failures = read_folder(
+        cif_files, os.path.join(output_dir, AS_READ_DIR))
+
     # ============================================================================
     # STEP 1: Config file provides OVERRIDES (highest priority)
     # ============================================================================
@@ -5928,7 +5959,7 @@ def batch_process_directory(directory_path):
     # v2.0.18: one narrator for the whole run. See BatchReporter in CELL 1b
     # for what was wrong with printing from thirty places instead.
     _rep = BatchReporter(
-        directory_path, len(cif_files), EIR_VERSION,
+        directory_path, len(cif_files) + len(_read_failures), EIR_VERSION,
         log_path=os.path.join(output_dir, f'eir_batch_log_{_run_stamp}.txt'))
     _rep.open()
 
@@ -5938,8 +5969,9 @@ def batch_process_directory(directory_path):
     def _announce(_tf, _est, _bias, _w, _why):
         _parallel_banner(_rep._emit, 'calibration', _tf, _est, _bias, _w, _why)
 
-    _prepared = _prepare_all(cif_files, override_oxidation_states,
-                             fallback_oxidation_states, announce=_announce)
+    _prepared = (_prepare_all(cif_files, override_oxidation_states,
+                              fallback_oxidation_states, announce=_announce)
+                 if cif_files else [])      # v2.0.46: none may be readable
 
     for _prog_i, (cif_file, _pre) in enumerate(zip(cif_files, _prepared), 1):
         merge_read_failures(_pre['read_failures'])
@@ -5976,6 +6008,8 @@ def batch_process_directory(directory_path):
         if result['success']:
             # v2.0.27: computed in _eir_prepare, beside the sites it reads.
             error_flags = _pre['error_flags']
+            # v2.0.46: how the file was read, on every row (CELL 3)
+            result['metadata'].update(reading_columns(cif_file.name))
 
             # v2.0.11: no structure tier here either. The demotions that used
             # to happen below - partial instability index, unscreened cation -
@@ -6069,6 +6103,7 @@ def batch_process_directory(directory_path):
                     'cif_sign_inversion': result.get('cif_sign_inversion'),
                     'cif_sign_inversion_detail': result.get('cif_sign_inversion_detail'),
                     'anion_anion_min': result.get('anion_anion_min'),
+                    'polyanion_edge_min': result.get('polyanion_edge_min'),  # v2.0.46
                     'cation_cation_min': result.get('cation_cation_min'),
                     'anion_packing_plausible': result.get('anion_packing_plausible'),
         # v2.0.13a: computed and printed since v2.0.12 and never
@@ -6135,8 +6170,14 @@ def batch_process_directory(directory_path):
             _rep.failure(_prog_i, cif_file, result['error'])
             failed_files.append({
                 'filename': cif_file.name,
-                'error': result['error']
+                'error': result['error'],
+                **reading_columns(cif_file.name),      # v2.0.46
             })
+
+    # v2.0.46: the structures the reading stage could not read at all
+    for _k, _f in enumerate(_read_failures, len(cif_files) + 1):
+        _rep.failure(_k, _f['filename'], _f['error'])
+        failed_files.append(_f)
 
     # ============================================================================
     # STEP 5: Save results to CSV files
@@ -6293,6 +6334,13 @@ def batch_process_directory(directory_path):
                    failed_path=failed_file)
         return df
     else:
+        # v2.0.46: the failures are written even when nothing succeeded. A
+        # folder of templates, or of files none of which can be read, used to
+        # leave no record of why beyond the log.
+        if failed_files:
+            failed_file = os.path.join(
+                output_dir, f"eir_batch_failed_v{EIR_VERSION}_{_run_stamp}.csv")
+            pd.DataFrame(failed_files).to_csv(failed_file, index=False)
         _rep.close(n_rows=0, written=[], failed_path=failed_file)
         print("\n✗ No successful analyses")
         if failed_files:

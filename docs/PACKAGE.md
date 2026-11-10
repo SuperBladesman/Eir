@@ -32,6 +32,7 @@ Every difference is listed here, and the build tool lists the edits it makes to 
 - The actions in CELLS 9 to 15 run when `eir.check_folder()` is called, in notebook order, with the folder passed in rather than picked from a dialog. Each run starts from the state the engine had on loading, as Restart & Run All would; settings such as `EIR_WORKERS` are kept.
 - CELL 10 (provenance) prints only and runs before the table it reads exists, and CELLS 16 and 17 wait for a code to be typed in, so none of the three runs. Their functions are all available.
 - The interactive oxidation-state prompt is replaced by an error naming the elements that need a state (`OxidationStatesNeeded`). Pass the states with `--ox` or `oxidation_states={...}`, or put a `config.json` beside the files; both are written as the `config.json` the notebook reads, and override the file.
+- `eir.check()` on a file holding several structures (several data blocks with atoms, read by the engine's reading stage from 2.0.46) returns a list, one `CheckResult` per structure, including any that could not be read. The reading stage is the engine's own, in the notebook, not a package difference.
 - `eir.check()` copies the one file into a scratch folder and runs CELLS 9 to 13b there. It stops before CELL 15, the dataset summary and figures, which describe a collection rather than one entry.
 - `eir.check_folder()` runs CELL 15 last. If it stops, every table has already been written, so the run is kept and the reason is recorded in `result.notes`.
 

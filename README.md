@@ -105,7 +105,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 28 tests against structures whose answers are known by hand, the four gate tests, the twelve parsing tests (type symbols and labels as other programs write them, anions, hydrogen) and the structural self-check. Run it again after changing anything.
+runs the 28 tests against structures whose answers are known by hand, the four gate tests, the 28 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen) and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 

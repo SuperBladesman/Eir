@@ -562,12 +562,25 @@ def _provenance_section(result):
                 if len(v):
                     cfg.append(f'{c[4:]} = {v.iloc[0]}')
     oxs = ', '.join(f'{ESC(k)} {float(v):+g}' for k, v in sorted(ox.items()))
+    # engine 2.0.46: how the file was read (the reading stage). Who wrote it
+    # is recorded and decides nothing; the notes say what was changed.
+    read = []
+    for k, label in (('cif_block', 'Data block'), ('cif_written_by', 'Written by'),
+                     ('cif_refined_with', 'Refined with'), ('cif_database', 'Database')):
+        v = _str(st.get(k)) if st is not None else None
+        if v and v != 'nan':
+            read.append(f'<dt>{label}</dt><dd>{ESC(v)}</dd>')
+    rn = _str(st.get('cif_reading_notes')) if st is not None else None
+    if rn and rn != 'nan':
+        read.append('<dt>Read as</dt><dd>' + '<br>'.join(
+            ESC(n) for n in rn.split('; ')) + '</dd>')
     return f'''
 <section class="prov">
   <h3>How this was produced</h3>
   <dl class="kv">
     {''.join(meta)}
     <dt>File</dt><dd class="mono">{ESC(result.cif.name)} (SHA-256 {sha}&hellip;)</dd>
+    {''.join(read)}
     <dt>Eir</dt><dd>engine {ESC(getattr(e, "EIR_VERSION", "?"))}, package
       eir-bvs {ESC(__version__)}</dd>
     <dt>Run</dt><dd>{_dt.datetime.now().strftime("%Y-%m-%d %H:%M")}</dd>
