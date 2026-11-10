@@ -211,6 +211,25 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   `anion_charge` and `brown_code`, the loader leaves out one fitted for
   another anion charge, and `tools/audit_bv_table.py` checks the table
   against Brown's file.
+- **Chen and Adams (2017) fill gaps and replace unpublished values.** Their
+  softNC1 parameters (IUCrJ 4, 614, Table S1), fitted to 15,523 ICSD
+  cation environments over the first coordination shell, enter by the same
+  merge rule as any other published source: 105 for pairs nothing else
+  covers (Re4+ and Re6+-O, Ag3+-O, Au+-O, Dy3+-S, Yb2+-S, many selenides,
+  tellurides, arsenides and phosphides) and 73 in place of Brown's private
+  communications (Ni3+-O, V2+-O, Co2+-S, Mn2+-S, Cr3+-S, P5+-F and others).
+  Pairs fitted to fewer than three environments are left out. 1,349 entries
+  to 1,454. On the ordered sites of the test sets that use a replaced pair,
+  the median deviation from valence falls from 16.4% to 2.5% for Ni3+-O
+  (the RNiO3 nickelates), 26.7% to 6.7% for Co2+-S, 20.5% to 5.2% for
+  Ru6+-O and 14.4% to 9.8% for Cr3+-S. No verdict changes on the 4,806, the
+  870 or the 200; the GII changes on 216 entries, nine of them ACCEPT or
+  FLAG; three NOT_ASSESSED entries (two thiospinels and a telluride) move
+  from R1 to R3.
+  On the 212, two GaAs files move from R1 to R3, and Hf2S (pymatgen, a
+  metal-rich subsulfide given Hf(4+)) from R1 to EXPUNGE on G7. Tried in
+  place of Brese and O'Keeffe's extrapolated rows too, softNC1 was better
+  for some pairs and worse for others, so those stay.
 - A cation with no parameters for its anion at any valence is NOT_ASSESSED
   (R1). It used to be dropped, and a file whose only pair it was failed as
   unreadable: RaO, or W2C and Mo2C among the 212, which are now R1. An anion
@@ -225,7 +244,8 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   move the Os4+ and Tc4+ perovskites from GII 0.41-0.76 to 0.09-0.32; his
   Ni3+-O, a private communication and the only one he lists, puts the
   rare-earth nickelates RNiO3 at 3.4-3.7 for a valence of 3, where the
-  unsourced 1.70 gave 2.9-3.2. On the 870 ICSD exports, five iodine azide
+  unsourced 1.70 gave 2.9-3.2; Chen and Adams's published fit, below, now
+  replaces it. On the 870 ICSD exports, five iodine azide
   entries that failed as unreadable now expunge on G2 with the other
   azides; on the 212, W2C and Mo2C are R1; on the 200, no verdict changes.
 - The GII takes each label's element from its type symbol before its first
@@ -258,9 +278,9 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 - 29 VALIDATE tests, four gate tests and 43 parsing tests in CELL 7b
   (`VALIDATE_GATES()`, `VALIDATE_PARSING()`, which need the gates defined),
   seventeen end-to-end parsing cases in `tests/test_parsing.py`, 29
-  end-to-end reading cases in `tests/test_reading.py` and six on the
-  parameter table in `tests/test_parameters.py`, which all fail on the
-  commit before the table was corrected (552f19c). The new tests fail on
+  end-to-end reading cases in `tests/test_reading.py` and seven on the
+  parameter table in `tests/test_parameters.py`, which fail on the commit
+  before the table was corrected (552f19c). The new tests fail on
   2.0.45, apart from the controls: one parsing test and six of the
   seventeen cases, which 2.0.45 already got right. The first sixteen reading
   cases also fail on 2.0.46 as it stood before the reading stage, and the

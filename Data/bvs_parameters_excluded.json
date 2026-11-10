@@ -1,5 +1,5 @@
 {
-  "_about": "Entries removed from bvs_parameters.json in Eir 2.0.46, with the values they had and why. None of these is used. See Data/README.md.",
+  "_about": "Entries taken out of bvs_parameters.json in Eir 2.0.46, with the values they had and why. Those marked \"replaced\" now hold a value from another source; the others are not used. See Data/README.md.",
   "('Ag', 2, 'O')": {
     "r0": 1.636,
     "b": 0.37,
@@ -10,7 +10,7 @@
     "r0": 1.631,
     "b": 0.37,
     "reference": "Brown2020",
-    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Ag(+3)-O(-2) row"
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Ag(+3)-O(-2) row; the pair now takes Chen and Adams (2017), softNC1 (R0 1.8675, b 0.444, 4 environments)"
   },
   "('As', 5, 'Cl')": {
     "r0": 2.14,
@@ -22,7 +22,7 @@
     "r0": 1.74,
     "b": 0.37,
     "reference": "Brown2020",
-    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Au(+1)-O(-2) row"
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Au(+1)-O(-2) row; the pair now takes Chen and Adams (2017), softNC1 (R0 1.7263, b 0.441, 4 environments)"
   },
   "('B', 3, 'B')": {
     "r0": 1.402,
@@ -154,7 +154,7 @@
     "r0": 2.72,
     "b": 0.37,
     "reference": "Brown_2020",
-    "reason": "Brown (2020) row is for Se(-1); Eir gives Se -2; Brown (2020) has no Pr(+3)-Se(-2) row"
+    "reason": "Brown (2020) row is for Se(-1); Eir gives Se -2; Brown (2020) has no Pr(+3)-Se(-2) row; the pair now takes Chen and Adams (2017), softNC1 (R0 2.5423, b 0.529, 3 environments)"
   },
   "('Pr', 4, 'O')": {
     "r0": 2.03,
@@ -178,13 +178,13 @@
     "r0": 1.8,
     "b": 0.37,
     "reference": "Brown2020",
-    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Re(+4)-O(-2) row"
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Re(+4)-O(-2) row; the pair now takes Chen and Adams (2017), softNC1 (R0 1.8162, b 0.507, 4 environments)"
   },
   "('Re', 6, 'O')": {
     "r0": 1.8,
     "b": 0.37,
     "reference": "Brown2020",
-    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Re(+6)-O(-2) row"
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Re(+6)-O(-2) row; the pair now takes Chen and Adams (2017), softNC1 (R0 1.9321, b 0.498, 4 environments)"
   },
   "('Rh', 9, 'Se')": {
     "r0": 2.33,
@@ -215,5 +215,589 @@
     "b": 0.37,
     "reference": "Brown2020",
     "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no U(+3)-O(-2) row"
+  },
+  "('Ag', 2, 'F')": {
+    "r0": 1.79,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6284, b 0.509, 16 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ag', 3, 'F')": {
+    "r0": 1.83,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.7571, b 0.452, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('As', 3, 'Se')": {
+    "r0": 2.4,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4022, b 0.571, 15 environments): a published fit ranks above an unpublished value"
+  },
+  "('As', 3, 'Te')": {
+    "r0": 2.65,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.5319, b 0.616, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('As', 5, 'S')": {
+    "r0": 2.28,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.2897, b 0.534, 6 environments): a published fit ranks above an unpublished value"
+  },
+  "('Au', 3, 'Br')": {
+    "r0": 2.32,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.2942, b 0.461, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Bi', 3, 'I')": {
+    "r0": 2.82,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.6613, b 0.605, 8 environments): a published fit ranks above an unpublished value"
+  },
+  "('Bi', 3, 'Se')": {
+    "r0": 2.7,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.563, b 0.554, 19 environments): a published fit ranks above an unpublished value"
+  },
+  "('C', 2, 'O')": {
+    "r0": 1.366,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.425, b 0.415, 386 environments): a published fit ranks above an unpublished value"
+  },
+  "('C', 4, 'S')": {
+    "r0": 1.8,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.8739, b 0.579, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('Co', 2, 'S')": {
+    "r0": 1.94,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.0052, b 0.487, 8 environments): a published fit ranks above an unpublished value"
+  },
+  "('Cr', 2, 'I')": {
+    "r0": 2.48,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.2884, b 0.54, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('Cr', 3, 'Br')": {
+    "r0": 2.28,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1499, b 0.53, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Cr', 3, 'S')": {
+    "r0": 2.162,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.064, b 0.508, 36 environments): a published fit ranks above an unpublished value"
+  },
+  "('Cr', 4, 'F')": {
+    "r0": 1.56,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6569, b 0.418, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Cu', 1, 'Br')": {
+    "r0": 2.03,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.8773, b 0.442, 10 environments): a published fit ranks above an unpublished value"
+  },
+  "('Cu', 3, 'F')": {
+    "r0": 1.58,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.5463, b 0.437, 3 environments): a published fit ranks above an unpublished value"
+  },
+  "('Er', 3, 'Se')": {
+    "r0": 2.58,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4519, b 0.556, 6 environments): a published fit ranks above an unpublished value"
+  },
+  "('Eu', 2, 'Br')": {
+    "r0": 2.67,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.5099, b 0.465, 3 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ga', 3, 'Br')": {
+    "r0": 2.2,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1461, b 0.619, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('Gd', 3, 'S')": {
+    "r0": 2.53,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.3845, b 0.552, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ge', 4, 'Se')": {
+    "r0": 2.35,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.3509, b 0.545, 19 environments): a published fit ranks above an unpublished value"
+  },
+  "('Hg', 2, 'Br')": {
+    "r0": 2.38,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.2652, b 0.495, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Hg', 2, 'I')": {
+    "r0": 2.62,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4001, b 0.555, 10 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ho', 3, 'S')": {
+    "r0": 2.49,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.3542, b 0.522, 8 environments): a published fit ranks above an unpublished value"
+  },
+  "('In', 1, 'Cl')": {
+    "r0": 2.56,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4455, b 0.413, 8 environments): a published fit ranks above an unpublished value"
+  },
+  "('In', 3, 'Br')": {
+    "r0": 2.51,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.3201, b 0.589, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('In', 3, 'I')": {
+    "r0": 2.63,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.5279, b 0.667, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Mn', 2, 'Br')": {
+    "r0": 2.34,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.0952, b 0.528, 9 environments): a published fit ranks above an unpublished value"
+  },
+  "('Mn', 2, 'I')": {
+    "r0": 2.52,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.2719, b 0.588, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('Mn', 2, 'S')": {
+    "r0": 2.22,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1589, b 0.406, 26 environments): a published fit ranks above an unpublished value"
+  },
+  "('Nb', 3, 'O')": {
+    "r0": 1.91,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.7843, b 0.501, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('Nb', 4, 'F')": {
+    "r0": 1.9,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.8044, b 0.534, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Nb', 5, 'N')": {
+    "r0": 2.01,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.0388, b 0.48, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ni', 3, 'F')": {
+    "r0": 1.58,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.5744, b 0.423, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ni', 3, 'O')": {
+    "r0": 1.75,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6565, b 0.414, 15 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ni', 4, 'F')": {
+    "r0": 1.61,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6197, b 0.411, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Os', 5, 'F')": {
+    "r0": 1.81,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.779, b 0.488, 3 environments): a published fit ranks above an unpublished value"
+  },
+  "('P', 5, 'Cl')": {
+    "r0": 2.02,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.0649, b 0.662, 13 environments): a published fit ranks above an unpublished value"
+  },
+  "('P', 5, 'F')": {
+    "r0": 1.54,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.4917, b 0.535, 3 environments): a published fit ranks above an unpublished value"
+  },
+  "('Pb', 2, 'Se')": {
+    "r0": 2.69,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4842, b 0.524, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Pd', 2, 'Br')": {
+    "r0": 2.2,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1192, b 0.462, 6 environments): a published fit ranks above an unpublished value"
+  },
+  "('Pd', 2, 'S')": {
+    "r0": 2.09,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.0386, b 0.439, 10 environments): a published fit ranks above an unpublished value"
+  },
+  "('Pd', 4, 'F')": {
+    "r0": 1.66,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6952, b 0.457, 3 environments): a published fit ranks above an unpublished value"
+  },
+  "('Pt', 2, 'S')": {
+    "r0": 2.16,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.0333, b 0.438, 8 environments): a published fit ranks above an unpublished value"
+  },
+  "('Pt', 3, 'O')": {
+    "r0": 1.87,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.7506, b 0.546, 3 environments): a published fit ranks above an unpublished value"
+  },
+  "('Re', 3, 'Cl')": {
+    "r0": 2.23,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1768, b 0.42, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Re', 4, 'Cl')": {
+    "r0": 2.23,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1875, b 0.412, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ru', 3, 'Cl')": {
+    "r0": 2.25,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.0045, b 0.489, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ru', 5, 'F')": {
+    "r0": 1.82,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.785, b 0.445, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ru', 6, 'O')": {
+    "r0": 1.87,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.9275, b 0.425, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('Sb', 3, 'Br')": {
+    "r0": 2.51,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4213, b 0.537, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('Sb', 3, 'I')": {
+    "r0": 2.76,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.6188, b 0.597, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Sb', 3, 'Se')": {
+    "r0": 2.6,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.5122, b 0.546, 14 environments): a published fit ranks above an unpublished value"
+  },
+  "('Se', 4, 'Br')": {
+    "r0": 2.43,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.3496, b 0.585, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ta', 5, 'S')": {
+    "r0": 2.47,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.2847, b 0.622, 6 environments): a published fit ranks above an unpublished value"
+  },
+  "('Te', 4, 'Br')": {
+    "r0": 2.55,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4696, b 0.559, 6 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ti', 2, 'Br')": {
+    "r0": 2.49,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.162, b 0.47, 3 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ti', 2, 'Cl')": {
+    "r0": 2.31,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.042, b 0.429, 6 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ti', 3, 'S')": {
+    "r0": 2.11,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1339, b 0.478, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Ti', 4, 'S')": {
+    "r0": 2.29,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.2072, b 0.64, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Tl', 1, 'Br')": {
+    "r0": 2.69,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4345, b 0.477, 10 environments): a published fit ranks above an unpublished value"
+  },
+  "('Tl', 3, 'Br')": {
+    "r0": 2.65,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.378, b 0.555, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('U', 3, 'S')": {
+    "r0": 2.54,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.3003, b 0.6, 6 environments): a published fit ranks above an unpublished value"
+  },
+  "('U', 4, 'S')": {
+    "r0": 2.55,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.4698, b 0.523, 9 environments): a published fit ranks above an unpublished value"
+  },
+  "('V', 2, 'Cl')": {
+    "r0": 2.44,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.0393, b 0.442, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('V', 2, 'F')": {
+    "r0": 2.16,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.5539, b 0.485, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('V', 2, 'O')": {
+    "r0": 1.7,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6158, b 0.477, 4 environments): a published fit ranks above an unpublished value"
+  },
+  "('V', 5, 'S')": {
+    "r0": 2.25,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.3238, b 0.647, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Xe', 2, 'F')": {
+    "r0": 2.02,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.001, b 0.569, 8 environments): a published fit ranks above an unpublished value"
+  },
+  "('Xe', 4, 'F')": {
+    "r0": 1.93,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.936, b 0.529, 7 environments): a published fit ranks above an unpublished value"
+  },
+  "('Xe', 6, 'F')": {
+    "r0": 1.89,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.9009, b 0.431, 13 environments): a published fit ranks above an unpublished value"
+  },
+  "('Zr', 2, 'Cl')": {
+    "r0": 2.58,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "e",
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1386, b 0.478, 5 environments): a published fit ranks above an unpublished value"
   }
 }
