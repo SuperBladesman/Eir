@@ -11,8 +11,9 @@ taken from elsewhere, Fe4+-O from Brown (2009), Table 2, is listed as such.
 
 Each entry must also be the row the merge rule picks: Gagne and Hawthorne
 (2015) first, then Brown and Altermatt (1985, 'a'), then Brese and O'Keeffe
-(1991, 'b'), then any other published source, then Brown's private
-communications ('e'). Where rows of equal rank differ, the table's choice is
+(1991, 'b'), then any other published source, then the unpublished ones
+(Brown's private communications 'e', Sidey's 'bi', and Hu's 'bq', listed as
+'to be published'). Where rows of equal rank differ, the table's choice is
 reported, not failed: the 2025 merge did not take them in a fixed order.
 
 Exits 1 if any entry fails.
@@ -33,10 +34,16 @@ EIR_ANION = {'O': -2, 'F': -1, 'Cl': -1, 'Br': -1, 'I': -1, 'S': -2, 'Se': -2,
 NOT_IN_BROWN_2020 = {"('Fe', 4, 'O')": 'Brown_2009_Table2_ref54'}
 
 
+# Sources Brown lists that are not published: his own private communications
+# ('e'), Sidey's (2012, 'bi'), and Hu (2014) 'to be published' ('bq', whose
+# nitride rows are given per spin state). They rank last.
+UNPUBLISHED = {'e', 'bi', 'bq'}
+
+
 def rank(code, ref):
     if ref == 'Gagne2015':
         return -1
-    return 0 if code == 'a' else 1 if code == 'b' else 3 if code == 'e' else 2
+    return 0 if code == 'a' else 1 if code == 'b' else 3 if code in UNPUBLISHED else 2
 
 
 def main(bvparm):
