@@ -164,6 +164,37 @@ except Exception as e:
 # DATABASE MANAGER (From Skuld 1.5 - UNCHANGED)
 # ============================================================================
 
+# v2.0.46: the anion charge each parameter set was fitted for. The table is
+# keyed (cation, valence, anion) with no anion charge, and Brown's
+# compilation lists some pairs only at an unusual one: Pr3+-Se for Se(1-) in
+# polyselenides, Fe3+-C for C(2+). Keyed without the charge,
+# those rows were used for Se(2-) and C(4-). Each entry now records
+# 'anion_charge', and one fitted for a charge other than the one Eir gives
+# that anion (ALWAYS_ANION, AMPHOTERIC_ANION) is not loaded. An entry with no
+# 'anion_charge', as in a table written for an earlier Eir, is loaded as
+# before. The entries taken out of the shipped table, and why, are in
+# Data/bvs_parameters_excluded.json.
+def bv_table_entries(data):
+    """The parameters Eir uses from a loaded bvs_parameters.json, keyed
+    (cation, valence, anion), and the keys left out because they were fitted
+    for another anion charge."""
+    import ast
+    charges = {**ALWAYS_ANION, **AMPHOTERIC_ANION}
+    kept, skipped = {}, []
+    for key, params in data.items():
+        try:
+            cation, cation_valence, anion = ast.literal_eval(key)
+        except (ValueError, SyntaxError, TypeError):
+            continue
+        q = params.get('anion_charge')
+        if q is not None and anion in charges and q != charges[anion]:
+            skipped.append(key)
+            continue
+        kept[(cation, cation_valence, anion)] = {
+            'R0': params['r0'], 'B': params.get('b', 0.37)}
+    return kept, skipped
+
+
 class DatabaseManager:
     """Manages external JSON databases for ionic radii and bond valence parameters"""
 
@@ -273,23 +304,17 @@ class DatabaseManager:
             return None
 
         try:
-            import ast
             with open(filepath, 'r') as f:
                 data = json.load(f)
-                self.bond_valence_params = {}
-                for key, params in data.items():
-                    # Keys are string representations of tuples: "('Na', 1, 'O')"
-                    try:
-                        cation, cation_valence, anion = ast.literal_eval(key)
-                        self.bond_valence_params[(cation, cation_valence, anion)] = {
-                            'R0': params['r0'],  # Note lowercase in JSON
-                            'B': params.get('b', 0.37)  # Note lowercase in JSON
-                        }
-                    except (ValueError, SyntaxError) as e:
-                        # Skip malformed keys
-                        continue
+            # Keys are string representations of tuples: "('Na', 1, 'O')";
+            # v2.0.46: see bv_table_entries
+            self.bond_valence_params, _skipped = bv_table_entries(data)
 
             print(f"✓ Loaded BVS parameters database with {len(self.bond_valence_params)} entries")
+            if _skipped:
+                print(f"⚠ {len(_skipped)} entries fitted for another anion charge "
+                      f"left out: {', '.join(_skipped[:6])}"
+                      f"{' ...' if len(_skipped) > 6 else ''}")
         except Exception as e:
             print(f"✗ Error loading BVS parameters: {e}")
             import traceback
@@ -1732,8 +1757,15 @@ def has_bvs_parameters_for_pair(cation, anion, valence_dict=None):
         # is selected; the site then has no sum and the R facet reports R1
         # with the ion. Dropping it hid the gap and let the rest of the site
         # be judged as if Th were not there.
-        return any(k[0] == cation and k[2] == anion
-                   for k in db_manager.bond_valence_params)
+        #
+        # v2.0.46: the same holds when the table has no parameters for the
+        # pair at any valence (Ra2+-O, Pm3+-O, Pr3+-Se), as long as the
+        # table has parameters for some cation with that anion. Dropping the
+        # pair left the structure with no bonds, and it was reported as an
+        # unreadable file and expunged. An anion the table has nothing for
+        # (Sn(4-) in Mg2Sn, B in a boride) stays out as before, so a Zintl
+        # phase still fails as unsupported_anion and says why.
+        return any(k[2] == anion for k in db_manager.bond_valence_params)
     else:
         # Try common oxidation states from database
         cation_valences = db_manager.get_common_oxidation_states(cation)

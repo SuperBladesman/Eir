@@ -1,0 +1,219 @@
+{
+  "_about": "Entries removed from bvs_parameters.json in Eir 2.0.46, with the values they had and why. None of these is used. See Data/README.md.",
+  "('Ag', 2, 'O')": {
+    "r0": 1.636,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Ag(+2)-O(-2) row"
+  },
+  "('Ag', 3, 'O')": {
+    "r0": 1.631,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Ag(+3)-O(-2) row"
+  },
+  "('As', 5, 'Cl')": {
+    "r0": 2.14,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for Cl(-2); Eir gives Cl -1; Brown (2020) has no As(+5)-Cl(-1) row"
+  },
+  "('Au', 1, 'O')": {
+    "r0": 1.74,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Au(+1)-O(-2) row"
+  },
+  "('B', 3, 'B')": {
+    "r0": 1.402,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for B(+3); Eir gives B -3; Brown (2020) has no B(+3)-B(-3) row"
+  },
+  "('Br', 1, 'O')": {
+    "r0": 1.71,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Br(+1)-O(-2) row"
+  },
+  "('C', 4, 'C')": {
+    "r0": 1.54,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for C(+4); Eir gives C -4; Brown (2020) has no C(+4)-C(-4) row"
+  },
+  "('Cl', 1, 'O')": {
+    "r0": 1.67,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Cl(+1)-O(-2) row"
+  },
+  "('Co', 3, 'C')": {
+    "r0": 1.634,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for C(+2); Eir gives C -4; Brown (2020) has no Co(+3)-C(-4) row"
+  },
+  "('F', 1, 'O')": {
+    "r0": 1.4,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no F(+1)-O(-2) row"
+  },
+  "('Fe', 3, 'C')": {
+    "r0": 1.689,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for C(+2); Eir gives C -4; Brown (2020) has no Fe(+3)-C(-4) row"
+  },
+  "('Ga', 1, 'Se')": {
+    "r0": 2.55,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for Se(-1); Eir gives Se -2; Brown (2020) has no Ga(+1)-Se(-2) row"
+  },
+  "('Ge', 2, 'O')": {
+    "r0": 1.78,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Ge(+2)-O(-2) row"
+  },
+  "('Hg', 2, 'Hg')": {
+    "r0": 2.51,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for Hg(+2) as the anion; Eir does not treat Hg as an anion"
+  },
+  "('I', 0, 'I')": {
+    "r0": 2.195,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "reason": "cation valence 0: not a cation"
+  },
+  "('I', 1, 'O')": {
+    "r0": 1.8,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no I(+1)-O(-2) row"
+  },
+  "('In', 3, 'Co')": {
+    "r0": 2.593,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for Co(-1) as the anion; Eir does not treat Co as an anion"
+  },
+  "('In', 3, 'Mn')": {
+    "r0": 2.604,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for Mn(-2) as the anion; Eir does not treat Mn as an anion"
+  },
+  "('Mn', 9, 'Se')": {
+    "r0": 2.32,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for Se(-1); Eir gives Se -2; Brown (2020) has no Mn(+9)-Se(-2) row"
+  },
+  "('N', -3, 'N')": {
+    "r0": 1.44,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "reason": "cation valence -3: not a cation"
+  },
+  "('Np', 3, 'O')": {
+    "r0": 2.11,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Np(+3)-O(-2) row"
+  },
+  "('O', -2, 'O')": {
+    "r0": 1.406,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "cation valence -2: not a cation"
+  },
+  "('P', 5, 'P')": {
+    "r0": 2.22,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for P(+5); Eir gives P -3; Brown (2020) has no P(+5)-P(-3) row"
+  },
+  "('Pm', 3, 'O')": {
+    "r0": 2.05,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Pm(+3)-O(-2) row"
+  },
+  "('Po', 2, 'O')": {
+    "r0": 2.05,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Po(+2)-O(-2) row"
+  },
+  "('Pr', 3, 'Se')": {
+    "r0": 2.72,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for Se(-1); Eir gives Se -2; Brown (2020) has no Pr(+3)-Se(-2) row"
+  },
+  "('Pr', 4, 'O')": {
+    "r0": 2.03,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Pr(+4)-O(-2) row"
+  },
+  "('Pt', 2, 'C')": {
+    "r0": 1.76,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for C(+2); Eir gives C -4; Brown (2020) has no Pt(+2)-C(-4) row"
+  },
+  "('Ra', 2, 'O')": {
+    "r0": 2.23,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Ra(+2)-O(-2) row"
+  },
+  "('Re', 4, 'O')": {
+    "r0": 1.8,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Re(+4)-O(-2) row"
+  },
+  "('Re', 6, 'O')": {
+    "r0": 1.8,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Re(+6)-O(-2) row"
+  },
+  "('Rh', 9, 'Se')": {
+    "r0": 2.33,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for Se(-1); Eir gives Se -2; Brown (2020) has no Rh(+9)-Se(-2) row"
+  },
+  "('S', 4, 'S')": {
+    "r0": 2.35,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "Brown (2020) row is for S(-4); Eir gives S -2; Brown (2020) has no S(+4)-S(-2) row"
+  },
+  "('Se', 2, 'O')": {
+    "r0": 1.65,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Se(+2)-O(-2) row"
+  },
+  "('Te', 2, 'O')": {
+    "r0": 1.7,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no Te(+2)-O(-2) row"
+  },
+  "('U', 3, 'O')": {
+    "r0": 2.12,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "no row of Brown (2020) has these values; from the hand-compiled table of Eir 1.0; Brown (2020) has no U(+3)-O(-2) row"
+  }
+}

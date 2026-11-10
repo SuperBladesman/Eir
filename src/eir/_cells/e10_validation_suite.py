@@ -859,6 +859,35 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
     report('28. a species the CIF types as an anion is an anion to the packing '
            'scan', _ok28, _det28)
 
+    # 29. v2.0.46: the parameter table. Every shipped entry records the anion
+    #     charge it was fitted for, and it is the charge Eir gives that
+    #     anion; an entry fitted for another charge is not loaded; and a
+    #     cation with no parameters for its anion is kept for an R1, not
+    #     removed from the structure.
+    try:
+        import os as _os29
+        with open(_os29.path.join(db_manager.data_dir, 'bvs_parameters.json')) as _f29:
+            _raw29 = json.load(_f29)
+        _kept29, _skip29 = bv_table_entries(_raw29)
+        _nocharge29 = [k for k, v in _raw29.items() if 'anion_charge' not in v]
+        _toy29 = {"('Pr', 3, 'Se')": {'r0': 2.72, 'b': 0.37, 'anion_charge': -1},
+                  "('Pr', 3, 'S')": {'r0': 2.6, 'b': 0.37, 'anion_charge': -2},
+                  "('Pr', 3, 'O')": {'r0': 2.1, 'b': 0.37}}
+        _k29, _s29 = bv_table_entries(_toy29)
+        _sel29 = has_bvs_parameters_for_pair('Ra', 'O', {'Ra': 2, 'O': -2})
+        _ok29 = (not _skip29 and not _nocharge29
+                 and len(_kept29) == len(_raw29)
+                 and sorted(_k29) == [('Pr', 3, 'O'), ('Pr', 3, 'S')]
+                 and _s29 == ["('Pr', 3, 'Se')"] and _sel29 is True)
+        _det29 = (f"shipped table: {len(_raw29)} entries, {len(_kept29)} loaded, "
+                  f"{len(_skip29)} at another anion charge, {len(_nocharge29)} "
+                  f"with no anion charge (want all loaded, none of either); "
+                  f"toy: kept {sorted(_k29)}, left out {_s29} (want Pr-O and "
+                  f"Pr-S kept, Pr-Se(1-) left out); Ra2+-O kept for R1: {_sel29}")
+    except Exception as _e29:
+        _ok29, _det29 = False, f'{type(_e29).__name__}: {_e29}'
+    report('29. the parameter table matches each anion charge', _ok29, _det29)
+
     if verbose:
         print()
         print("=" * 70)

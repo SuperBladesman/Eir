@@ -24,7 +24,7 @@ def test_validate():
     import eir
     log = eir.validate()
     assert 'STRUCTURAL SELF-CHECK PASSED' in log
-    assert 'ALL 28 TESTS PASSED' in log
+    assert 'ALL 29 TESTS PASSED' in log
     assert 'ALL GATE TESTS PASSED' in log
     assert 'ALL PARSING TESTS PASSED' in log
     assert 'ALL SETTING TESTS PASSED' in log

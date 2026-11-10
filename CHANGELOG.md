@@ -195,6 +195,39 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   describe. 39 such structures among the 212 came out EXPUNGE on G7, G1 or
   G2, or failed; the reason now names the bond. A carbonate, or a carbide's
   isolated carbon, is assessed as before.
+- **The bond valence table is checked against its sources.** 32 entries
+  labelled Brown (2020) are in none of the 2009, 2011 and 2020 releases of
+  Brown's compilation; all came from the hand-compiled table of 1.0, and
+  none records a source. Fourteen of those pairs now take Brown's row by the
+  merge rule (V2+-O 1.79 to 1.70 Å, Yb2+-O 2.08 to 1.989, Ni3+-O 1.70 to
+  1.75, Hg+-O 1.74 to 1.90, Os4+, W4+, Tc4+, S2+ and six actinide pairs);
+  eighteen have no Brown row and are removed (Pr4+-O, Re4+ and Re6+-O,
+  U3+-O, Ag2+-O, Ra2+-O and others). Seventeen entries were Brown rows for
+  an anion charge other than Eir's (Pr3+-Se(1-) used for Pr3+-Se(2-),
+  Fe3+-C(2+) for C(4-)): two take the row at the ordinary charge and
+  fifteen are removed; three more were not cation-anion pairs. 1,385
+  entries to 1,349; the 36 removed are kept, with their values and why, in
+  `Data/bvs_parameters_excluded.json`. Each entry now records
+  `anion_charge` and `brown_code`, the loader leaves out one fitted for
+  another anion charge, and `tools/audit_bv_table.py` checks the table
+  against Brown's file.
+- A cation with no parameters for its anion at any valence is NOT_ASSESSED
+  (R1). It used to be dropped, and a file whose only pair it was failed as
+  unreadable: RaO, or W2C and Mo2C among the 212, which are now R1. An anion
+  the table has nothing for (a Zintl anion, boron in a boride) is left out
+  as before.
+- On the 4,806 ICSD structures of the four sets no verdict changes. 44
+  NOT_ASSESSED entries change their reason from R3 to R1: 37 Pr4+ oxides
+  (31 fluorites, 6 perovskites), two U3+ pyrochlores, one Pm oxide and four
+  spinels with ICSD's unspecified metal M. The GII changes on 152, of which
+  10 are ACCEPT or FLAG: five LiNi0.5Mn1.5O4 and NiAl2O4 spinels (Ni3+),
+  two Pr pyrochlores, two uranium fluorites and one LaVO3. Brown's values
+  move the Os4+ and Tc4+ perovskites from GII 0.41-0.76 to 0.09-0.32; his
+  Ni3+-O, a private communication and the only one he lists, puts the
+  rare-earth nickelates RNiO3 at 3.4-3.7 for a valence of 3, where the
+  unsourced 1.70 gave 2.9-3.2. On the 870 ICSD exports, five iodine azide
+  entries that failed as unreadable now expunge on G2 with the other
+  azides; on the 212, W2C and Mo2C are R1; on the 200, no verdict changes.
 - The GII takes each label's element from its type symbol before its first
   letters. CrystalMaker labels the Si on majorite's octahedral position
   `MgOc2`; the index took magnesium's sum for it, and post-processing
@@ -222,10 +255,12 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   not change (see the README's known limitations). On the 200 no verdict
   changes; on the 4,806 only the two magnesium ferrites under the packing
   gates; the G5 evidence of 26 entries now names the pair and its floor.
-- 28 VALIDATE tests, four gate tests and 43 parsing tests in CELL 7b
+- 29 VALIDATE tests, four gate tests and 43 parsing tests in CELL 7b
   (`VALIDATE_GATES()`, `VALIDATE_PARSING()`, which need the gates defined),
-  seventeen end-to-end parsing cases in `tests/test_parsing.py` and 29
-  end-to-end reading cases in `tests/test_reading.py`. The new tests fail on
+  seventeen end-to-end parsing cases in `tests/test_parsing.py`, 29
+  end-to-end reading cases in `tests/test_reading.py` and six on the
+  parameter table in `tests/test_parameters.py`, which all fail on the
+  commit before the table was corrected (552f19c). The new tests fail on
   2.0.45, apart from the controls: one parsing test and six of the
   seventeen cases, which 2.0.45 already got right. The first sixteen reading
   cases also fail on 2.0.46 as it stood before the reading stage, and the

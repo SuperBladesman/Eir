@@ -105,7 +105,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 28 tests against structures whose answers are known by hand, the four gate tests, the 43 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions) and the structural self-check. Run it again after changing anything.
+runs the 29 tests against structures whose answers are known by hand, the four gate tests, the 43 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions) and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 
@@ -159,7 +159,7 @@ outputs/
 - **The GII is cation-only.**
 - **ACCEPT_HETEROVALENT means a valence span of 2 or more on one position**, so Y³⁺/Zr⁴⁺ and Gd³⁺/Ce⁴⁺ count as homovalent.
 - **GII thresholds depend on the family.** The often-quoted 0.20 v.u. comes from simple ordered structures; spinels and many perovskites routinely exceed it while being perfectly stable. Read the number against the family, and always beside the tier.
-- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback; not Brown and Altermatt (1985). This matters for any comparison with published GII values.
+- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback; not Brown and Altermatt (1985). This matters for any comparison with published GII values. Every entry traces to a row of Brown's bvparm2020 (or, for Fe⁴⁺–O, Brown 2009) at the anion charge Eir uses; `tools/audit_bv_table.py` checks it. Before 2.0.46, 52 entries did not, among them V²⁺–O, Yb²⁺–O, Ni³⁺–O, Pr⁴⁺–O and the actinide oxides; [Data/README.md](Data/README.md) lists what changed.
 - **Every threshold carries its measurement** in the comment beside it. Where one does not, the comment says so.
 
 ## Reference data
@@ -187,6 +187,7 @@ The history in this repository was rebuilt in 2026 from dated copies of every ve
 - G7, which expunges a site missing bonds, was set on the 200-entry regression set, where it fires on nothing. On 4,806 ICSD spinels, perovskites, pyrochlores and fluorites it fires once, on ICSD 69461, which G2 already expunges.
 - Anions bonded to each other (peroxides, superoxides, disulfides such as pyrite, polysulfides, azides) are expunged on G2 for their own O-O, S-S or N-N bond, and their cations would be summed with parameters fitted for O(2-), S(2-) or N(3-), which on these compounds put cation sums up to 55% over valence. Cations bonded to each other (hyponitrite and dinitramide N-N, closo-borate B-B) are expunged on G5 the same way. Read any verdict on such a structure as not assessed.
 - On a position shared by two anions, the coordination-quality columns written by CELL 7 (`contact_anion`, `expected_contact`, `shortest_contact_ratio`) describe the first-listed species. The bond valence sums use every species.
+- An ion with no bond valence parameters for its anion is reported as NOT_ASSESSED (R1). Pr⁴⁺–O, Re⁶⁺–O, U³⁺–O, Ag²⁺–O and Ra²⁺–O are among them: the values Eir carried for these until 2.0.46 are in no release of Brown's table, and no other source is recorded.
 - An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, N³⁺ (nitrites), Pr⁴⁺, Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
 
 Each will gain a `VALIDATE()` test as it is addressed.
