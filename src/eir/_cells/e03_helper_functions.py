@@ -2946,6 +2946,47 @@ SPLIT_SITE_MAX = 1.20         # A, closer than this with occupancies summing to
 # on the empty 8b site at zero occupancy in 11 entries).
 ALTERNATIVE_OCC_SUM_MAX = 1.02
 
+# v2.0.46: AND THE DEPOSITOR'S OWN UNCERTAINTIES.
+#
+# A fixed allowance of 0.02 expunged models that are over-full only within
+# their own error bars: in La2Zr2O7 (ICSD 189344) oxygen on 8b at 0.04(2)
+# beside 48f at 0.99 sums to 1.03, 1.5 standard uncertainties over one. The
+# gate says the model cannot be right, and a model right within its stated
+# precision is not that. So a close pair counts as alternatives when the
+# excess over one is within OCC_ESD_K combined standard uncertainties, or
+# within ALTERNATIVE_OCC_SUM_MAX - 1 where that is larger (no uncertainty
+# given, or a fixed occupancy). The uncertainties are combined in quadrature
+# for two labels and doubled for two images of one label, whose occupancy is
+# one parameter.
+#
+# Measured on Richmond's pyrochlores: of the 18 entries on G2 whose closest
+# pair sums to 1.10 or less, six lie within 3 sigma and are released (189344,
+# 173796, 213453, 121049, 180491, 173792); nine are over-full by 4 to 32
+# sigma and stay; 213452 sits at 3.0 sigma and stays; two give no
+# uncertainty. Nothing in the spinels or fluorites changes.
+OCC_ESD_K = 3.0
+
+
+def _occupancy_esds(cif_path):
+    """{label: standard uncertainty of its occupancy}, 0.0 where none is
+    given ("1." or "0.41583"). Read from the CIF text, because the parsed
+    structure keeps the value and drops the uncertainty."""
+    out = {}
+    try:
+        doc = gemmi.cif.read_file(str(cif_path))
+        block = doc.sole_block() if len(doc) == 1 else doc[0]
+        table = block.find(['_atom_site_label', '_atom_site_occupancy'])
+    except Exception:
+        return out
+    for row in table:
+        lab = gemmi.cif.as_string(row[0])
+        m = re.match(r'^\s*[-+]?(\d*)(?:\.(\d*))?\((\d+)\)\s*$', row[1])
+        if not m:
+            out[lab] = 0.0
+            continue
+        out[lab] = int(m.group(3)) * 10.0 ** (-len(m.group(2) or ''))
+    return out
+
 # No cation-oxygen bond in any oxide is shorter than this. B-O runs to about
 # 1.37 A, C-O in carbonate to 1.28, Si-O to 1.60; 1.20 leaves clearance below
 # all of them. Like ANION_ANION_MIN this is a single constant with no
@@ -3052,7 +3093,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
     import numpy as _np
     import math as _math
 
-    def _scan(st, anion_set, rmax):
+    def _scan(st, anion_set, rmax, esd=None):
         # v2.0.14: the image range follows the search radius. At one image a
         # 6.5 A search in a 5 A cell cannot reach the neighbour it is looking
         # for, so widening rmax alone would have been a half fix.
@@ -3077,10 +3118,14 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                         for k in rng:
                             p = st.cell.orthogonalize(
                                 gemmi.Fractional(f[0] + i, f[1] + j, f[2] + k))
-                            pts.append((s.element.name, p.x, p.y, p.z, occ))
+                            pts.append((s.element.name, p.x, p.y, p.z, occ,
+                                        s.label))
 
+        esd = esd or {}
         els = [p[0] for p in pts]
         occs = _np.array([p[4] for p in pts])
+        labs = [p[5] for p in pts]
+        sigs = _np.array([esd.get(p[5], 0.0) for p in pts])
         P = _np.array([[p[1], p[2], p[3]] for p in pts])
         is_anion = _np.array([e in anion_set for e in els])
 
@@ -3091,6 +3136,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
             occ0 = 1.0 if occ0 is None else float(occ0)
             if occ0 <= 0:
                 continue                          # v2.0.46: no atom there
+            sig0 = esd.get(s.label, 0.0)
             o = site_centre(st.cell, s)
             p0 = _np.array([o.x, o.y, o.z])
             d = _np.linalg.norm(P - p0, axis=1)
@@ -3107,10 +3153,14 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                         and els[idx] in CATION_FLOOR_EXCLUDED_ELEMENTS):
                     continue                      # v2.0.15: not a packing sphere
                 dist = float(d[idx])
-                # v2.0.46: alternatives to the floor, not to SPLIT_SITE_MAX
+                # v2.0.46: alternatives to the floor, not to SPLIT_SITE_MAX,
+                # and over-full only within the stated uncertainties
                 _floor = ANION_ANION_MIN if el_is_anion else CATION_CATION_MIN
+                _sig = (2.0 * sig0 if labs[idx] == s.label
+                        else _math.hypot(sig0, float(sigs[idx])))
+                _allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * _sig)
                 if (dist < max(SPLIT_SITE_MAX, _floor)
-                        and (occ0 + occs[idx]) <= ALTERNATIVE_OCC_SUM_MAX):
+                        and (occ0 + occs[idx] - 1.0) <= _allow + 1e-9):
                     continue                      # never both filled
                 # v2.0.14: the bucket now asks the same question the filter
                 # asked, and asks it of the structure rather than of a list.
@@ -3130,14 +3180,15 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         _has_anion = bool(_anion_set & _els)
         _has_cation = bool(_els - _anion_set)
 
-        aa, cc = _scan(st, _anion_set, rmax)
+        _esd = _occupancy_esds(cif_path)
+        aa, cc = _scan(st, _anion_set, rmax, _esd)
 
         # v2.0.14: one widened retry, and only where a bucket that SHOULD
         # have a member came back empty. A structure with no cations has no
         # cation-cation contact at any radius and is not a failure.
         if ((_has_anion and aa is None) or (_has_cation and cc is None)) \
                 and rmax < ANION_CONTACT_RMAX_WIDE:
-            aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE)
+            aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd)
             aa = aa if aa is not None else aa2
             cc = cc if cc is not None else cc2
         return aa, cc

@@ -722,7 +722,9 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
     # and 0.60 the model can fill them one at a time, and the cation floor
     # must not fire; at 0.60 and 0.60 it cannot, and it must. A rock salt
     # with an oxygen position refined to zero occupancy 1.82 A from O1 must
-    # pass the anion floor: there is no atom there.
+    # pass the anion floor: there is no atom there. And with uncertainties
+    # stated, 0.52(1) + 0.52(1) is over-full within 3 sigma and passes, where
+    # 0.55(1) + 0.55(1) is not and fails.
     _P2 = (
         "data_eir_validation_p2\n_cell_length_a 2.8300\n_cell_length_b 2.8300\n"
         "_cell_length_c 10.9000\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
@@ -741,15 +743,23 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
         _r26a = _run_cif(_P2.format(o1=0.40, o2=0.60))
         _r26b = _run_cif(_P2.format(o1=0.60, o2=0.60))
         _r26c = _run_cif(_RS0)
+        _P2e = _P2.replace('{o1:.2f}', '{o1}').replace('{o2:.2f}', '{o2}')
+        _r26d = _run_cif(_P2e.format(o1='0.52(1)', o2='0.52(1)'))
+        _r26e = _run_cif(_P2e.format(o1='0.55(1)', o2='0.55(1)'))
         _ok26 = (_r26a.get('cation_packing_plausible') is True
                  and _r26b.get('cation_packing_plausible') is False
-                 and _r26c.get('anion_packing_plausible') is True)
+                 and _r26c.get('anion_packing_plausible') is True
+                 and _r26d.get('cation_packing_plausible') is True
+                 and _r26e.get('cation_packing_plausible') is False)
         _det26 = (f"Na 0.40 + 0.60: cation floor {_r26a.get('cation_packing_plausible')} "
                   f"(min {_r26a.get('cation_cation_min')}), want True; 0.60 + 0.60: "
                   f"{_r26b.get('cation_packing_plausible')} (min "
                   f"{_r26b.get('cation_cation_min')}), want False; zero-occupancy O: "
                   f"anion floor {_r26c.get('anion_packing_plausible')} (min "
-                  f"{_r26c.get('anion_anion_min')}), want True")
+                  f"{_r26c.get('anion_anion_min')}), want True; 0.52(1) + "
+                  f"0.52(1), 2.8 sigma over: {_r26d.get('cation_packing_plausible')}"
+                  f", want True; 0.55(1) + 0.55(1), 7 sigma over: "
+                  f"{_r26e.get('cation_packing_plausible')}, want False")
     except Exception as _e26:
         _ok26, _det26 = False, f'{type(_e26).__name__}: {_e26}'
     report('26. positions the model fills one at a time are not a contact',

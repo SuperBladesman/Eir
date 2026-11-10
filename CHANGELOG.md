@@ -35,7 +35,10 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   stops in `flag_same_source_entries`. Such entries are groups of one.
 - The packing gates leave out positions refined to zero occupancy, and any
   pair below the floor whose occupancies sum to one or less, which the model
-  can fill one at a time. The rule used to stop at 1.20 Å. ICSD 253190,
+  can fill one at a time. The rule used to stop at 1.20 Å. A sum over one
+  is allowed 0.02, or three standard uncertainties of the occupancies as
+  deposited where that is more, so a model over-full only within its own
+  error bars is not expunged. ICSD 253190,
   253192 and 261554 (P2-type sodium layered oxides, Na 2b and 2d about
   1.70 Å apart) and 291603 (CrO2, Cr on octahedral and tetrahedral
   interstices) move from EXPUNGE (G5) to FLAG (M1).
