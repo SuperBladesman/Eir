@@ -316,6 +316,35 @@ def test_a_perchlorate_spread_over_four_orientations_keeps_plain_weights(tmp_pat
     assert pd.isna(cl['ligand_occupancy_conditional'])
 
 
+def p2(na1, na2, extra=()):
+    # P2-type NaCoO2: Na on 2b and 2d, a/sqrt(3) = 1.634 A apart
+    return cif('p2', (2.83, 2.83, 10.9, 90, 90, 120), 'P 63/m m c',
+               [('Co1', 'Co3+', 0, 0, 0, 1), ('O1', 'O2-', 0.33333, 0.66667, 0.0925, 1),
+                ('Na1', 'Na1+', 0, 0, 0.25, na1), ('Na2', 'Na1+', 0.66667, 0.33333, 0.25, na2)]
+               + list(extra),
+               [('Na1+', 1), ('Co3+', 3), ('O2-', -2), ('Ca2+', 2)])
+
+
+def test_mobile_ions_on_partly_filled_positions_are_flagged(tmp_path):
+    # over-full by 0.20, as an ionic conductor's mobile ion often is
+    r = run(tmp_path, p2(0.60, 0.60))
+    assert (r.tier, r.code) == ('FLAG', 'M11')
+    assert 'positions 0.600 and 0.600 filled' in r.evidence
+
+
+def test_beside_a_full_position_the_pair_is_still_expunged(tmp_path):
+    r = run(tmp_path, p2(1.0, 0.60))
+    assert (r.tier, r.code) == ('EXPUNGE', 'G5')
+
+
+def test_a_shared_position_counts_everything_on_it(tmp_path):
+    # 2d shared by Na 0.40 and Ca 0.40: label by label 0.80, position by
+    # position 1.20 (ICSD 164286, Li and Fe on 8a and 16c, sums to 1.70)
+    r = run(tmp_path, p2(0.40, 0.40, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.40)]))
+    assert (r.tier, r.code) == ('EXPUNGE', 'G5')
+    assert 'Na1-Ca2 1.634 A, floor 2.40 A' in r.evidence
+
+
 def test_a_template_with_no_atoms_says_so(tmp_path):
     r = run(tmp_path, "# GSAS-II phase information template file\ndata_template\n"
                       "_pd_phase_name ?\n")

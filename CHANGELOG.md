@@ -38,7 +38,11 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   can fill one at a time. The rule used to stop at 1.20 Å. A sum over one
   is allowed 0.02, or three standard uncertainties of the occupancies as
   deposited where that is more, so a model over-full only within its own
-  error bars is not expunged. ICSD 253190,
+  error bars is not expunged. The sum is of each position's occupancy, all
+  the species on it together: compared label by label, a lithiated
+  magnetite (ICSD 155030, Fe at 0.16 on 8a beside a 16c full of Li and Fe,
+  1.82 Å away) and two cation-excess magnesium ferrites (67847 and 94870,
+  Mg at 0.07 on 16c beside a full 8a) passed, and stay EXPUNGE (G5). ICSD 253190,
   253192 and 261554 (P2-type sodium layered oxides, Na 2b and 2d about
   1.70 Å apart) and 291603 (CrO2, Cr on octahedral and tetrahedral
   interstices) move from EXPUNGE (G5) to FLAG (M1).
@@ -175,6 +179,16 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   whatever the file says) is held to 2.00 Å (`MONOVALENT_PAIR_MIN`); any
   other pair stays at 2.40 Å. The contact that decides, with its floor, is
   reported as `cation_cation_contact`.
+- **Mobile ions on partly filled positions are a FLAG** (M11,
+  `mobile_ions_close`), not an EXPUNGE: a contact below the floor between
+  two monovalent cations whose positions are both partly filled, as the
+  mobile ion of an ionic conductor often is, is read as positions never
+  filled together, whatever the refined occupancies sum to. A full position
+  beside it, or a cation of higher charge, still gives G5
+  (`cation_contact_partly_occupied` says which). Li10GeP2S12 written by
+  VESTA (Li 0.691 on positions 1.73 Å apart) leaves EXPUNGE, and is
+  NOT_ASSESSED (R3) for want of measured Li-S lengths; no ICSD entry of the
+  5,676 changes on it.
 - **Molecular carbon is NOT_ASSESSED** (R1, `molecular_carbon`). Carbon
   bonded to C, H or N (a MOF linker, an organic or hybrid perovskite cation,
   a cyanide, a carbide's C2 unit) is outside what bond valence sums
@@ -205,19 +219,19 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   perchlorates, chlorates and chlorites 44 to 3, nitrates and nitrites 43
   to 22 (21 to NOT_ASSESSED: no measured N(3+)-O bond lengths), carbonates
   45 to 41. Peroxides, superoxides, disulfides, polysulfides and azides do
-  not change (see the README's known limitations). On the 4,806 and the
-  200 no verdict changes; the G5 evidence of 26 entries now names the pair
-  and its floor.
-- 28 VALIDATE tests, four gate tests and 40 parsing tests in CELL 7b
+  not change (see the README's known limitations). On the 200 no verdict
+  changes; on the 4,806 only the two magnesium ferrites under the packing
+  gates; the G5 evidence of 26 entries now names the pair and its floor.
+- 28 VALIDATE tests, four gate tests and 43 parsing tests in CELL 7b
   (`VALIDATE_GATES()`, `VALIDATE_PARSING()`, which need the gates defined),
-  seventeen end-to-end parsing cases in `tests/test_parsing.py` and 26
+  seventeen end-to-end parsing cases in `tests/test_parsing.py` and 29
   end-to-end reading cases in `tests/test_reading.py`. The new tests fail on
   2.0.45, apart from the controls: one parsing test and six of the
   seventeen cases, which 2.0.45 already got right. The first sixteen reading
   cases also fail on 2.0.46 as it stood before the reading stage, and the
-  other ten (halogens, alternatives, polyanion limits, repeated items,
-  the lithium floor, the conditional weight) on 2.0.46 as it stood before
-  them. On 200 ICSD
+  13 added or changed since (halogens, alternatives, polyanion limits,
+  repeated items, the lithium floor, the conditional weight, positions and
+  mobile ions) on 2.0.46 as it stood before them; one more is a control. On 200 ICSD
   entries the only verdicts that change are the four structures named under
   the packing gates; the sulfoselenide spinel 640368 stays NOT_ASSESSED
   (R1), now for the In-Se pair it has no parameters for rather than a Se-S

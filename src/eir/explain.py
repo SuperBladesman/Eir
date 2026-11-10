@@ -174,6 +174,12 @@ def _reason_sentence(code, reason, site):
         'cation_packing_impossible':
             'Two cations are closer together than is credible for any sound '
             'structure.',
+        'mobile_ions_close':
+            'Two partly filled positions of monovalent cations lie closer '
+            'together than two such ions can be, as the mobile ion of an '
+            'ionic conductor often does. Read as positions never filled '
+            'together, though the occupancies as refined sum to more than '
+            'one; treat those occupancies with care.',
         'no_bond_valence_parameters':
             f'There are no bond valence parameters for {ion}'
             + (f' bonded to {lig}' if lig else '')
@@ -360,6 +366,7 @@ def explain(result):
 
 # The screen each code reads, where one does.
 _CODE_SCREEN = {'G2': 'anion packing', 'G5': 'cation packing',
+                'M11': 'cation packing',
                 'G7': 'coordination',
                 'M8': 'bond-valence distance', 'G4': 'half-lattice shift',
                 'M7': 'half-lattice shift'}

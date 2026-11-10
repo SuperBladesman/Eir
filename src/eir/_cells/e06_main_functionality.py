@@ -1269,6 +1269,7 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
         # whatever the occupancies of a disordered hydroxyl.
         _EIR_ALTERNATIVES.clear()
         _alt_esd = _occupancy_esds(cif_file_path)
+        _alt_tot = _position_occupancies(small_struct, _alt_esd)
 
         # Now find neighbors by simple distance calculation
         for site in small_struct.sites:
@@ -1297,7 +1298,7 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                         and elem1_type not in CATION_FLOOR_EXCLUDED_ELEMENTS
                         and atom_dict['element'] not in CATION_FLOOR_EXCLUDED_ELEMENTS
                         and _are_alternatives(site, atom_dict['original_site'],
-                                              _alt_esd)):
+                                              _alt_esd, _alt_tot)):
                     _EIR_ALTERNATIVES.append((elem1, atom_dict['label'], distance))
                     continue
 
@@ -5320,7 +5321,12 @@ def process_single_cif(file_path, user_oxidation_states=None):
         _gv = _CATION_CONTACT.pop(str(file_path), None)
         results['cation_cation_contact'] = (
             None if _gv is None else
-            f'{_gv[2]}-{_gv[3]} {_gv[1]:.3f} A, floor {_gv[4]:.2f} A')
+            f'{_gv[2]}-{_gv[3]} {_gv[1]:.3f} A, floor {_gv[4]:.2f} A'
+            + (f'; positions {_gv[5]:.3f} and {_gv[6]:.3f} filled'
+               if _gv[7] else ''))
+        # v2.0.46: below the floor, but between mobile ions (mobile_pair)
+        results['cation_contact_partly_occupied'] = (
+            None if _gv is None else bool(_gv[7]))
         # v2.0.46: the shortest polyanion edge the scan set aside, if any
         _pe = _POLYANION_EDGE_MIN.pop(str(file_path), None)
         results['polyanion_edge_min'] = None if _pe is None else round(_pe, 4)
@@ -6214,6 +6220,8 @@ def batch_process_directory(directory_path):
                     'cation_cation_min': result.get('cation_cation_min'),
                     'cation_cation_contact': result.get(
                         'cation_cation_contact'),                            # v2.0.46
+                    'cation_contact_partly_occupied': result.get(
+                        'cation_contact_partly_occupied'),                   # v2.0.46
                     'anion_packing_plausible': result.get('anion_packing_plausible'),
         # v2.0.13a: computed and printed since v2.0.12 and never
         # exported, so the triage and summary both reported it as 0

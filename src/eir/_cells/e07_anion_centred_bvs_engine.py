@@ -380,6 +380,7 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
     # v2.0.46: positions the model fills one at a time are not neighbours
     # (_are_alternatives), as the cation side's bond finder already has it
     _alt_esd = _occupancy_esds(cif_path)
+    _alt_tot = _position_occupancies(st, _alt_esd)
 
     results = []
     for site in st.sites:
@@ -414,7 +415,8 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
             if (d[idx] < CATION_ANION_ABSOLUTE_MIN
                     and elem not in CATION_FLOOR_EXCLUDED_ELEMENTS
                     and site.element.name not in CATION_FLOOR_EXCLUDED_ELEMENTS
-                    and _are_alternatives(site, _AltSite(label, occ), _alt_esd)):
+                    and _are_alternatives(site, _AltSite(label, occ), _alt_esd,
+                                          _alt_tot)):
                 continue                          # v2.0.46
             _px, _py, _pz = _Pl[idx]
             _dd = kept.get(label)

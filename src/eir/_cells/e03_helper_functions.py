@@ -3970,18 +3970,44 @@ MONOVALENT_PAIR_MIN = 2.00    # A, measured; see above
 ALWAYS_MONOVALENT = frozenset({'Li', 'Na', 'K', 'Rb', 'Cs'})
 
 
+def monovalent(el, v):
+    """A cation of charge one or less: an alkali metal whatever the file
+    states, or any species stated at |charge| <= 1."""
+    if el in ALWAYS_MONOVALENT:
+        return True
+    try:
+        return 0.0 < abs(float(v)) <= 1.0 + 1e-6
+    except (TypeError, ValueError):
+        return False
+
+
 def cation_floor(el1, v1, el2, v2):
     """The packing floor for one pair of cations; see MONOVALENT_PAIR_MIN.
     v1 and v2 are the stated charges, or None."""
-    def _mono(el, v):
-        if el in ALWAYS_MONOVALENT:
-            return True
-        try:
-            return 0.0 < abs(float(v)) <= 1.0 + 1e-6
-        except (TypeError, ValueError):
-            return False
-    return (MONOVALENT_PAIR_MIN if _mono(el1, v1) and _mono(el2, v2)
+    return (MONOVALENT_PAIR_MIN if monovalent(el1, v1) and monovalent(el2, v2)
             else CATION_CATION_MIN)
+
+
+# v2.0.46: MOBILE IONS ON PARTLY FILLED POSITIONS.
+#
+# In an ionic conductor the mobile ion is spread over positions closer
+# together than two of it can be, and the refinement leaves their
+# occupancies summing to more than one. The usual reading is that
+# neighbouring positions are never filled together and the occupancies,
+# for a weak scatterer correlated with its displacement parameters, are
+# not good to the last few per cent. Li10GeP2S12 written by VESTA puts Li1
+# at 0.691 on 16h positions 1.73 A apart. So a contact below the floor
+# between two monovalent cations whose positions are both partly filled
+# (each under 1 - (ALTERNATIVE_OCC_SUM_MAX - 1)) is a FLAG (M11), not an
+# EXPUNGE. A full position next to it is not: the model then says the pair
+# is filled together (ICSD 164287, Li2Fe3O4, Li full on 8a beside Li and Fe
+# on 16c), and so does any pair with a cation of higher charge.
+def mobile_pair(el1, v1, p1, el2, v2, p2):
+    """Two monovalent cations on positions both partly filled (p1, p2 the
+    positions' occupancies)."""
+    _full = 1.0 - (ALTERNATIVE_OCC_SUM_MAX - 1.0)
+    return (p1 < _full and p2 < _full
+            and monovalent(el1, v1) and monovalent(el2, v2))
 
 # v2.0.15: WHAT THIS FLOOR DOES NOT APPLY TO.
 #
@@ -4047,16 +4073,65 @@ ALTERNATIVE_OCC_SUM_MAX = 1.02
 OCC_ESD_K = 3.0
 
 
-def _are_alternatives(s1, s2, esd=None):
+# v2.0.46: AND THE OCCUPANCY OF THE POSITION, NOT OF THE LABEL.
+#
+# Two positions can be filled one at a time only if what fills them, all
+# species together, sums to one or less. The test compared labels, so a
+# position shared by two species was judged on each species alone: in the
+# lithiated magnetite ICSD 164286, 8a holds Li 0.508 and Fe 0.192 and the
+# face-sharing 16c, 1.83 A away, holds Li 0.596 and Fe 0.404. Label by
+# label every pair but one summed to one or less; position by position the
+# two sum to 1.70, and 16c is full, so every cation on 8a has a neighbour
+# 1.83 A away. Each label's position is found within POSITION_TOL, at any
+# symmetry image, and its uncertainties are added in quadrature.
+POSITION_TOL = 0.02           # A, two labels this close are one position
+
+
+def _position_occupancies(st, esd=None):
+    """{label: (occupancy of its position, uncertainty)}, summed over every
+    label refined at the same coordinates or a symmetry image of them."""
+    import math as _m
+    esd = esd or {}
+    sites = list(st.sites)
+    ops = list(st.spacegroup.operations()) if st.spacegroup is not None else []
+
+    def _same(a, b):
+        fa = (a.fract.x, a.fract.y, a.fract.z)
+        for op in ops or [None]:
+            fb = ((b.fract.x, b.fract.y, b.fract.z) if op is None else
+                  op.apply_to_xyz([b.fract.x, b.fract.y, b.fract.z]))
+            df = [x - y - round(x - y) for x, y in zip(fa, fb)]
+            c = st.cell.orthogonalize(gemmi.Fractional(*df))
+            if c.x * c.x + c.y * c.y + c.z * c.z < POSITION_TOL ** 2:
+                return True
+        return False
+
+    out = {}
+    for i, a in enumerate(sites):
+        tot = var = 0.0
+        for j, b in enumerate(sites):
+            if i == j or _same(a, b):
+                o = getattr(b, 'occ', None)
+                tot += 1.0 if o is None else float(o)
+                var += esd.get(b.label, 0.0) ** 2
+        out[a.label] = (tot, _m.sqrt(var))
+    return out
+
+
+def _are_alternatives(s1, s2, esd=None, totals=None):
     """v2.0.46. Can the model fill these two positions one at a time? Their
     occupancies sum to one or less, within ALTERNATIVE_OCC_SUM_MAX or
     OCC_ESD_K standard uncertainties of the deposited occupancies (doubled for
-    two images of one label). The packing gates' rule, for any two sites."""
+    two images of one label). The packing gates' rule, for any two sites.
+    totals (_position_occupancies) makes it the positions' occupancies."""
     import math as _m
     esd = esd or {}
     o1 = 1.0 if getattr(s1, 'occ', None) is None else float(s1.occ)
     o2 = 1.0 if getattr(s2, 'occ', None) is None else float(s2.occ)
     g1, g2 = esd.get(s1.label, 0.0), esd.get(s2.label, 0.0)
+    if totals:
+        o1, g1 = totals.get(s1.label, (o1, g1))
+        o2, g2 = totals.get(s2.label, (o2, g2))
     sig = 2.0 * g1 if s1.label == s2.label else _m.hypot(g1, g2)
     allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * sig)
     return (o1 + o2 - 1.0) <= allow + 1e-9
@@ -4341,8 +4416,10 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
     import math as _math
     _edges = []         # v2.0.46: polyanion edges set aside (POLYANION_CENTRES)
     _gov = [None]       # v2.0.46: the cation contact nearest its floor
+    _hard = [None]      # ... of those not between mobile ions (mobile_pair)
+    _soft = [None]      # ... of those that are
 
-    def _scan(st, anion_set, rmax, esd=None, sv=None):
+    def _scan(st, anion_set, rmax, esd=None, sv=None, tot=None):
         # v2.0.14: the image range follows the search radius. At one image a
         # 6.5 A search in a 5 A cell cannot reach the neighbour it is looking
         # for, so widening rmax alone would have been a half fix.
@@ -4379,6 +4456,11 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         _ev = valences or {}
         vals = [sv.get(p[5], _ev.get(p[0])) for p in pts]
         sigs = _np.array([esd.get(p[5], 0.0) for p in pts])
+        # v2.0.46: the occupancy of each POSITION (_position_occupancies)
+        tot = tot or {}
+        poccs = _np.array([tot.get(p[5], (p[4], 0.0))[0] for p in pts])
+        psigs = _np.array([tot.get(p[5], (0.0, esd.get(p[5], 0.0)))[1]
+                           for p in pts])
         P = _np.array([[p[1], p[2], p[3]] for p in pts])
         is_anion = _np.array([e in anion_set for e in els])
         # v2.0.46: see POLYANION_CENTRES
@@ -4393,6 +4475,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
             if occ0 <= 0:
                 continue                          # v2.0.46: no atom there
             sig0 = esd.get(s.label, 0.0)
+            pocc0, psig0 = tot.get(s.label, (occ0, sig0))
             v0 = sv.get(s.label, _ev.get(el))
             o = site_centre(st.cell, s)
             p0 = _np.array([o.x, o.y, o.z])
@@ -4416,11 +4499,11 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                 # v2.0.46: alternatives to the floor, not to SPLIT_SITE_MAX,
                 # and over-full only within the stated uncertainties
                 _floor = ANION_ANION_MIN if el_is_anion else CATION_CATION_MIN
-                _sig = (2.0 * sig0 if labs[idx] == s.label
-                        else _math.hypot(sig0, float(sigs[idx])))
+                _sig = (2.0 * psig0 if labs[idx] == s.label
+                        else _math.hypot(psig0, float(psigs[idx])))
                 _allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * _sig)
                 if (dist < max(SPLIT_SITE_MAX, _floor)
-                        and (occ0 + occs[idx] - 1.0) <= _allow + 1e-9):
+                        and (pocc0 + poccs[idx] - 1.0) <= _allow + 1e-9):
                     continue                      # never both filled
                 # v2.0.46: an edge of this anion's own polyanion, held short
                 # by the bonds to its centre, is not a packing contact
@@ -4440,8 +4523,16 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                     cc = dist if cc is None else min(cc, dist)
                     # v2.0.46: judged against the floor for THIS pair
                     _fl = cation_floor(el, v0, els[idx], vals[idx])
-                    if _gov[0] is None or dist - _fl < _gov[0][0]:
-                        _gov[0] = (dist - _fl, dist, s.label, labs[idx], _fl)
+                    _c = (dist - _fl, dist, s.label, labs[idx], _fl,
+                          pocc0, float(poccs[idx]))
+                    if _gov[0] is None or _c[0] < _gov[0][0]:
+                        _gov[0] = _c
+                    # v2.0.46: see mobile_pair
+                    _box = (_soft if mobile_pair(el, v0, pocc0, els[idx],
+                                                 vals[idx], float(poccs[idx]))
+                            else _hard)
+                    if _box[0] is None or _c[0] < _box[0][0]:
+                        _box[0] = _c
         return aa, cc
 
     try:
@@ -4462,18 +4553,25 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                    if d.get('explicit_valence') not in (None, 0)}
         except (OSError, UnicodeDecodeError, ValueError):
             _sv = {}
-        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv)
+        _tot = _position_occupancies(st, _esd)
+        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot)
 
         # v2.0.14: one widened retry, and only where a bucket that SHOULD
         # have a member came back empty. A structure with no cations has no
         # cation-cation contact at any radius and is not a failure.
         if ((_has_anion and aa is None) or (_has_cation and cc is None)) \
                 and rmax < ANION_CONTACT_RMAX_WIDE:
-            aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd, _sv)
+            aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd,
+                             _sv, _tot)
             aa = aa if aa is not None else aa2
             cc = cc if cc is not None else cc2
         _POLYANION_EDGE_MIN[str(cif_path)] = min(_edges) if _edges else None
-        _CATION_CONTACT[str(cif_path)] = _gov[0]
+        # v2.0.46: the contact that decides: any below its floor that is not
+        # between mobile ions, else one that is (M11), else the nearest
+        _dec = (_hard[0] + (False,) if _hard[0] is not None and _hard[0][0] < 0
+                else _soft[0] + (True,) if _soft[0] is not None and _soft[0][0] < 0
+                else None if _gov[0] is None else _gov[0] + (False,))
+        _CATION_CONTACT[str(cif_path)] = _dec
         return aa, cc
     except (NameError, TypeError, AttributeError):
         # A defect in this function, not a property of the file. Fail loudly:

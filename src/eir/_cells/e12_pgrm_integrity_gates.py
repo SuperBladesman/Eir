@@ -410,10 +410,14 @@ def classify_site(row, struct):
     # before 2.0.46 carry no contact and are judged as they were.
     cc = _pgrm_f(struct.get('cation_cation_min'))
     _cct = struct.get('cation_cation_contact')
+    _mobile = None      # v2.0.46: M11, asked after R (mobile_pair, CELL 1)
     if _pgrm_has_value(_cct):
         if _pgrm_is_false(struct.get('cation_packing_plausible')):
-            return ('G5', 'cation_packing_impossible',
-                    f'cation-cation contact {_cct}')
+            if _pgrm_is_true(struct.get('cation_contact_partly_occupied')):
+                _mobile = f'cation-cation contact {_cct}'
+            else:
+                return ('G5', 'cation_packing_impossible',
+                        f'cation-cation contact {_cct}')
     elif cc == cc and cc < _PGRM_CATION_FLOOR:
         return ('G5', 'cation_packing_impossible',
                 f'shortest cation-cation {cc:.3f} A, floor {_PGRM_CATION_FLOOR} A')
@@ -458,6 +462,12 @@ def classify_site(row, struct):
     occ = _pgrm_f(row.get('occupancy'), 1.0)
     if occ == 0.0:
         return 'M5', 'zero_occupancy', 'site refined to no atom'
+
+    # v2.0.46: mobile ions on partly filled positions closer than their
+    # floor, read as never filled together; see mobile_pair in CELL 1.
+    if _mobile:
+        return ('M11', 'mobile_ions_close',
+                _mobile + '; read as positions not filled together')
 
     # v2.0.22 (4.1): the bond-valence distance screen, as an M FLAG.
     #
@@ -723,8 +733,10 @@ def classify_pgrm(df):
                   # rest for the same reason M8 does - it says WHERE, and it
                   # is a measurement. The others are renumbered rather than
                   # squeezed, so every existing pair keeps its order.
-                  'M5': 12, 'M8': 13, 'M10': 14, 'M7': 15, 'M4': 16,
-                  'M1': 17, 'M6': 18, 'M3': 19, 'M2': 20, '-': 99}
+                  # v2.0.46: M11 sits below M8, above M10, for the same
+                  # reason, and the rest are renumbered.
+                  'M5': 12, 'M8': 13, 'M11': 14, 'M10': 15, 'M7': 16,
+                  'M4': 17, 'M1': 18, 'M6': 19, 'M3': 20, 'M2': 21, '-': 99}
     _w = df.assign(_s=df['pgrm_tier'].map(sev),
                    _r=df['pgrm_code'].map(_code_rank).fillna(50))
     worst = (_w.sort_values(['_s', '_r'], ascending=[True, False])
@@ -1399,6 +1411,40 @@ def VALIDATE_PARSING(verbose=True):
                polyanion_edge('Si', 'O', 1.78, 1.81, 2.29))  # shared SiO6 edge, 79 deg
         return got == (True, True, False, False), f'{got}'
     _case(37, 'polyanion edges: C2O5 and NO4 kept, crushed CO3 and SiO6 at 79 deg not', _t37)
+
+    # ---- v2.0.46: positions, not labels; mobile ions -----------------------
+    def _p2(na1, na2, extra=()):
+        # P2-type NaCoO2: Na on 2b and 2d, a/sqrt(3) = 1.634 A apart
+        return _parsing_cif('p2', 2.83, 'P 63/m m c',
+                            [('Co1', 'Co3+', 0, 0, 0, 1),
+                             ('O1', 'O2-', 0.33333, 0.66667, 0.0925, 1),
+                             ('Na1', 'Na1+', 0, 0, 0.25, na1),
+                             ('Na2', 'Na1+', 0.66667, 0.33333, 0.25, na2)] + list(extra),
+                            loop=[('Na1+', 1), ('Co3+', 3), ('O2-', -2), ('Ca2+', 2)],
+                            cell=(2.83, 2.83, 10.9, 90, 90, 120))
+
+    def _t38():
+        r = _parsing_run(_p2(0.60, 0.60))
+        c = str(r.get('cation_cation_contact'))
+        return (r.get('cation_packing_plausible') is False
+                and r.get('cation_contact_partly_occupied') is True
+                and 'positions 0.600 and 0.600 filled' in c),             f"plausible {r.get('cation_packing_plausible')}; mobile {r.get('cation_contact_partly_occupied')}: {c}"
+    _case(38, 'Na 0.60 and 0.60, 1.63 A apart: below the floor, between mobile ions (M11)', _t38)
+
+    def _t39():
+        r = _parsing_run(_p2(1.0, 0.60))
+        return (r.get('cation_packing_plausible') is False
+                and r.get('cation_contact_partly_occupied') is False),             f"plausible {r.get('cation_packing_plausible')}; mobile {r.get('cation_contact_partly_occupied')}"
+    _case(39, 'beside a full Na position the pair is filled together: G5, not M11', _t39)
+
+    def _t40():
+        # 2d shared by Na 0.40 and Ca 0.40: label by label every pair sums
+        # to 0.80, position by position 1.20
+        r = _parsing_run(_p2(0.40, 0.40, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.40)]))
+        c = str(r.get('cation_cation_contact'))
+        return (r.get('cation_packing_plausible') is False
+                and r.get('cation_contact_partly_occupied') is False and 'Ca2' in c),             f"plausible {r.get('cation_packing_plausible')}; mobile {r.get('cation_contact_partly_occupied')}: {c}"
+    _case(40, 'a shared position counts all it holds: Na 0.40 beside Na and Ca 0.40 each', _t40)
 
     ok = all(results)
     if verbose:
