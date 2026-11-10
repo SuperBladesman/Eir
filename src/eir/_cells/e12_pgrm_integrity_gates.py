@@ -156,10 +156,10 @@ PGRM_HETEROVALENT_DV = 2
 # sites above sit at -38% (a minority species) and -4%. The conjunction
 # fires on none of the 200.
 #
-# Measured on 3,868 ICSD structures (the 1,881 spinels of the corpus, 1,254
-# pyrochlores and 733 fluorites): it fires once, on ICSD 69461, a Tb2Ti2O7
-# whose 48f x appears to be quoted for the other origin, so that Tb has two
-# neighbours. G2 expunged it already. The 938 perovskites are still to run.
+# Measured on 4,806 ICSD structures (the 1,881 spinels and 938 perovskites
+# of the corpus, 1,254 pyrochlores and 733 fluorites): it fires once, on ICSD
+# 69461, a Tb2Ti2O7 whose 48f x appears to be quoted for the other origin, so
+# that Tb has two neighbours. G2 expunged it already.
 CN_DEFICIT_BVS_FRACTION = 0.50
 
 # The two packing floors come from CELL 1, where they are set from the

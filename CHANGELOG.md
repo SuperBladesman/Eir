@@ -46,8 +46,9 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   neighbours than the smallest coordination tabulated for it, summing to
   less than half its valence, is expunged. A CIF giving only the identity
   operation for Pm-3m SrTiO3 used to come out ACCEPT with a GII of 2.07.
-  On 3,868 ICSD structures (1,881 spinels, 1,254 pyrochlores, 733
-  fluorites) it fires once, on ICSD 69461, a record already expunged on G2.
+  On 4,806 ICSD structures (1,881 spinels, 938 perovskites, 1,254
+  pyrochlores, 733 fluorites) it fires once, on ICSD 69461, a record
+  already expunged on G2.
 - The packing scan is given the oxidation states the CIF states, so N(3-)
   or S(2-) beside oxygen is an anion rather than a cation. 2.0.45 tested
   their bonds against the cation floor and expunged ICSD 172231 and 51587
