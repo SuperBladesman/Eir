@@ -27,7 +27,7 @@
 # old version defaulted to NOTEBOOK = None and skipped the scan silently,
 # which is the same fault it exists to detect.
 
-import json as _json, re as _re
+import json as _json, os as _os, re as _re
 from pathlib import Path as _Path
 
 NOTEBOOK = None      # leave None to auto-detect; set a path to override
@@ -93,9 +93,31 @@ if not is_jahn_teller_ion('Mn', 3.3):
 # ---- 2. the notebook source ------------------------------------------------
 _path = _Path(NOTEBOOK) if NOTEBOOK else None
 if _path is None:
+    # v2.0.46: JupyterLab and Notebook 7 name the running notebook in
+    # JPY_SESSION_NAME. Failing that, the newest notebook here whose code
+    # sets this EIR_VERSION. The test used to be 'EIR_VERSION' anywhere in
+    # the file, which Huginn 3.9.3 passes (it names the Eir version it
+    # reads), so a run in a folder holding both scanned Huginn and reported
+    # every function missing; in a folder of several Eir versions it could
+    # scan the wrong one.
+    _sess = _os.environ.get('JPY_SESSION_NAME', '')
+    if _sess.endswith('.ipynb') and _Path(_sess).is_file():
+        _path = _Path(_sess)
+if _path is None:
     _here = _Path.cwd()
-    _cands = [p for p in sorted(_here.glob('*.ipynb'))
-              if 'EIR_VERSION' in p.read_text(encoding='utf-8', errors='ignore')]
+    _mine = _re.compile(r'^EIR_VERSION\s*=\s*["\']' + _re.escape(str(EIR_VERSION))
+                        + r'["\']', _re.M)
+
+    def _sets_this_version(p):
+        try:
+            _nbc = _json.loads(p.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            return False
+        return any(_mine.search(c['source'] if isinstance(c.get('source'), str)
+                                else ''.join(c.get('source', [])))
+                   for c in _nbc.get('cells', []) if c.get('cell_type') == 'code')
+
+    _cands = [p for p in sorted(_here.glob('*.ipynb')) if _sets_this_version(p)]
     _path = max(_cands, key=lambda p: p.stat().st_mtime) if _cands else None
 
 if _path is None or not _path.exists():

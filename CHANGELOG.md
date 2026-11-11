@@ -258,6 +258,15 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   replaces it. On the 870 ICSD exports, five iodine azide
   entries that failed as unreadable now expunge on G2 with the other
   azides; on the 212, W2C and Mo2C are R1; on the 200, no verdict changes.
+- The structural self-check scans its own notebook. It took the newest
+  notebook in the folder that mentioned EIR_VERSION anywhere, so with Huginn
+  3.9.3 beside it (which names the Eir version it reads) it scanned Huginn
+  and reported every function missing, and in a folder of several Eir
+  versions it could scan the wrong one. It now takes the notebook Jupyter
+  names in JPY_SESSION_NAME, or else the newest whose code sets this
+  EIR_VERSION. Found on NRM's first Windows run of 2.0.46, whose outputs on
+  53 fluorites otherwise match the cloud run of the same commit in every
+  column.
 - The GII takes each label's element from its type symbol before its first
   letters. CrystalMaker labels the Si on majorite's octahedral position
   `MgOc2`; the index took magnesium's sum for it, and post-processing

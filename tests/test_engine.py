@@ -36,3 +36,35 @@ def test_import_is_quiet(capsys):
     out = capsys.readouterr()
     assert out.out == ''
     assert 'GII SELF-TEST' in eir.engine.IMPORT_LOG.getvalue()
+
+
+def test_self_check_scans_its_own_notebook(tmp_path, monkeypatch):
+    # The structural self-check (CELL 1c) finds the notebook it scans. A
+    # notebook that only mentions EIR_VERSION (Huginn names the version it
+    # reads) or sets another version must not be taken for it, even when
+    # newer: 2.0.46 as first issued scanned Huginn 3.9.3 and reported every
+    # function missing.
+    import json
+    import os
+    import re
+    import time
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / 'src' / 'eir' / '_cells'
+           / 'k04_structural_self_check.py').read_text(encoding='utf-8')
+    start = src.index('_path = _Path(NOTEBOOK) if NOTEBOOK else None')
+    end = src.index('if _path is None or not _path.exists():')
+
+    def nb(path, code):
+        path.write_text(json.dumps({'cells': [
+            {'cell_type': 'code', 'source': code}]}), encoding='utf-8')
+
+    nb(tmp_path / 'Eir_2_0_46.ipynb', 'EIR_VERSION = "2.0.46"\n')
+    time.sleep(0.05)
+    nb(tmp_path / 'Eir_2_0_45.ipynb', 'EIR_VERSION = "2.0.45"\n')
+    nb(tmp_path / 'Huginn.ipynb', "CONFIG = {'EXPECTED_EIR_VERSION': '2.0.46'}\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv('JPY_SESSION_NAME', raising=False)
+    ns = {'_Path': Path, '_json': json, '_os': os, '_re': re,
+          'NOTEBOOK': None, 'EIR_VERSION': '2.0.46'}
+    exec(src[start:end], ns)
+    assert ns['_path'].name == 'Eir_2_0_46.ipynb'
