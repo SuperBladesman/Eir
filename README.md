@@ -168,7 +168,11 @@ outputs/
 
 ## Versions
 
-The current engine is **2.0.46**, packaged as **eir-bvs 2.1.0**, which adds the command line, the Python interface and the report without changing a result. The last released engine is 2.0.45 (23rd October 2026). Every surviving earlier version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one.
+The current release is engine **2.0.46**, packaged as **eir-bvs 2.1.0** (11th November 2026), which adds the command line, the Python interface and the report. Every surviving version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one. To install a particular release rather than the latest code, name its tag:
+
+```bash
+pip install "git+https://github.com/SuperBladesman/Eir.git@v2.0.46"
+```
 
 To reproduce the rock salt study, use the version that accompanied it:
 
@@ -188,7 +192,7 @@ The history in this repository was rebuilt in 2026 from dated copies of every ve
 - Anions bonded to each other (peroxides, superoxides, disulfides such as pyrite, polysulfides, azides) are expunged on G2 for their own O-O, S-S or N-N bond, and their cations would be summed with parameters fitted for O(2-), S(2-) or N(3-), which on these compounds put cation sums up to 55% over valence. Cations bonded to each other (hyponitrite and dinitramide N-N, closo-borate B-B) are expunged on G5 the same way. Read any verdict on such a structure as not assessed.
 - On a position shared by two anions, the coordination-quality columns written by CELL 7 (`contact_anion`, `expected_contact`, `shortest_contact_ratio`) describe the first-listed species. The bond valence sums use every species.
 - An ion with no bond valence parameters for its anion is reported as NOT_ASSESSED (R1). Pr⁴⁺–O, U³⁺–O, Np³⁺–O, Ag²⁺–O and Ra²⁺–O are among them: the values Eir carried for these until 2.0.46 are in no release of Brown's table, no other source was recorded, and Chen and Adams (2017) either do not cover them or fit them to fewer than three environments (Ag²⁺–O, two).
-- An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, N³⁺ (nitrites), Pr⁴⁺, Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
+- An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, N³⁺ (nitrites), Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
 
 Each will gain a `VALIDATE()` test as it is addressed.
 
