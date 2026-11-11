@@ -4,7 +4,7 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## The eir-bvs package
 
-### eir-bvs 2.1.0 – unreleased
+### eir-bvs 2.1.0 – 11 November 2026
 
 **A command line, a Python interface and a one-page report, on the 2.0.46 engine**
 
@@ -26,7 +26,7 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
-### 2.0.46 – unreleased
+### 2.0.46 – 11 November 2026
 
 **Faults found while packaging Eir, by running it on the corpus, and by a battery of CIFs written the way other programs write them**
 

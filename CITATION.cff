@@ -6,8 +6,16 @@ authors:
   - family-names: Reeves-McLaren
     given-names: Nik
     affiliation: University of Sheffield
-version: 2.0.45
-date-released: 2026-10-23
+    orcid: "https://orcid.org/0000-0002-1061-1230"
+version: 2.0.46
+date-released: 2026-11-11
+abstract: >-
+  Eir reads CIF files and asks of each structure whether it can be
+  assessed at all and, if so, how well its bond valence sums agree with the
+  formal valences. It returns an integrity verdict with the code that
+  decided it, the bond valence sum of every site, the global instability
+  index, and the evidence for each. This release is engine 2.0.46,
+  packaged as eir-bvs 2.1.0.
 license: MIT
 repository-code: "https://github.com/SuperBladesman/Eir"
 keywords:
@@ -24,6 +32,7 @@ preferred-citation:
     - family-names: Reeves-McLaren
       given-names: Nik
       affiliation: University of Sheffield
+      orcid: "https://orcid.org/0000-0002-1061-1230"
   title: "Automated Bond Valence Sum Analysis for Crystallographic Database Quality Assessment: A Systematic Study of Rock Salt Oxides, Halides, and Chalcogenides"
   journal: "Dalton Transactions"
   year: 2026
