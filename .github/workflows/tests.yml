@@ -1,0 +1,59 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  MPLBACKEND: Agg
+
+jobs:
+  engine:
+    name: package cells match Eir.ipynb
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python tools/build_engine.py --check
+
+  test:
+    name: py${{ matrix.python }} / pandas ${{ matrix.pandas }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.11", "3.12", "3.13"]
+        pandas: ["2", "3"]
+        include:
+          - os: windows-latest
+            python: "3.13"
+            pandas: "3"
+          - os: macos-latest
+            python: "3.13"
+            pandas: "3"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install the package as a user would, with the pandas under test
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          if [ "${{ matrix.pandas }}" = "2" ]; then PANDAS="pandas>=2.0,<3"; else PANDAS="pandas>=3"; fi
+          python -m pip install "$PANDAS" ".[test]"
+          python -c "import pandas, eir; print('pandas', pandas.__version__, '| eir', eir.__version__, '| engine', eir.ENGINE_VERSION)"
+      - name: Known-answer tests
+        run: eir validate
+      - name: Test suite
+        run: python -m pytest -q
+      - name: Command line, end to end
+        shell: bash
+        run: |
+          eir check examples/MgO.cif --no-report
+          eir check examples/SrTiO3_refined.cif --ox Sr=2,Ti=4,O=-2 --report report.html
+          test -s report.html

@@ -4,6 +4,9 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+build/
+dist/
+.pytest_cache/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -18,6 +21,7 @@ shifted_cifs/
 results/
 output/
 *.log
+*.eir.html
 
 # Oxidation states for a CIF folder
 config.json
@@ -31,5 +35,6 @@ config.json
 Thumbs.db
 desktop.ini
 
-# The published results are kept
+# The published results and the constructed examples are kept
 !paper_data/*.csv
+!examples/*.cif
