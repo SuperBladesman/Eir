@@ -24,10 +24,23 @@ import tempfile
 import warnings
 from pathlib import Path
 
-from ._manifest import ENGINE_VERSION
 
 __all__ = ['check', 'check_folder', 'validate', 'CheckResult', 'FolderResult',
            'OxidationStatesNeeded', 'EirError']
+
+
+# What engine 2.0.46 writes into a failure when the file types an element as
+# an anion that the bond valence table has no parameters for in that role
+# (_unsupported_anion_note).
+_UNSUPPORTED_ANION = 'typed as an anion'
+
+# Failures that mean the file was read and cannot be assessed, which is
+# NOT_ASSESSED rather than EXPUNGE: (phrase the engine writes, code, reason).
+_NOT_ASSESSED_FAILURES = (
+    (_UNSUPPORTED_ANION, 'R1', 'unsupported_anion'),
+    # engine 2.0.46, molecular_carbon: MOFs, organic cations, cyanides
+    ('Not assessed: molecular carbon', 'R1', 'molecular_carbon'),
+)
 
 
 class EirError(RuntimeError):
@@ -84,48 +97,12 @@ def _capture(verbose):
         yield buf
 
 
-class _SourceGrouping:
-    """flag_same_source_entries, made to finish where engine 2.0.45 stops.
-
-    The engine groups entries by ICSD code and first author to find several
-    deposited from one paper. It stops the run with an exception in two
-    cases: when no file has an ICSD code (every Rietveld CIF checked on its
-    own), and when some files have codes and one lacks an author or journal.
-    The grouping decides no verdict. Where the engine raises, this gives the
-    answer the function itself gives for metadata too thin to group on (no
-    group found, for every entry) and records that it did so. Where the
-    engine does not raise, its result is returned unchanged, so no run it
-    completes is altered."""
-
-    def __init__(self, original):
-        self.original = original
-        self.skipped = None
-        self.__wrapped__ = original
-
-    def __call__(self, df):
-        try:
-            return self.original(df)
-        except (ValueError, AttributeError, TypeError, KeyError) as err:
-            self.skipped = f'{type(err).__name__}: {err}'
-            print(f'\n  eir: source grouping skipped; engine '
-                  f'{ENGINE_VERSION} stopped in flag_same_source_entries '
-                  f'({self.skipped}). No verdict depends on it.')
-            df['source_group'] = None
-            df['source_group_size'] = 1
-            df['source_group_codes'] = (df['icsd_code']
-                                        if 'icsd_code' in df.columns else None)
-            df['flag_multi_entry_source'] = False
-            return df
-
-
 @contextlib.contextmanager
 def _settings(e, workers=None):
-    """Temporarily set engine options; replace the interactive oxidation-state
-    prompt with an error that says what is missing; and let a run finish where
-    the engine's source grouping would stop it (see _SourceGrouping)."""
+    """Temporarily set engine options, and replace the interactive
+    oxidation-state prompt with an error that says what is missing."""
     saved = {'EIR_WORKERS': e.EIR_WORKERS,
-             'prompt_for_oxidation_states': e.prompt_for_oxidation_states,
-             'flag_same_source_entries': e.flag_same_source_entries}
+             'prompt_for_oxidation_states': e.prompt_for_oxidation_states}
 
     def _no_prompt(elements):
         raise OxidationStatesNeeded(elements)
@@ -134,9 +111,7 @@ def _settings(e, workers=None):
         if workers is not None:
             e.EIR_WORKERS = 'auto' if workers in (0, 'auto') else int(workers)
         e.prompt_for_oxidation_states = _no_prompt
-        grouping = _SourceGrouping(saved['flag_same_source_entries'])
-        e.flag_same_source_entries = grouping
-        yield grouping
+        yield
     finally:
         for k, v in saved.items():
             setattr(e, k, v)
@@ -274,15 +249,38 @@ class CheckResult:
         return self.failure is None
 
     @property
+    def _not_assessed(self):
+        # Engine 2.0.46 says in the failure when a file was read and cannot
+        # be assessed: an anion it has no parameters for (Sn(4-) in Mg2Sn),
+        # or molecular carbon (a MOF). That is NOT_ASSESSED, not EXPUNGE.
+        if not self.failure:
+            return None
+        for phrase, code, reason in _NOT_ASSESSED_FAILURES:
+            if phrase in self.failure:
+                return code, reason
+        return None
+
+    @property
+    def _unsupported_anion(self):
+        na = self._not_assessed
+        return na is not None and na[1] == 'unsupported_anion'
+
+    @property
     def tier(self):
+        if self._not_assessed:
+            return 'NOT_ASSESSED'
         return 'EXPUNGE' if self.failure else self._get('structure_pgrm_tier')
 
     @property
     def code(self):
+        if self._not_assessed:
+            return self._not_assessed[0]
         return 'P' if self.failure else self._get('structure_pgrm_code')
 
     @property
     def reason(self):
+        if self._not_assessed:
+            return self._not_assessed[1]
         return ('unreadable_file' if self.failure
                 else self._get('structure_pgrm_reason'))
 
@@ -361,7 +359,7 @@ def check_folder(folder, oxidation_states=None, *, workers=None,
         _write_config(folder, oxidation_states)
     e = _engine()
     summary_error = None
-    with _capture(verbose) as buf, _settings(e, workers) as grouping:
+    with _capture(verbose) as buf, _settings(e, workers):
         e.run_pipeline(folder, steps=[k for k in e._manifest.PIPELINE
                                       if k != 'summary'])
         # CELL 15 describes the whole run. Every table is written before it
@@ -380,8 +378,6 @@ def check_folder(folder, oxidation_states=None, *, workers=None,
     dfq, dfs, summary, ox = _read_outputs(e, outdir)
     res = FolderResult(folder, dfq, dfs, _failures(outdir, log), outdir,
                        summary, log, ox)
-    if grouping.skipped:
-        res.notes.append('Source grouping skipped: ' + grouping.skipped)
     if summary_error:
         res.notes.append('Dataset summary not written: ' + summary_error)
         warnings.warn('The dataset summary (CELL 15) stopped: '
@@ -418,7 +414,7 @@ def check(cif, oxidation_states=None, *, output_dir=None, verbose=False):
         # Everything up to the shift test: the dataset summary and figures
         # (CELL 15) describe a collection, and say nothing about one entry.
         steps = [k for k in e._manifest.PIPELINE if k != 'summary']
-        with _capture(verbose) as buf, _settings(e, workers=1) as grouping:
+        with _capture(verbose) as buf, _settings(e, workers=1):
             e.run_pipeline(run_dir, steps=steps)
         log = buf.getvalue()
         outdir = run_dir / 'outputs'
@@ -429,9 +425,11 @@ def check(cif, oxidation_states=None, *, output_dir=None, verbose=False):
             shutil.copytree(outdir, dest, dirs_exist_ok=True)
             outdir = dest
     run = FolderResult(cif.parent, dfq, dfs, failed, outdir, summary, log, ox)
-    if grouping.skipped:
-        run.notes.append('Source grouping skipped: ' + grouping.skipped)
     if dfs is None or not len(dfs):
+        if len(failed) > 1:
+            # engine 2.0.46: a file holding several structures, none readable
+            return [CheckResult(cif, None, None, run, failure=why)
+                    for why in failed.values()]
         reason = failed.get(cif.name) or next(iter(failed.values()), None)
         if reason is None:
             reason = 'the file produced no sites to assess'
@@ -439,12 +437,16 @@ def check(cif, oxidation_states=None, *, output_dir=None, verbose=False):
     results = run.results()
     for r in results:
         r.cif = cif
+    # engine 2.0.46: a file holding several structures, some unreadable
+    done = set(dfs['filename'].astype(str))
+    results += [CheckResult(cif, None, None, run, failure=why)
+                for name, why in failed.items() if name not in done]
     return results[0] if len(results) == 1 else results
 
 
 def validate(verbose=False):
     """Run the checks the notebook runs as it loads: the structural scan of
-    the source, and the 24-test and Fd-3m setting suites. Raises
+    the source, and the known-answer and Fd-3m setting suites. Raises
     AssertionError if any fails; returns the printed record otherwise."""
     e = _engine()
     with _capture(verbose) as buf:

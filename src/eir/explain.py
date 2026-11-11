@@ -104,6 +104,20 @@ def _ligands(site):
     return ', '.join(dict.fromkeys(found)) or None
 
 
+def _a_site(site):
+    lab = None if site is None else site.get('site_label')
+    return f'Site {lab}' if lab not in (None, '') else 'A site'
+
+
+# Where a code makes the tier's general meaning inexact.
+CODE_MEANING = {
+    'P': 'The file cannot be read, so nothing in it can be assessed.',
+    'G7': ('The model in the file is missing bonds, so the sums built on it '
+           'mean nothing. No bond valence result from this file should be '
+           'quoted.'),
+}
+
+
 def _reason_sentence(code, reason, site):
     """One sentence, without numbers: the numbers are in the evidence."""
     ion, at = _ion(site), _at(site)
@@ -112,8 +126,17 @@ def _reason_sentence(code, reason, site):
     S = {
         'unreadable_file':
             'Eir could not read the file.',
+        'unsupported_anion':
+            'The file types an element as an anion that Eir has no bond '
+            'valence parameters for in that role, as in a Zintl or '
+            'intermetallic phase, so nothing in it can be assessed.',
+        'molecular_carbon':
+            'The structure holds carbon bonded to carbon, hydrogen or '
+            'nitrogen (a framework linker, an organic cation, a cyanide or '
+            'a carbide\'s C2 unit). Those covalent bonds are outside what '
+            'bond valence sums describe, so nothing in it is assessed.',
         'no_position':
-            f'A site{at} has no coordinates, so nothing can be computed '
+            f'{_a_site(site)} has no coordinates, so nothing can be computed '
             f'for it.',
         'contact_below_physical_floor':
             f'A contact to {ion}{at} is shorter than any chemical bond can '
@@ -140,12 +163,23 @@ def _reason_sentence(code, reason, site):
             f'The first coordination shell of {ion}{at} is split, but '
             f'nothing else was failing, so testing a shifted position could '
             f'not decide anything.',
+        'coordination_incomplete':
+            f'{ion}{at} has fewer neighbours than the smallest coordination '
+            f'tabulated for it, and its bond valence sum is less than half '
+            f'its valence: bonds are missing from the model, so no sum '
+            f'built on it can be trusted.',
         'anion_packing_impossible':
             'Two anions are closer together than their electron clouds '
             'allow.',
         'cation_packing_impossible':
             'Two cations are closer together than is credible for any sound '
             'structure.',
+        'mobile_ions_close':
+            'Two partly filled positions of monovalent cations lie closer '
+            'together than two such ions can be, as the mobile ion of an '
+            'ionic conductor often does. Read as positions never filled '
+            'together, though the occupancies as refined sum to more than '
+            'one; treat those occupancies with care.',
         'no_bond_valence_parameters':
             f'There are no bond valence parameters for {ion}'
             + (f' bonded to {lig}' if lig else '')
@@ -160,7 +194,7 @@ def _reason_sentence(code, reason, site):
         'no_index':
             'The recommended instability index could not be calculated.',
         'zero_occupancy':
-            f'A site{at} is refined to zero occupancy: there is no atom '
+            f'{_a_site(site)} is refined to zero occupancy: there is no atom '
             f'there.',
         'shortest_contact_implausible':
             f'The shortest contact to {ion}{at} is too short for the bond '
@@ -182,7 +216,7 @@ def _reason_sentence(code, reason, site):
         'shared_site_homovalent':
             f'More than one species shares a position{at}.',
         'partial_occupancy':
-            f'A site{at} is only partly occupied.',
+            f'{_a_site(site)} is only partly occupied.',
         'index_imprecise':
             'The coordinate uncertainties in the file leave the instability '
             'index imprecise.',
@@ -280,6 +314,7 @@ def explain(result):
     e = _engine_or_none()
     tier = result.tier
     head, meaning = TIERS.get(tier, (tier or 'Unknown', ''))
+    meaning = CODE_MEANING.get(result.code, meaning)
     site = headline_site(result)
     reason = (_reason_sentence(result.code, result.reason, site)
               if result.reason else None)
@@ -309,13 +344,13 @@ def explain(result):
                          note='Eir could not complete its checks, so it does '
                               'not vouch for this number.')
         else:
+            why = ('a shell that is missing bonds' if result.code == 'G7'
+                   else 'coordinates that cannot be right')
             quote = dict(status='withheld', short=short, long=long_,
                          number=num,
                          sentence=f'Do not quote. Eir computed {short} = '
-                                  f'{num}, but it is arithmetic on '
-                                  f'coordinates that cannot be right.',
-                         note='Do not quote it: it is arithmetic on '
-                              'coordinates that cannot be right.')
+                                  f'{num}, but it is arithmetic on {why}.',
+                         note=f'Do not quote it: it is arithmetic on {why}.')
     elif tier == 'EXPUNGE':
         quote = dict(status='withheld', short=None, long=None, number=None,
                      sentence='There is no bond valence result to quote.',
@@ -326,12 +361,13 @@ def explain(result):
                 facets=facet_states(result.code, tier),
                 failed_screens=failed_screens(result),
                 screen_note=_screen_note(tier, result.code,
-                                         failed_screens(result)),
-                caution=caution(result, e))
+                                         failed_screens(result)))
 
 
 # The screen each code reads, where one does.
 _CODE_SCREEN = {'G2': 'anion packing', 'G5': 'cation packing',
+                'M11': 'cation packing',
+                'G7': 'coordination',
                 'M8': 'bond-valence distance', 'G4': 'half-lattice shift',
                 'M7': 'half-lattice shift'}
 
@@ -345,42 +381,6 @@ def _screen_note(tier, code, failed):
     return (f'The {", ".join(rest)} screen{"s" if many else ""} failed. The '
             f'verdict does not rest on {"them" if many else "it"}, so check '
             f'{"them" if many else "it"} below before relying on the number.')
-
-
-def caution(result, e=None):
-    """A note where a packing gate fired on a model with partly occupied
-    positions that could be mutually exclusive. The gates treat two such
-    positions as one atom only when they are closer than SPLIT_SITE_MAX, so
-    a pair further apart is counted as a contact (see Known limitations in
-    the README). The note never changes the verdict."""
-    if result.code not in ('G2', 'G5') or e is None:
-        return None
-    try:
-        st = e.load_structure_for_viz(str(result.cif))
-        els = {s.element.name for s in st.sites}
-        anions = e.resolve_anions(els, None)
-    except Exception:
-        return None
-    full = getattr(e, 'PGRM_FULL_OCC', 0.98)
-    want_anion = result.code == 'G2'
-    occ = [float(s.occ) for s in st.sites
-           if (s.element.name in anions) == want_anion
-           and s.occ is not None and float(s.occ) < full]
-    exclusive = (any(o <= 0.51 for o in occ)
-                 or any(a + b <= 1.02 for i, a in enumerate(occ)
-                        for b in occ[i + 1:]))
-    if not exclusive:
-        return None
-    split = getattr(e, 'SPLIT_SITE_MAX', 1.2)
-    kind = 'anion' if want_anion else 'cation'
-    example = ('' if want_anion else
-               ', as for the two sodium positions of a P2-type layered oxide '
-               '(about 1.7 \u00c5 apart)')
-    return (f'The closest {kind} pair may be two partly occupied positions '
-            f'that the model never fills together. Eir treats such a pair as '
-            f'one atom on two positions only when they are closer than '
-            f'{split:g} \u00c5; further apart{example}, it counts the '
-            f'contact. Check the pair by hand before acting on this verdict.')
 
 
 def verdict_text(result):
@@ -410,8 +410,6 @@ def verdict_text(result):
         lines.append(_wrap(x['quote']['sentence'], 23, first='  Bond valence'))
     if x['screen_note']:
         lines.append(_wrap(x['screen_note'], 23, first='  Screens'))
-    if x['caution']:
-        lines.append(_wrap(x['caution'], 23, first='  Caution'))
     return '\n'.join(lines)
 
 

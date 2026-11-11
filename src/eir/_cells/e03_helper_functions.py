@@ -214,6 +214,1022 @@ KNOWN_ANIONS = dict(ALWAYS_ANION)
 KNOWN_ANIONS.update(AMPHOTERIC_ANION)
 
 
+# ============================================================================
+# v2.0.46: ONE READING OF AN ATOM'S SYMBOL
+# ============================================================================
+# Eight functions each turned a type symbol or a label into an element, with
+# expressions that disagreed. On CIFs written the way other programs and
+# older files write them (VALIDATE_PARSING):
+#   'SN4+'    lost its charge, and Sn was summed as Sn(2+)
+#   'CO2+'    stopped the run: with no oxidation-number loop, a scan of EVERY
+#             line for 'X2+' read 'O2+' as oxygen at +2 ('HO3+' the same)
+#   'Mn2.5+'  became the element 'Mn2.' and the file failed
+#   no _atom_site_type_symbol column: the file produced nothing at all, not
+#             even an entry among the failures
+#   'D1+'     deuterium has no bond valence parameters and was dropped
+# parse_atom_symbol is now the one reading. normalise_atom_types rewrites the
+# atom_site and atom_type loops into the form ICSD writes ('Sn4+', 'O2-', and
+# 'Mn4+' with 3.5 in the oxidation-number loop) before anything else reads
+# the file, so every older parser sees the form it was written against, and
+# ICSD files themselves pass through unchanged.
+ELEMENT_SYMBOLS = frozenset(
+    gemmi.Element(_z).name for _z in range(1, 119)) | {'D'}
+
+
+def parse_atom_symbol(token, hint=None):
+    """
+    (element, charge) from a type symbol ('Sn4+', 'SN4+', 'Sn+4', 'O-2',
+    'Mn3.5+', 'D1+') or a label ('Sn1', 'SN1', 'OW1', 'Cl1a').
+
+    The element is the first one or two letters, whichever is a real element,
+    two letters first: 'SN4+' is tin, 'CO2+' cobalt, 'HO3+' holmium. Where
+    both readings are real and `hint` (the elements the file's formula names)
+    holds only the shorter, the shorter wins: the label 'HO1' in Mg(OH)2 is
+    hydrogen. charge is a float, or None where the token carries none ('Sn',
+    'Sn1', 'O1W'). (None, None) for a token that starts with no element.
+    """
+    s = str(token or '').strip().strip("'\"")
+    m = re.match(r'^([A-Za-z])([A-Za-z]?)', s)
+    if not m:
+        return None, None
+    one = m.group(1).upper()
+    two = (one + m.group(2).lower()) if m.group(2) else None
+    cands = [c for c in (two, one) if c and c in ELEMENT_SYMBOLS]
+    if not cands:
+        return None, None
+    el = cands[0]
+    if hint and len(cands) == 2 and cands[0] not in hint and cands[1] in hint:
+        el = cands[1]
+    rest = s[len(el):]
+    charge = None
+    m1 = re.match(r'^(\d+(?:\.\d+)?)?([+-])$', rest)
+    m2 = re.match(r'^([+-])(\d+(?:\.\d+)?)$', rest)
+    if m1:
+        charge = (float(m1.group(1)) if m1.group(1) else 1.0) * (
+            1 if m1.group(2) == '+' else -1)
+    elif m2:
+        charge = float(m2.group(2)) * (1 if m2.group(1) == '+' else -1)
+    return el, charge
+
+
+def canonical_type_symbol(element, charge):
+    """ICSD's form of a type symbol: 'Sn4+', 'O2-', 'Na0+'. A fractional
+    charge is written rounded away from zero, as ICSD writes 'Mn4+' for 3.5,
+    with the value itself in the oxidation-number loop. D is written as H:
+    for bond valence purposes deuterium is hydrogen."""
+    el = 'H' if element == 'D' else element
+    if charge is None:
+        return el
+    n = int(math.ceil(abs(charge) - 1e-9))
+    return f'{el}{n}{"+" if charge >= 0 else "-"}'
+
+
+def _cif_tokens(line):
+    return re.findall(r"'[^']*'|\"[^\"]*\"|\S+", line)
+
+
+def _formula_hint(content):
+    """Elements the file's formula names, where the formula is written in a
+    case that can be trusted ('O2 Sn1', 'SnO2'; not 'SNO2')."""
+    m = re.search(r"_chemical_formula_(?:sum|moiety)\s+(?:'([^']*)'|\"([^\"]*)\"|(\S+))",
+                  content)
+    if not m:
+        return None
+    f = next(g for g in m.groups() if g is not None).strip()
+    toks = f.split()
+    if toks and all(re.match(r'^[A-Z][a-z]?\d*\.?\d*$', t) for t in toks):
+        els = {re.match(r'^([A-Z][a-z]?)', t).group(1) for t in toks}
+    elif re.search(r'[a-z]', f) and re.match(r'^([A-Z][a-z]?\d*\.?\d*)+$', f):
+        els = set(re.findall(r'[A-Z][a-z]?', f))
+    else:
+        return None
+    els = {e for e in els if e in ELEMENT_SYMBOLS}
+    return els or None
+
+
+def _cif_loops(lines):
+    """[(loop_ line, [tag line indices], [tags], [row line indices] or None)].
+    Rows are None for a loop holding a text field, which is left alone."""
+    out, i, n = [], 0, len(lines)
+    while i < n:
+        if lines[i].strip().lower() == 'loop_':
+            j, tag_idx, tags = i + 1, [], []
+            while j < n and lines[j].strip().startswith('_'):
+                tag_idx.append(j)
+                tags.append(lines[j].strip().split()[0].lower())
+                j += 1
+            rows = []
+            while j < n:
+                t = lines[j].strip()
+                if t.lower().startswith(('loop_', 'data_')) or t.startswith('_'):
+                    break
+                if t.startswith(';'):
+                    rows = None
+                if rows is not None and t and not t.startswith('#'):
+                    rows.append(j)
+                j += 1
+            out.append((i, tag_idx, tags, rows))
+            i = j
+            continue
+        i += 1
+    return out
+
+
+def normalise_atom_types(content):
+    """
+    The atom_site and atom_type loops rewritten in ICSD's own forms. Returns
+    (content, notes); notes say what changed, for the run log.
+
+      * every type symbol in the form 'Sn4+' (see parse_atom_symbol and
+        canonical_type_symbol); a fractional charge also enters the
+        oxidation-number loop, which is added if the file has none;
+      * a missing _atom_site_type_symbol column is added, from the labels,
+        read against the formula where it can be trusted;
+      * a row that does not split into one value per column, or a loop
+        holding a text field, is left exactly as written.
+
+    A file already in ICSD's form is returned unchanged.
+    """
+    lines = content.split('\n')
+    hint = _formula_hint(content)
+    notes = []
+    loops = _cif_loops(lines)
+    site = [L for L in loops if '_atom_site_label' in L[2]
+            and '_atom_site_fract_x' in L[2]]
+    types = [L for L in loops if '_atom_type_symbol' in L[2]]
+    if len(site) != 1 or site[0][3] is None:
+        return content, notes
+    _, tag_idx, tags, rows = site[0]
+    toks = {r: _cif_tokens(lines[r]) for r in rows}
+    if any(len(t) != len(tags) for t in toks.values()):
+        return content, ['atom_site rows span lines; symbols left as written']
+
+    # what each symbol means, from wherever it appears
+    seen = {}
+    if '_atom_site_type_symbol' in tags:
+        k = tags.index('_atom_site_type_symbol')
+        raws = [toks[r][k] for r in rows]
+    else:
+        k = None
+        li = tags.index('_atom_site_label')
+        raws = [toks[r][li] for r in rows]
+    for t in types:
+        if t[3] is None:
+            continue
+        kk = t[2].index('_atom_type_symbol')
+        for r in t[3]:
+            tt = _cif_tokens(lines[r])
+            if len(tt) == len(t[2]):
+                raws.append(tt[kk])
+    for raw in raws:
+        if raw not in seen:
+            el, ch = parse_atom_symbol(raw, hint if k is None else None)
+            seen[raw] = (el, ch)
+    canon = {raw: canonical_type_symbol(el, ch)
+             for raw, (el, ch) in seen.items() if el is not None}
+    # two charges written as one symbol cannot both be kept: leave those
+    by_sym = {}
+    for raw, c in canon.items():
+        by_sym.setdefault(c, set()).add(seen[raw][1])
+    clash = {c for c, chs in by_sym.items() if len({x for x in chs if x is not None}) > 1}
+    for raw in [r for r, c in canon.items() if c in clash]:
+        canon[raw] = raw
+    if clash:
+        notes.append('kept ' + ', '.join(sorted(clash)) + ' as written (two charges)')
+    frac = {canon[raw]: ch for raw, (el, ch) in seen.items()
+            if raw in canon and canon[raw] != raw and ch is not None
+            and abs(ch - round(ch)) > 1e-6}
+
+    changed = 0
+    if k is None:
+        li = tags.index('_atom_site_label')
+        if not all(toks[r][li] in canon for r in rows):
+            return content, ['no _atom_site_type_symbol, and a label names no '
+                             'element; left as written']
+        lines[tag_idx[li]] = lines[tag_idx[li]] + '\n_atom_site_type_symbol'
+        for r in rows:
+            t = toks[r]
+            lines[r] = ' '.join(t[:li + 1] + [canon[t[li]]] + t[li + 1:])
+        notes.append('added _atom_site_type_symbol from the labels')
+    else:
+        for r in rows:
+            t = toks[r]
+            if t[k] in canon and canon[t[k]] != t[k]:
+                t[k] = canon[t[k]]
+                lines[r] = ' '.join(t)
+                changed += 1
+    for t in types:
+        if t[3] is None:
+            continue
+        kk = t[2].index('_atom_type_symbol')
+        for r in t[3]:
+            tt = _cif_tokens(lines[r])
+            if len(tt) == len(t[2]) and tt[kk] in canon and canon[tt[kk]] != tt[kk]:
+                tt[kk] = canon[tt[kk]]
+                lines[r] = ' '.join(tt)
+                changed += 1
+    if changed:
+        notes.append(f'rewrote {changed} type symbol{"s" if changed > 1 else ""} '
+                     'in ICSD form')
+    has_ox = any('_atom_type_oxidation_number' in t[2] for t in types)
+    if frac and not has_ox and sum(l.strip().lower().startswith('data_')
+                                   for l in lines) <= 1:
+        lines += ['loop_', '_atom_type_symbol', '_atom_type_oxidation_number']
+        lines += [f'{s} {v:g}' for s, v in sorted(frac.items())]
+        lines.append('')
+        notes.append('added the oxidation-number loop for '
+                     + ', '.join(f'{s} {v:g}' for s, v in sorted(frac.items())))
+    return '\n'.join(lines), notes
+
+
+def read_cif_text(cif_path):
+    """The file as every parser in Eir should read it: normalise_atom_types
+    applied. Raises OSError or UnicodeDecodeError as open() does."""
+    with open(cif_path, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.read()
+    return normalise_atom_types(content)[0]
+
+
+# ============================================================================
+# v2.0.46: THE READING STAGE
+# ============================================================================
+# 212 CIFs written by thirteen other programs (FullProf, Jana2006, Jana2020,
+# GSAS-II, EXPGUI, TOPAS, MAUD, VESTA, CrystalMaker, Materials Studio,
+# pymatgen, COD and AMCSD files) failed in a handful of ways, and no way
+# belonged to one program:
+#
+#   a bond loop holding nothing but '?'        FullProf, Jana2006, Jana2020
+#   an author's partial bond list, used in     Jana2006 Sr3LiRuO6: Ru-O only,
+#     place of the bonds the positions give      so Sr and Li had no bonds
+#   several data blocks, of which only the     FullProf, Jana, GSAS-II, COD;
+#     first was read, and two may share a        the first is often 'global',
+#     name                                       holding no atoms at all
+#   one label for several atoms                VESTA and CrystalMaker, each
+#                                                writing both kinds: two
+#                                                species on one position, and
+#                                                dummy labels on different ones
+#   a value of several words left unquoted     VESTA's  R -3 m
+#   'data_' followed by a space                a FullProf template
+#
+# So each step below tests the FILE for one feature and repairs that feature,
+# whoever wrote it. Who wrote it is recorded (cif_provenance), for the report
+# and for diagnostics, and decides nothing: 101 of the 212 had passed through
+# COD, which rewrites what is deposited, so a 'FullProf file' is often
+# FullProf's refinement in COD's layout, and a file misread as the wrong
+# program would be handled by the wrong rules without a word said.
+#
+# read_cif_structures() returns one record per structure a file holds, with
+# the text Eir will read and a note of every change. A structure the stage
+# leaves alone is read from the file itself, so an ICSD entry reaches the
+# engine exactly as before. One it changes is written to outputs/as_read/,
+# where the user can see what Eir read, and every later cell finds it there
+# through cif_path_for(). Add a step whenever a new way of writing a file
+# turns up, with a case in VALIDATE_PARSING; never a rule keyed on a
+# program's name.
+
+AS_READ_DIR = 'as_read'
+_CIF_PLACEHOLDERS = frozenset({'?', '.'})
+
+
+def _cif_value(v):
+    v = str(v).strip()
+    if len(v) >= 2 and v[0] == v[-1] and v[0] in "'\"":
+        v = v[1:-1].strip()
+    return v
+
+
+def _cif_item(text, tag):
+    """The value of a single item, unquoted, from the same line or the next;
+    None where absent or a placeholder."""
+    m = re.search(r'(?im)^[ \t]*' + re.escape(tag) + r'(?:[ \t]+(.*?))?[ \t]*$',
+                  text)
+    if not m:
+        return None
+    v = m.group(1)
+    if not v:
+        rest = text[m.end():].lstrip('\n').split('\n', 1)[0].strip()
+        if rest and not rest.startswith(('_', ';', '#')) \
+                and not rest.lower().startswith(('loop_', 'data_')):
+            v = rest
+    v = _cif_value(v or '')
+    v = re.sub(r'\s+#.*$', '', v) if not v.startswith(("'", '"')) else v
+    return None if (not v or v in _CIF_PLACEHOLDERS) else v
+
+
+def cif_provenance(text):
+    """
+    Who wrote, refined and deposited the file, where the file says so:
+    {'written_by', 'refined_with', 'database'}, each a string or None.
+    Recorded beside every result and in the report; nothing reads it to
+    decide how the file is handled.
+    """
+    out = {'written_by': None, 'refined_with': None, 'database': None}
+    v = _cif_item(text, '_audit_creation_method')
+    if v:
+        out['written_by'] = re.sub(r'(?i)^generated by\s+', '', v)
+    for rx, name in (
+            (r'(?im)^#.*FullProf-generated CIF.*?\(version:\s*([^)]*?)\s*\)', 'FullProf ({})'),
+            (r'(?im)^#\s*generated using pymatgen', 'pymatgen'),
+            (r'(?im)^#\s*GSAS-II (.*?) template file', 'GSAS-II ({} template)'),
+            (r'(?im)^data_VESTA_phase_', 'VESTA')):
+        m = re.search(rx, text)
+        if m and out['written_by'] is None:
+            out['written_by'] = name.format(*[g.strip() for g in m.groups()])
+    out['refined_with'] = _cif_item(text, '_computing_structure_refinement')
+    dbs = []
+    for tag, db in (('_database_code_ICSD', 'ICSD'), ('_cod_database_code', 'COD'),
+                    ('_database_code_amcsd', 'AMCSD'),
+                    ('_database_code_depnum_ccdc_archive', 'CCDC')):
+        v = _cif_item(text, tag)
+        if v:
+            dbs.append(v if v.upper().startswith(db) else f'{db} {v}')
+    out['database'] = ', '.join(dbs) or None
+    return out
+
+
+def _cif_line_roles(lines):
+    """
+    The role of every line: 'field' (inside or delimiting a ;-text field),
+    'loop' (a loop_ keyword), 'loop_tag', 'loop_value', 'item' (a tag outside
+    a loop, with or without its value on the line), 'block', 'comment' or
+    'blank'. A value on the line after its item is 'value'.
+    """
+    roles, in_field, state = [], False, None   # state: None | 'tags' | 'values'
+    for raw in lines:
+        line = raw.rstrip('\r')
+        s = line.strip()
+        if line.startswith(';'):
+            in_field = not in_field
+            roles.append('field')
+            if not in_field and state == 'tags':
+                state = 'values'
+            continue
+        if in_field:
+            roles.append('field')
+            continue
+        if not s:
+            roles.append('blank')
+        elif s.startswith('#'):
+            roles.append('comment')
+        elif s.lower().startswith('data_'):
+            roles.append('block')
+            state = None
+        elif s.lower() == 'loop_' or s.lower().startswith('loop_ '):
+            roles.append('loop')
+            state = 'tags'
+        elif s.startswith('_'):
+            # a tag followed by a comment is still a tag on its own
+            if state == 'tags' and len(re.sub(r'\s#.*$', '', s).split()) == 1:
+                roles.append('loop_tag')
+            else:
+                roles.append('item')
+                state = None
+        elif state in ('tags', 'values'):
+            roles.append('loop_value')
+            state = 'values'
+        else:
+            roles.append('value')
+    return roles
+
+
+def _cif_loop_spans(lines, roles):
+    """[(first line, end line (exclusive), [tags], [value tokens] or None)].
+    Tokens are None for a loop holding a text field."""
+    out, i, n = [], 0, len(lines)
+    while i < n:
+        if roles[i] != 'loop':
+            i += 1
+            continue
+        j, tags = i + 1, []
+        while j < n and roles[j] in ('loop_tag', 'blank', 'comment'):
+            if roles[j] == 'loop_tag':
+                tags.append(lines[j].strip().split()[0].lower())
+            j += 1
+        toks, field = [], False
+        while j < n and roles[j] in ('loop_value', 'field', 'blank', 'comment'):
+            if roles[j] == 'field':
+                field = True
+            elif roles[j] == 'loop_value':
+                toks += [t for t in _cif_tokens(lines[j].split(' #')[0])]
+            j += 1
+        # trailing blank or comment lines belong to what follows
+        k = j
+        while k > i + 1 and roles[k - 1] in ('blank', 'comment'):
+            k -= 1
+        out.append((i, k, tags, None if field else toks))
+        i = j
+    return out
+
+
+def split_cif_blocks(text):
+    """(preamble lines, [(header line, block lines)]): the lines before the
+    first data_ heading, then each block from its heading. A heading inside
+    a ;-text field is not a heading."""
+    lines = text.split('\n')
+    roles = _cif_line_roles(lines)
+    pre, blocks = [], []
+    for line, role in zip(lines, roles):
+        if role == 'block':
+            blocks.append([line])
+        elif blocks:
+            blocks[-1].append(line)
+        else:
+            pre.append(line)
+    return pre, [(b[0], b) for b in blocks]
+
+
+def _block_name(line):
+    return re.sub(r'\s+#.*$', '', line.strip())[5:]
+
+
+def _block_header(line, index):
+    """(heading, name, notes): 'data_ A single-crystal ...', which no reader
+    accepts, becomes 'data_A_single-crystal_...'."""
+    s = re.sub(r'\s+#.*$', '', line.strip())
+    rest = s[5:]
+    if rest and not re.search(r'\s', rest):
+        return line, rest, []
+    name = re.sub(r'[^\w.+-]+', '_', rest.strip()).strip('_') or f'block{index}'
+    return (f'data_{name}', name,
+            [f"block heading '{s[:40]}' has a space after data_: read as data_{name}"])
+
+
+def _quote_multiword_values(lines):
+    """An item whose value of several words is not quoted: VESTA writes
+    '_space_group_name_H-M_alt R -3 m'. Quoted where that can be done
+    without ambiguity, which is wherever the value holds no quote mark."""
+    roles = _cif_line_roles(lines)
+    notes, out = [], list(lines)
+    for i, (line, role) in enumerate(zip(lines, roles)):
+        if role != 'item':
+            continue
+        m = re.match(r'^(\s*)(_\S+)(\s+)(.+?)(\s*)$', line.rstrip('\r'))
+        if not m:
+            continue
+        val = m.group(4)
+        com = ''
+        mc = re.search(r'(^|\s)#', val)
+        if mc:
+            val, com = val[:mc.start()].rstrip(), val[mc.start():]
+        if not val or "'" in val or '"' in val:
+            continue
+        words = val.split()
+        if len(words) < 2 or words[1].startswith('_'):
+            continue
+        out[i] = (f"{m.group(1)}{m.group(2)}{m.group(3)}'{val}'"
+                  + (' ' + com.strip() if com else ''))
+        notes.append(f"quoted the value of {m.group(2)} ('{val}'), "
+                     f"written with spaces and no quotes")
+    return out, notes
+
+
+def _set_aside_geometry(lines):
+    """Remove every _geom_ loop. Eir computes its own bonds from the
+    positions, as it does for every ICSD entry, and reads no angles; an
+    author's list is often partial, or a template of '?'. Said each time."""
+    roles = _cif_line_roles(lines)
+    notes, drop = [], set()
+    for a, b, tags, toks in _cif_loop_spans(lines, roles):
+        if not tags or not all(t.startswith('_geom_') for t in tags):
+            continue
+        drop.update(range(a, b))
+        kind = tags[0].split('_')[2] if len(tags[0].split('_')) > 2 else 'geom'
+        n = (len(toks) // len(tags)) if toks is not None else None
+        if kind == 'bond':
+            if toks is not None and toks and all(t in _CIF_PLACEHOLDERS for t in toks):
+                notes.append("the bond list held only placeholders ('?'), "
+                             "so bonds were computed from the positions")
+            else:
+                notes.append(f"set aside the file's own bond list"
+                             + (f" ({n} bond{'s' if n != 1 else ''})" if n else '')
+                             + ' and computed bonds from the positions')
+        else:
+            notes.append(f'set aside the file\'s {kind} list'
+                         + (f" ({n} row{'s' if n != 1 else ''})" if n else ''))
+    return [l for i, l in enumerate(lines) if i not in drop], notes
+
+
+def _atom_site_span(lines, roles=None):
+    roles = roles or _cif_line_roles(lines)
+    hits = [s for s in _cif_loop_spans(lines, roles)
+            if '_atom_site_label' in s[2] and '_atom_site_fract_x' in s[2]]
+    return hits[0] if len(hits) == 1 else None
+
+
+def _unique_labels(lines):
+    """One label for several atoms is renamed <label>_1, <label>_2, ...
+    Every table in Eir is keyed by label. Two species on one position (a
+    shared site, as CrystalMaker labels them) stay on one position and are
+    read as a shared site; atoms on different positions are different atoms.
+    A loop that refers to atoms by label (the anisotropic displacements) can
+    no longer say which atom it means and is set aside; Eir reads none."""
+    roles = _cif_line_roles(lines)
+    site = _atom_site_span(lines, roles)
+    if site is None or site[3] is None:
+        return lines, []
+    a, b, tags, toks = site
+    w = len(tags)
+    if len(toks) % w:
+        return lines, []
+    rows = [toks[k:k + w] for k in range(0, len(toks), w)]
+    li = tags.index('_atom_site_label')
+    labels = [r[li] for r in rows]
+    from collections import Counter as _C
+    count = _C(labels)
+    dups = [l for l, c in count.items() if c > 1]
+    if not dups:
+        return lines, []
+    taken = set(labels)
+    xi = [tags.index(f'_atom_site_fract_{c}') for c in 'xyz']
+    notes = []
+    for lab in dups:
+        idx = [k for k, l in enumerate(labels) if l == lab]
+        pos = {tuple(re.sub(r'\(\d+\)$', '', rows[k][c]) for c in xi) for k in idx}
+        new = []
+        for n in range(1, 10 ** 6):
+            cand = f'{lab}_{n}'
+            if cand not in taken:
+                new.append(cand)
+                taken.add(cand)
+            if len(new) == len(idx):
+                break
+        for k, nl in zip(idx, new):
+            rows[k][li] = nl
+        where = ('on one position (a shared site)' if len(pos) == 1
+                 else f'on {len(pos)} different positions')
+        notes.append(f"label '{lab}' was used for {len(idx)} atoms {where}: "
+                     f"renamed {new[0]} to {new[-1]}")
+    body = ['loop_'] + [lines[k] for k in range(a + 1, b)
+                        if roles[k] == 'loop_tag'] + [' '.join(r) for r in rows]
+    out = lines[:a] + body + lines[b:]
+    roles2 = _cif_line_roles(out)
+    drop = set()
+    for a2, b2, tags2, _ in _cif_loop_spans(out, roles2):
+        if any(t.endswith('_label') for t in tags2) and '_atom_site_fract_x' not in tags2 \
+                and any(t.startswith('_atom_site') for t in tags2):
+            drop.update(range(a2, b2))
+            notes.append(f'set aside the {tags2[0].rsplit("_", 1)[0]} loop, '
+                         f'which refers to atoms by the repeated labels')
+    return [l for i, l in enumerate(out) if i not in drop], notes
+
+
+_SYMOP_TAGS = ('_symmetry_equiv_pos_as_xyz', '_space_group_symop_operation_xyz')
+_SG_ITEM_TAGS = ('_symmetry_space_group_name_h-m', '_space_group_name_h-m_alt',
+                 '_symmetry_space_group_name_hall', '_space_group_name_hall',
+                 '_symmetry_int_tables_number', '_space_group_it_number')
+
+
+def _tabulated_setting(lines):
+    """
+    (lines, notes, error) for a block whose symmetry operations match no
+    tabulated setting. CrystalMaker's majorite (AMCSD 0001231) lists I41/a
+    with its origin half a lattice vector from either tabulated choice;
+    gemmi cannot name the group, and the engine either stopped with 'No M-X
+    bonds found' or, had the file carried an IT number, would have used the
+    tabulated operations with the file's coordinates, which is a different
+    structure. The origin is searched on a grid of eighths and twelfths; where
+    a shift gives a tabulated setting, the operations are rewritten in it and
+    every position moved with it, which is the same structure exactly. Where
+    none does, the block is not read. A file whose operations gemmi
+    recognises, or which names its space group, is not touched: the engine
+    repairs names itself (ICSD's reverse rhombohedral 'HR').
+    """
+    import itertools as _it
+    try:
+        st = gemmi.make_small_structure_from_block(
+            gemmi.cif.read_string('\n'.join(lines)).sole_block())
+    except Exception:
+        return lines, [], None            # the engine's readers decide
+    if st.spacegroup is not None or not st.symops:
+        return lines, [], None
+    # A name the engine can repair from (ICSD's reverse rhombohedral 'HR')
+    # is the engine's to decide; this step is for operations alone.
+    if (_has_tag(lines, '_symmetry_space_group_name_H-M')
+            or _has_tag(lines, '_space_group_name_H-M_alt')):
+        return lines, [], None
+    try:
+        ops = [gemmi.Op(o) for o in st.symops]
+    except Exception:
+        return lines, [], None
+    D = gemmi.Op.DEN
+    found = None
+    for den in (8, 12):
+        for t in _it.product(range(den), repeat=3):
+            sh = gemmi.Op('x,y,z')
+            sh.tran = [k * D // den for k in t]
+            inv = sh.inverse()
+            sg = gemmi.find_spacegroup_by_ops(
+                gemmi.GroupOps([(sh * o * inv).wrap() for o in ops]))
+            if sg is not None:
+                found = (t, den, sg)
+                break
+        if found:
+            break
+    if found is None:
+        return lines, [], (f'the file\'s {len(ops)} symmetry operations match no '
+                           f'tabulated setting, even with the origin moved, so '
+                           f'Eir cannot place the atoms')
+    t, den, sg = found
+    shift = [k / den for k in t]
+    roles = _cif_line_roles(lines)
+    site = _atom_site_span(lines, roles)
+    if site is None or site[3] is None:
+        return lines, [], None
+    a, b, tags, toks = site
+    w = len(tags)
+    rows = [toks[k:k + w] for k in range(0, len(toks), w)]
+    for c, dv in zip('xyz', shift):
+        ci = tags.index(f'_atom_site_fract_{c}')
+        for r in rows:
+            m = re.match(r'^([-+]?\d*\.?\d*)(\(\d+\))?$', r[ci])
+            if not m or not m.group(1) or m.group(1) in '+-.':
+                continue
+            v = (float(m.group(1)) + dv) % 1.0
+            nd = max(4, len(m.group(1).split('.')[1]) if '.' in m.group(1) else 4)
+            r[ci] = f'{v:.{nd}f}' + (m.group(2) or '')
+    out = lines[:a] + (['loop_'] + [lines[k] for k in range(a + 1, b)
+                                    if roles[k] == 'loop_tag']
+                       + [' '.join(r) for r in rows]) + lines[b:]
+    roles = _cif_line_roles(out)
+    drop = set()
+    for a2, b2, tags2, _ in _cif_loop_spans(out, roles):
+        if any(tg in _SYMOP_TAGS for tg in tags2):
+            drop.update(range(a2, b2))
+    for i, (l, r) in enumerate(zip(out, roles)):
+        if r == 'item' and l.strip().split()[0].lower() in _SG_ITEM_TAGS:
+            drop.add(i)
+    kept = [l for i, l in enumerate(out) if i not in drop]
+    kept += [f"_space_group_name_H-M_alt '{sg.xhm()}'",
+             f'_space_group_IT_number {sg.number}', 'loop_',
+             '_space_group_symop_operation_xyz']
+    kept += [f"'{op.triplet()}'" for op in sg.operations()]
+    from fractions import Fraction as _Fr
+    frac = ', '.join(str(_Fr(k, den)) for k in t)
+    return kept, [f'the symmetry operations match no tabulated setting: '
+                  f'moved the origin by ({frac}) to {sg.xhm()}, and every '
+                  f'position with it'], None
+
+
+def _atom_sites_as_items(lines):
+    """Atom sites written one item at a time, more than once, instead of as
+    a loop. No CIF reader can tell which value belongs to which atom."""
+    roles = _cif_line_roles(lines)
+    n = sum(1 for l, r in zip(lines, roles)
+            if r == 'item' and l.strip().lower().startswith('_atom_site_fract_x'))
+    return n > 1
+
+
+# Items that define the structure. Given twice with DIFFERENT values, no
+# reader can tell which is meant, and the file is not read. Given twice with
+# the same value, or any other item given twice, the first is kept and the
+# note says so. (The first form of this step stopped on any repeated _cell_,
+# _symmetry_, _space_group_, _atom_site_ or _atom_type_ item, so a file that
+# repeats its measurement temperature, its cell volume or the same cell edge
+# was not read at all.)
+_DEFINING_TAGS = frozenset({
+    '_cell_length_a', '_cell_length_b', '_cell_length_c',
+    '_cell_angle_alpha', '_cell_angle_beta', '_cell_angle_gamma',
+    '_symmetry_space_group_name_h-m', '_space_group_name_h-m_alt',
+    '_symmetry_space_group_name_hall', '_space_group_name_hall',
+    '_symmetry_int_tables_number', '_space_group_it_number'})
+_DEFINING_PREFIXES = ('_atom_site_', '_atom_type_')
+
+
+def _item_value(lines, roles, i):
+    """(value, index of its last line) for the item on line i. The value is
+    on the same line, the next value line, or a ;-text field."""
+    rest = re.sub(r'\s#.*$', '', lines[i].strip()).split(None, 1)
+    if len(rest) == 2:
+        return _cif_value(rest[1]), i
+    j = i + 1
+    while j < len(lines) and roles[j] in ('blank', 'comment'):
+        j += 1
+    if j < len(lines) and roles[j] == 'value':
+        return _cif_value(lines[j].strip()), j
+    if j < len(lines) and roles[j] == 'field':
+        k = j + 1
+        while k < len(lines) and roles[k] == 'field' and not lines[k].startswith(';'):
+            k += 1
+        return '\n'.join(lines[j:k + 1]), min(k, len(lines) - 1)
+    return None, i
+
+
+def _same_value(a, b):
+    """Equal as written, or as numbers once uncertainties are set aside."""
+    if a is None or b is None:
+        return False
+    if a == b:
+        return True
+    try:
+        fa = float(re.sub(r'\(\d+\)$', '', a))
+        fb = float(re.sub(r'\(\d+\)$', '', b))
+        return abs(fa - fb) <= 1e-9 * max(1.0, abs(fa))
+    except (TypeError, ValueError):
+        return ' '.join(str(a).lower().split()) == ' '.join(str(b).lower().split())
+
+
+def _repeated_items(lines):
+    """(lines, notes, error): an item given more than once in a block."""
+    roles = _cif_line_roles(lines)
+    in_loop = set()
+    for a, b, tags, _ in _cif_loop_spans(lines, roles):
+        in_loop.update(tags)
+    seen, drop, notes, said = {}, set(), [], set()
+    for i, (line, role) in enumerate(zip(lines, roles)):
+        if role != 'item':
+            continue
+        tag = line.strip().split()[0].lower()
+        defining = tag in _DEFINING_TAGS or tag.startswith(_DEFINING_PREFIXES)
+        val, last = _item_value(lines, roles, i)
+        if tag in in_loop:
+            if defining:
+                return lines, notes, (f'the file gives {tag} both in a loop and on '
+                                      f'its own, so no reader can tell which is meant')
+            drop.update(range(i, last + 1))
+            notes.append(f'{tag} is given both in a loop and on its own: kept the loop')
+            continue
+        if tag not in seen:
+            seen[tag] = val
+            continue
+        same = _same_value(seen[tag], val)
+        if defining and not same:
+            return lines, notes, (f'the file gives {tag} twice, as {seen[tag]!r} and '
+                                  f'{val!r}, so no reader can tell which is meant')
+        drop.update(range(i, last + 1))
+        if tag not in said:
+            said.add(tag)
+            first = str(seen[tag]).replace(';', ',')[:40]
+            notes.append(f'{tag} is given more than once'
+                         + (', with the same value: kept one' if same
+                            else f': kept the first ({first})'))
+    return [l for k, l in enumerate(lines) if k not in drop], notes, None
+
+
+def _has_tag(lines, tag):
+    t = tag.lower()
+    return any(l.strip().lower().split(' ')[0].split('\t')[0] == t for l in lines)
+
+
+# Notes are joined with '; ' in cif_reading_notes, so no note holds one.
+def read_cif_structures(path):
+    """
+    The structures a CIF holds, each as Eir will read it. One record per
+    data block that holds atom sites:
+
+      name        what the structure is reported as: the file's own name
+                  where it holds one structure, <stem>__<block>.cif where it
+                  holds several
+      source      the file's own name
+      block       the data block, as named in the file
+      text        what Eir reads
+      changed     whether that differs from the file (newlines aside)
+      notes       what the stage changed, one phrase each
+      error       why the structure cannot be read at all, or None
+      provenance  cif_provenance() of the file
+
+    A file holding no structure gives one record with error set.
+    """
+    with open(path, 'r', encoding='utf-8', errors='surrogateescape') as f:
+        raw = f.read()
+    text = raw.replace('\r\n', '\n').replace('\r', '\n')
+    base = os.path.basename(str(path))
+    stem = os.path.splitext(base)[0]
+    prov = cif_provenance(text)
+    who = prov['written_by'] or prov['refined_with']
+
+    def rec(name, block=None, out_text=None, notes=(), error=None):
+        return {'name': name, 'source': base, 'block': block,
+                'text': out_text, 'changed': out_text is not None and out_text != text,
+                'notes': list(notes), 'error': error, 'provenance': prov}
+
+    pre, blocks = split_cif_blocks(text)
+    file_notes = []
+    if not blocks:
+        if not re.search(r'(?im)^\s*_atom_site_fract_x', text):
+            return [rec(base, error='the file holds no data block')]
+        blocks = [('data_' + stem, ['data_' + stem] + text.split('\n'))]
+        pre = []
+        file_notes.append('the file has no data_ heading: read as one block')
+    with_atoms, empty = [], []
+    for k, (hdr, blines) in enumerate(blocks, 1):
+        name = _block_name(hdr)
+        if _has_tag(blines, '_atom_site_fract_x'):
+            with_atoms.append((k, hdr, blines))
+        elif _has_tag(blines, '_atom_site_cartn_x'):
+            with_atoms.append((k, hdr, blines))
+        else:
+            empty.append(name or f'block{k}')
+    if not with_atoms:
+        why = 'no data block holds atom sites'
+        if who:
+            why += f' (written by {who})'
+        return [rec(base, error=why)]
+    several = len(with_atoms) > 1
+    if len(blocks) > 1:
+        kept = ', '.join("'" + _block_name(h) + "'" for _, h, _ in with_atoms)
+        none_ = ', '.join("'" + e + "'" for e in empty)
+        file_notes.append(f'{len(blocks)} data blocks: read {kept}'
+                          + (f", and {none_} {'holds' if len(empty) == 1 else 'hold'} "
+                             f"no atom sites" if empty else ''))
+    used, out = set(), []
+    for k, hdr, blines in with_atoms:
+        notes = list(file_notes)
+        hdr2, name, n = _block_header(hdr, k)
+        notes += n
+        lines = [hdr2] + blines[1:]
+        error = None
+        if not _has_tag(lines, '_atom_site_fract_x'):
+            error = (f"block '{name}' gives its atoms in Cartesian coordinates "
+                     f"only; Eir reads fractional coordinates")
+        elif _atom_sites_as_items(lines):
+            error = (f"block '{name}' writes its atom sites one item at a time, "
+                     f"not as a loop, so no reader can tell which value belongs "
+                     f"to which atom" + (f' (written by {who}: export a CIF '
+                                         f'from it rather than its own file)'
+                                         if who else ''))
+        elif not _has_tag(lines, '_cell_length_a'):
+            error = (f"block '{name}' holds atom sites but no cell; Eir reads "
+                     f"each block on its own and does not combine blocks")
+        if error is None:
+            lines, n, error = _repeated_items(lines)
+            notes += n
+        if error is None:
+            for step in (_quote_multiword_values, _set_aside_geometry, _unique_labels):
+                lines, n = step(lines)
+                notes += n
+            lines, n, error = _tabulated_setting(lines)
+            notes += n
+        if error is None:
+            body, n = normalise_atom_types('\n'.join(lines))
+            notes += n
+        else:
+            body = '\n'.join(lines)
+        out_text = '\n'.join(pre + [body]) if pre else body
+        if several:
+            safe = re.sub(r'[^\w.+-]+', '_', name).strip('_') or f'block{k}'
+            nm, j = f'{stem}__{safe}.cif', 2
+            while nm in used:
+                nm, j = f'{stem}__{safe}_{j}.cif', j + 1
+        else:
+            nm = base
+        used.add(nm)
+        r = rec(nm, name, out_text, notes, error)
+        if r['changed'] and not r['notes']:
+            r['notes'].append('text before the first data_ heading left out')
+        out.append(r)
+    return out
+
+
+_AS_READ_MANIFEST = 'manifest.json'
+_AS_READ_CACHE = {}
+
+
+def read_folder(cif_files, as_read_dir):
+    """
+    Every file through read_cif_structures. Returns (paths, failures): the
+    paths the engine reads, in order - the file itself where the stage left
+    it alone, its copy in as_read_dir where it did not - and
+    [{'filename', 'error', ...}] for structures that cannot be read at all.
+    The records are kept in _READING, by the name each structure is
+    reported as, and the copies written are listed in as_read_dir's
+    manifest, which cif_path_for() reads. Earlier copies are left where they
+    are and are not read: the manifest names this run's.
+    """
+    import json as _json
+    from pathlib import Path as _Path
+    _READING.clear()
+    paths, failures, written = [], [], []
+    n_files = n_changed = 0
+    for p in cif_files:
+        n_files += 1
+        try:
+            recs = read_cif_structures(p)
+        except OSError as e:
+            recs = [{'name': os.path.basename(str(p)), 'source': os.path.basename(str(p)),
+                     'block': None, 'text': None, 'changed': False, 'notes': [],
+                     'error': f'could not read the file: {e}',
+                     'provenance': {'written_by': None, 'refined_with': None,
+                                    'database': None}}]
+        for r in recs:
+            _READING[r['name']] = {k: v for k, v in r.items() if k != 'text'}
+            if r['error']:
+                failures.append({'filename': r['name'], 'error': r['error'],
+                                 **reading_columns(r['name'])})
+                continue
+            if not r['changed']:
+                paths.append(_Path(p))
+                continue
+            os.makedirs(as_read_dir, exist_ok=True)
+            q = os.path.join(as_read_dir, r['name'])
+            with open(q, 'w', encoding='utf-8', errors='surrogateescape',
+                      newline='\n') as f:
+                f.write(r['text'])
+            written.append(r['name'])
+            n_changed += 1
+            paths.append(_Path(q))
+    if written or os.path.isdir(as_read_dir):
+        os.makedirs(as_read_dir, exist_ok=True)
+        with open(os.path.join(as_read_dir, _AS_READ_MANIFEST), 'w',
+                  encoding='utf-8') as f:
+            _json.dump(sorted(written), f, indent=0)
+    _AS_READ_CACHE.clear()
+    print(f'\nReading {n_files} file{"s" if n_files != 1 else ""}: '
+          f'{len(paths)} structure{"s" if len(paths) != 1 else ""} to analyse'
+          + (f', {n_changed} read from a corrected copy in '
+             f'outputs/{AS_READ_DIR}/' if n_changed else '')
+          + (f'; {len(failures)} cannot be read' if failures else ''))
+    for r in [x for x in _READING.values() if x['notes'] and not x['error']][:12]:
+        print(f"  {r['name']}: {'; '.join(r['notes'])}")
+    if sum(1 for x in _READING.values() if x['notes'] and not x['error']) > 12:
+        print('  ... every note is in the cif_reading_notes column')
+    for f_ in failures[:12]:
+        print(f"  {f_['filename']}: {f_['error']}")
+    return paths, failures
+
+
+_READING = {}
+
+
+def reading_columns(name):
+    """The columns every result carries about how its file was read."""
+    r = _READING.get(str(name))
+    if r is None:
+        return {}
+    pv = r.get('provenance') or {}
+    return {'cif_read_from': r.get('source'),
+            'cif_block': r.get('block'),
+            'cif_written_by': pv.get('written_by'),
+            'cif_refined_with': pv.get('refined_with'),
+            'cif_database': pv.get('database'),
+            'cif_reading_notes': '; '.join(r.get('notes') or []) or None}
+
+
+def cif_path_for(cif_directory, filename):
+    """Where a run over cif_directory read `filename` from: its copy in
+    outputs/as_read/ where the reading stage wrote one in the latest run,
+    else the file itself."""
+    import json as _json
+    d = os.path.join(str(cif_directory), 'outputs', AS_READ_DIR)
+    man = os.path.join(d, _AS_READ_MANIFEST)
+    try:
+        mt = os.path.getmtime(man)
+    except OSError:
+        return os.path.join(str(cif_directory), str(filename))
+    hit = _AS_READ_CACHE.get(man)
+    if hit is None or hit[0] != mt:
+        try:
+            with open(man, encoding='utf-8') as f:
+                hit = (mt, frozenset(_json.load(f)))
+        except (OSError, ValueError):
+            hit = (mt, frozenset())
+        _AS_READ_CACHE[man] = hit
+    if str(filename) in hit[1]:
+        return os.path.join(d, str(filename))
+    return os.path.join(str(cif_directory), str(filename))
+
+
+# v2.0.46: ONE RULE FOR AN AMPHOTERIC SPECIES WHOSE VALENCE IS NOT STATED.
+#
+# resolve_anions (the packing scan) and classify_bond_pair (bond selection)
+# decided it differently: the first made S, Se, Te, N, P ... anions unless
+# any of O, F, Cl, Br, I was present; the second made them cations whenever
+# any more electronegative anion former was. Without stated valences a
+# sulfoselenide therefore had Se as an anion in one and a cation bonded to S
+# in the other, and a thiophosphate had P as an anion in the packing scan.
+# The rule here, used by both: an amphoteric species is a cation if a more
+# electronegative O or F is present (sulfate, phosphate, borate, hydroxide),
+# or a more electronegative amphoteric species from ANOTHER group (P or As
+# against S, H against N, Si against C); otherwise it is an anion. Same-group
+# partners (S with Se and Te, N with P) and the heavier halides are anions
+# beside it: a sulfoselenide, a chalcohalide, a nitride chloride. A stated
+# valence still settles it, as before, wherever one exists.
+AMPHOTERIC_GROUP = {'H': 1, 'B': 13, 'C': 14, 'Si': 14, 'N': 15, 'P': 15,
+                    'As': 15, 'S': 16, 'Se': 16, 'Te': 16}
+DEMOTING_ANIONS = frozenset({'O', 'F'})
+
+
+def acts_as_anion(el, elements_present=None):
+    """Is `el` an anion in a structure holding `elements_present`, when no
+    valence says? See AMPHOTERIC_GROUP."""
+    if el in ALWAYS_ANION:
+        return True
+    if el not in AMPHOTERIC_ANION:
+        return False
+    if not elements_present:
+        return True
+    e = PAULING_EN.get(el, 0.0)
+    for other in elements_present:
+        if other == el or PAULING_EN.get(other, 0.0) <= e:
+            continue
+        if other in DEMOTING_ANIONS:
+            return False
+        if (other in AMPHOTERIC_ANION
+                and AMPHOTERIC_GROUP.get(other) != AMPHOTERIC_GROUP.get(el)):
+            return False
+    return True
+
+
+
 # Reads that failed, so a file that could not be parsed is distinguishable
 # from a file with nothing to report. Every metadata extractor below wrapped
 # its whole file read in a bare `except: return result`, which is why
@@ -292,9 +1308,25 @@ def is_anion(element, valence=None):
 # and the flag would have depended on which worker took which file.
 _SIGN_INVERSIONS = {}
 
+# v2.0.46. Elements the CIF being read types with both signs, S(6+) and S(2-)
+# in a thiosulfate. Set per structure by process_single_cif before bond
+# selection, and cleared with _SIGN_INVERSIONS. One valence per element
+# cannot describe such an element, so classify_bond_pair does not read two
+# stated negative valences as two anions where either belongs to this set.
+_MIXED_SIGN_ELEMENTS = set()
+
+# v2.0.46. The oxidation states the user supplied (--ox, config.json) for the
+# structure being read, for the code that decides anions from the file before
+# bond selection (_stated_anions). Set by process_single_cif; cleared with
+# _SIGN_INVERSIONS. Without it a hydride given only as --ox H=-1 was never
+# recorded as sharing oxygen's position, and SmHO came out ACCEPT at 1.81.
+_USER_VALENCES = {}
+
 
 def reset_sign_inversions():
     _SIGN_INVERSIONS.clear()
+    _MIXED_SIGN_ELEMENTS.clear()
+    _USER_VALENCES.clear()
 
 
 def _valence_signs_are_credible(el1, el2, v1, v2):
@@ -368,24 +1400,34 @@ def classify_bond_pair(el1, el2, valences=None, elements_present=None):
                     return el2, el1
                 if f2 < 0 <= f1:
                     return el1, el2
+                # v2.0.46: two stated anions are not a bond. This fell
+                # through to rule 2, which makes the less electronegative
+                # one a cation whenever a more electronegative anion is
+                # present, so N(3-)-O in an oxynitride, S(2-)-O, H(-)-O in an
+                # oxyhydride and Se(2-)-S or Te(2-)-S in a mixed chalcogenide
+                # were selected as bonds, found no bond valence parameters,
+                # and left the structure NOT_ASSESSED (R1).
+                if (f1 < 0 and f2 < 0
+                        and el1 not in _MIXED_SIGN_ELEMENTS
+                        and el2 not in _MIXED_SIGN_ELEMENTS):
+                    return None, None
+                # v2.0.46: nor are two stated cations. A halogen stated
+                # positive fell through to rule 2, which takes Cl, Br and I
+                # for anions whatever their charge, so in LiClO4 Li-Cl was
+                # selected as a bond: Li was summed over Cl(7+) 3.2 A away
+                # and, with no measured Li-Cl bond lengths, came out
+                # NOT_ASSESSED (R3). See positive_halogens.
+                if (f1 > 0 and f2 > 0
+                        and el1 not in _MIXED_SIGN_ELEMENTS
+                        and el2 not in _MIXED_SIGN_ELEMENTS):
+                    return None, None
             except (TypeError, ValueError):
                 pass
  
     # --- 2. is each species acting as an anion here? -------------------------
     def _acts_as_anion(el):
-        if el in ALWAYS_ANION:
-            return True
-        if el not in AMPHOTERIC_ANION:
-            return False
-        if not elements_present:
-            return True            # no context supplied, fall back to old rule
-        e = PAULING_EN.get(el, 0.0)
-        for other in elements_present:
-            if other == el:
-                continue
-            if other in ANION_FORMERS and PAULING_EN.get(other, 0.0) > e:
-                return False       # something more electronegative is available
-        return True
+        # v2.0.46: the rule resolve_anions uses too (acts_as_anion).
+        return acts_as_anion(el, elements_present)
  
     a1, a2 = _acts_as_anion(el1), _acts_as_anion(el2)
     if a1 and not a2:
@@ -394,6 +1436,13 @@ def classify_bond_pair(el1, el2, valences=None, elements_present=None):
         return el1, el2
  
     # --- 3. both could be anions: the more electronegative one is ------------
+    # v2.0.46: only where both are O or halogens, which is the oxyhalogen
+    # anion (IO3-, ClO4-, BrO3-) written without valences. Two amphoteric
+    # species both acting as anions (S and Se in a sulfoselenide), or one
+    # beside a halide (N and Cl in Ca2NCl, S and I in BiSI), are not bonded:
+    # rule 3 used to make the less electronegative one a cation.
+    if a1 and a2 and not (el1 in ALWAYS_ANION and el2 in ALWAYS_ANION):
+        return None, None
     if a1 and a2:
         e1 = PAULING_EN.get(el1)
         e2 = PAULING_EN.get(el2)
@@ -849,29 +1898,58 @@ def flag_same_source_entries(df):
     # Build structure-level lookup: one row per ICSD code
     struct_cols = ['icsd_code', 'authors', 'year', 'journal']
     available = [c for c in struct_cols if c in df.columns]
-    if 'icsd_code' not in available or 'authors' not in available:
-        # Not enough metadata to group — add empty columns and return
+
+    def _no_groups(df):
+        # Not enough metadata to group: every entry is a group of one
         df['source_group'] = None
         df['source_group_size'] = 1
         df['source_group_codes'] = df['icsd_code'] if 'icsd_code' in df.columns else None
         df['flag_multi_entry_source'] = False
         return df
-    
+
+    if 'icsd_code' not in available or 'authors' not in available:
+        return _no_groups(df)
+
+    # v2.0.46: TWO WAYS THIS STOPPED THE RUN, BOTH ON FILES THAT ARE NOT
+    # ICSD EXPORTS OR ARE INCOMPLETE ONES.
+    #
+    # 1. No ICSD code anywhere in the run - every Rietveld CIF, and any CIF
+    #    checked on its own. groupby drops the null codes, the lookup came
+    #    back empty, and DataFrame.apply on an empty frame returns a frame,
+    #    not a column: "Cannot set a DataFrame with multiple columns to the
+    #    single column source_group". Entries without a code cannot be
+    #    matched to a paper, so each is a group of one.
+    # 2. A code but no author or journal. groupby().first() gives NaN, which
+    #    is truthy, so `authors or ''` kept it and .split() raised. This is
+    #    the "CIF without an author field" fault noted since 2.0.41. An entry
+    #    with no first author is not grouped: grouping on year and journal
+    #    alone would join unrelated papers.
+    #
+    # Neither decided a verdict. Where neither arises the groups are those
+    # 2.0.45 formed.
+    if not df['icsd_code'].notna().any():
+        return _no_groups(df)
+
     other_cols = [c for c in available if c != 'icsd_code']
     struct_df = df.groupby('icsd_code')[other_cols].first().reset_index()
-    
+
+    def _text(v):
+        return '' if v is None or (isinstance(v, float) and v != v) else str(v)
+
     # Build source group key from first author surname + year + journal
     def make_source_key(row):
-        authors = row.get('authors', '') or ''
+        authors = _text(row.get('authors', ''))
         year = row.get('year', '') or ''
-        journal = row.get('journal', '') or ''
+        journal = _text(row.get('journal', ''))
         # Extract first author surname (before first comma or space)
         first_author = authors.split(',')[0].split(' ')[0].strip().lower()
+        if not first_author:
+            return None
         # Normalise journal (lowercase, strip whitespace)
         journal_norm = journal.strip().lower()[:40]  # truncate for matching
         return f"{first_author}|{year}|{journal_norm}"
-    
-    struct_df['source_group'] = struct_df.apply(make_source_key, axis=1)
+
+    struct_df['source_group'] = [make_source_key(r) for _, r in struct_df.iterrows()]
     
     # Count entries per source group
     group_counts = struct_df.groupby('source_group')['icsd_code'].agg(['count', list]).reset_index()
@@ -889,7 +1967,18 @@ def flag_same_source_entries(df):
     merge_cols = ['icsd_code', 'source_group', 'source_group_size', 
                   'source_group_codes', 'flag_multi_entry_source']
     df = df.merge(struct_df[merge_cols], on='icsd_code', how='left')
-    
+
+    # v2.0.46: an entry left ungrouped - no code, or no first author - is a
+    # group of one, as in the no-metadata case, rather than a row of nulls.
+    # Column-wise rather than by .loc, so pandas 3's string columns accept it.
+    _alone = df['source_group'].isna()
+    if _alone.any():
+        df['source_group_size'] = df['source_group_size'].fillna(1)
+        df['source_group_codes'] = (df['source_group_codes'].astype(object)
+                                    .where(~_alone, df['icsd_code'].astype(object)))
+        df['flag_multi_entry_source'] = (df['flag_multi_entry_source']
+                                         .astype(object).where(~_alone, False))
+
     return df
 
 def extract_cif_oxidation_states(cif_path):
@@ -925,8 +2014,8 @@ def extract_cif_oxidation_states(cif_path):
     error_message = None
 
     try:
-        with open(cif_path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
+        # v2.0.46: as normalise_atom_types leaves it
+        lines = read_cif_text(cif_path).split('\n')
     except Exception as e:
         return {}, 'missing', f"Could not read CIF: {e}", {}
 
@@ -991,15 +2080,26 @@ def extract_cif_oxidation_states(cif_path):
                         except ValueError:
                             pass
 
-    # Fallback: infer from atom_type_symbol pattern if loop values missing
+    # Fallback: the charges the type symbols carry, where no loop gives
+    # oxidation numbers. v2.0.46: read from the atom_site type column. This
+    # used to scan every line of the file for anything shaped like 'X2+', so
+    # a type written 'CO2+' gave oxygen a valence of +2 and a title or a
+    # chemical name could supply valences of its own.
     if not oxidation_states:
-        for line in lines:
-            line_stripped = line.strip()
-            matches = re.findall(r'([A-Z][a-z]?)(\d+)([+-])', line_stripped)
-            for elem, charge, sign in matches:
-                charge_val = int(charge) * (1 if sign == '+' else -1)
-                if elem not in oxidation_states:
-                    oxidation_states[elem] = charge_val
+        for _L in _cif_loops(lines):
+            if '_atom_site_type_symbol' not in _L[2] or _L[3] is None:
+                continue
+            _k = _L[2].index('_atom_site_type_symbol')
+            for _r in _L[3]:
+                _t = _cif_tokens(lines[_r])
+                if len(_t) != len(_L[2]):
+                    continue
+                _el, _ch = parse_atom_symbol(_t[_k])
+                if _el is None or _ch is None:
+                    continue
+                _el = 'H' if _el == 'D' else _el
+                if _el not in oxidation_states:
+                    oxidation_states[_el] = int(_ch) if _ch == int(_ch) else _ch
                     quality = 'inferred'
 
     if not oxidation_states:
@@ -1408,8 +2508,7 @@ def extract_per_atom_valences(cif_path):
         type_map = {}
 
     try:
-        with open(cif_path, 'r', errors='ignore') as f:
-            content = f.read()
+        content = read_cif_text(cif_path)      # v2.0.46
     except (OSError, UnicodeDecodeError) as _e:
         # v2.0.11: recorded, not swallowed. A file that could not be read is
         # not a file with nothing in it.
@@ -1598,8 +2697,7 @@ def extract_anion_parameter(cif_path, formula=None):
             anion_elements = {'O'}
     
     try:
-        with open(cif_path, 'r', errors='ignore') as f:
-            content = f.read()
+        content = read_cif_text(cif_path)      # v2.0.46
     except (OSError, UnicodeDecodeError) as _e:
         # v2.0.11: recorded, not swallowed. A file that could not be read is
         # not a file with nothing in it.
@@ -1922,8 +3020,7 @@ def extract_site_occupancies(cif_path):
     result = {}
     
     try:
-        with open(cif_path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
+        lines = [l + '\n' for l in read_cif_text(cif_path).split('\n')]  # v2.0.46
     except (OSError, UnicodeDecodeError) as _e:
         # v2.0.11: recorded, not swallowed. A file that could not be read is
         # not a file with nothing in it.
@@ -2844,6 +3941,74 @@ def VALIDATE_SHELL(verbose=True):
 # spinel cases.
 CATION_CATION_MIN = 2.40      # A, measured; see above
 
+# v2.0.46: TWO MONOVALENT CATIONS MAY COME CLOSER.
+#
+# The floor above was measured on perovskites, pyrochlores and spinels, which
+# hold no lithium-rich phase, and it expunged Li2O and Li3N: 13 of 16 ICSD
+# Li2O entries and 30 of 34 Li3N on G5, for Li-Li contacts of 2.31 and 2.10 A.
+#
+# A floor scaled by size does not separate them from the faults. Against the
+# sum of the two Shannon radii (CN 6), the Li-Li contacts of Li3N sit at 1.38
+# to 1.45, inside the range of the perovskites G5 condemns at 1.91 to 2.16 A
+# (1.06 to 1.40). What separates them is charge, as Pauling's third rule says
+# it should. Of every cation-cation contact below 2.40 A in the corpora and
+# the 870 ICSD entries, the only ones in otherwise sound structures are
+# between two Li(+): Li3N 2.10 to 2.20 A, Li2CO3 2.22 A, Li2O 2.31 to 2.39 A.
+# Below 2.40 A, every contact involving a cation of higher charge is one of
+# the known faults: shifted perovskites, pyrochlores with Bi and Ru 0.13 to
+# 0.16 A apart, spinels with over-full neighbouring sites.
+#
+# A pair of cations of charge one or less (an alkali metal counts whatever
+# the file states) is therefore held to MONOVALENT_PAIR_MIN, and any pair
+# with a cation of higher or unknown charge to CATION_CATION_MIN. Still
+# caught: the over-full Li positions of ICSD 164285 to 164287, 1.83 A apart,
+# and the Li2O model 216717 at 1.03 A. The heavier monovalent ions (Cu, Ag,
+# Hg, Tl) never come within 2.47 A of each other in these sets, so for them
+# the lower floor has been measured against nothing, and errs towards
+# passing.
+MONOVALENT_PAIR_MIN = 2.00    # A, measured; see above
+ALWAYS_MONOVALENT = frozenset({'Li', 'Na', 'K', 'Rb', 'Cs'})
+
+
+def monovalent(el, v):
+    """A cation of charge one or less: an alkali metal whatever the file
+    states, or any species stated at |charge| <= 1."""
+    if el in ALWAYS_MONOVALENT:
+        return True
+    try:
+        return 0.0 < abs(float(v)) <= 1.0 + 1e-6
+    except (TypeError, ValueError):
+        return False
+
+
+def cation_floor(el1, v1, el2, v2):
+    """The packing floor for one pair of cations; see MONOVALENT_PAIR_MIN.
+    v1 and v2 are the stated charges, or None."""
+    return (MONOVALENT_PAIR_MIN if monovalent(el1, v1) and monovalent(el2, v2)
+            else CATION_CATION_MIN)
+
+
+# v2.0.46: MOBILE IONS ON PARTLY FILLED POSITIONS.
+#
+# In an ionic conductor the mobile ion is spread over positions closer
+# together than two of it can be, and the refinement leaves their
+# occupancies summing to more than one. The usual reading is that
+# neighbouring positions are never filled together and the occupancies,
+# for a weak scatterer correlated with its displacement parameters, are
+# not good to the last few per cent. Li10GeP2S12 written by VESTA puts Li1
+# at 0.691 on 16h positions 1.73 A apart. So a contact below the floor
+# between two monovalent cations whose positions are both partly filled
+# (each under 1 - (ALTERNATIVE_OCC_SUM_MAX - 1)) is a FLAG (M11), not an
+# EXPUNGE. A full position next to it is not: the model then says the pair
+# is filled together (ICSD 164287, Li2Fe3O4, Li full on 8a beside Li and Fe
+# on 16c), and so does any pair with a cation of higher charge.
+def mobile_pair(el1, v1, p1, el2, v2, p2):
+    """Two monovalent cations on positions both partly filled (p1, p2 the
+    positions' occupancies)."""
+    _full = 1.0 - (ALTERNATIVE_OCC_SUM_MAX - 1.0)
+    return (p1 < _full and p2 < _full
+            and monovalent(el1, v1) and monovalent(el2, v2))
+
 # v2.0.15: WHAT THIS FLOOR DOES NOT APPLY TO.
 #
 # All three families above are hydrogen-free, and the floor is meaningless for
@@ -2864,6 +4029,134 @@ CATION_FLOOR_EXCLUDED_ELEMENTS = frozenset({'H', 'D'})
 SPLIT_SITE_MAX = 1.20         # A, closer than this with occupancies summing to
                               # <= 1 means one atom written as two positions
 
+# v2.0.46: ALTERNATIVE POSITIONS, AT ANY DISTANCE BELOW THE FLOOR.
+#
+# The rule above stopped at SPLIT_SITE_MAX, so two partly occupied positions
+# further apart were counted as a contact even where the model never fills
+# both. The two sodium positions of a P2-type layered oxide (2b and 2d) sit
+# a/sqrt(3), about 1.70 A, apart at occupancies near 0.2 and 0.45: ICSD
+# 253190, 253192 and 261554 came out EXPUNGE on G5 for a contact no sodium
+# layer contains. ICSD 291603, a rock-salt-derived CrO2 with Cr shared
+# between octahedral (0.667) and tetrahedral (0.167) interstices 1.77 A
+# apart, the same.
+#
+# What decides it is the occupancy sum, not the distance. Two sets of
+# positions can be filled without ever filling a close pair only if their
+# occupancies sum to no more than one; above that, some close pairs must be
+# filled together whatever the ordering, so the model implies the contact
+# and the gate stands. The rule therefore runs to the packing floor. Above
+# the floor no gate reads the contact, and the reported minimum is unchanged.
+#
+# A position refined to zero occupancy holds no atom and is left out of both
+# packing scans altogether (Richmond's anion-disorder pyrochlore models put O
+# on the empty 8b site at zero occupancy in 11 entries).
+ALTERNATIVE_OCC_SUM_MAX = 1.02
+
+# v2.0.46: AND THE DEPOSITOR'S OWN UNCERTAINTIES.
+#
+# A fixed allowance of 0.02 expunged models that are over-full only within
+# their own error bars: in La2Zr2O7 (ICSD 189344) oxygen on 8b at 0.04(2)
+# beside 48f at 0.99 sums to 1.03, 1.5 standard uncertainties over one. The
+# gate says the model cannot be right, and a model right within its stated
+# precision is not that. So a close pair counts as alternatives when the
+# excess over one is within OCC_ESD_K combined standard uncertainties, or
+# within ALTERNATIVE_OCC_SUM_MAX - 1 where that is larger (no uncertainty
+# given, or a fixed occupancy). The uncertainties are combined in quadrature
+# for two labels and doubled for two images of one label, whose occupancy is
+# one parameter.
+#
+# Measured on Richmond's pyrochlores: of the 18 entries on G2 whose closest
+# pair sums to 1.10 or less, six lie within 3 sigma and are released (189344,
+# 173796, 213453, 121049, 180491, 173792); nine are over-full by 4 to 32
+# sigma and stay; 213452 sits at 3.0 sigma and stays; two give no
+# uncertainty. Nothing in the spinels or fluorites changes.
+OCC_ESD_K = 3.0
+
+
+# v2.0.46: AND THE OCCUPANCY OF THE POSITION, NOT OF THE LABEL.
+#
+# Two positions can be filled one at a time only if what fills them, all
+# species together, sums to one or less. The test compared labels, so a
+# position shared by two species was judged on each species alone: in the
+# lithiated magnetite ICSD 164286, 8a holds Li 0.508 and Fe 0.192 and the
+# face-sharing 16c, 1.83 A away, holds Li 0.596 and Fe 0.404. Label by
+# label every pair but one summed to one or less; position by position the
+# two sum to 1.70, and 16c is full, so every cation on 8a has a neighbour
+# 1.83 A away. Each label's position is found within POSITION_TOL, at any
+# symmetry image, and its uncertainties are added in quadrature.
+POSITION_TOL = 0.02           # A, two labels this close are one position
+
+
+def _position_occupancies(st, esd=None):
+    """{label: (occupancy of its position, uncertainty)}, summed over every
+    label refined at the same coordinates or a symmetry image of them."""
+    import math as _m
+    esd = esd or {}
+    sites = list(st.sites)
+    ops = list(st.spacegroup.operations()) if st.spacegroup is not None else []
+
+    def _same(a, b):
+        fa = (a.fract.x, a.fract.y, a.fract.z)
+        for op in ops or [None]:
+            fb = ((b.fract.x, b.fract.y, b.fract.z) if op is None else
+                  op.apply_to_xyz([b.fract.x, b.fract.y, b.fract.z]))
+            df = [x - y - round(x - y) for x, y in zip(fa, fb)]
+            c = st.cell.orthogonalize(gemmi.Fractional(*df))
+            if c.x * c.x + c.y * c.y + c.z * c.z < POSITION_TOL ** 2:
+                return True
+        return False
+
+    out = {}
+    for i, a in enumerate(sites):
+        tot = var = 0.0
+        for j, b in enumerate(sites):
+            if i == j or _same(a, b):
+                o = getattr(b, 'occ', None)
+                tot += 1.0 if o is None else float(o)
+                var += esd.get(b.label, 0.0) ** 2
+        out[a.label] = (tot, _m.sqrt(var))
+    return out
+
+
+def _are_alternatives(s1, s2, esd=None, totals=None):
+    """v2.0.46. Can the model fill these two positions one at a time? Their
+    occupancies sum to one or less, within ALTERNATIVE_OCC_SUM_MAX or
+    OCC_ESD_K standard uncertainties of the deposited occupancies (doubled for
+    two images of one label). The packing gates' rule, for any two sites.
+    totals (_position_occupancies) makes it the positions' occupancies."""
+    import math as _m
+    esd = esd or {}
+    o1 = 1.0 if getattr(s1, 'occ', None) is None else float(s1.occ)
+    o2 = 1.0 if getattr(s2, 'occ', None) is None else float(s2.occ)
+    g1, g2 = esd.get(s1.label, 0.0), esd.get(s2.label, 0.0)
+    if totals:
+        o1, g1 = totals.get(s1.label, (o1, g1))
+        o2, g2 = totals.get(s2.label, (o2, g2))
+    sig = 2.0 * g1 if s1.label == s2.label else _m.hypot(g1, g2)
+    allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * sig)
+    return (o1 + o2 - 1.0) <= allow + 1e-9
+
+
+def _occupancy_esds(cif_path):
+    """{label: standard uncertainty of its occupancy}, 0.0 where none is
+    given ("1." or "0.41583"). Read from the CIF text, because the parsed
+    structure keeps the value and drops the uncertainty."""
+    out = {}
+    try:
+        doc = gemmi.cif.read_file(str(cif_path))
+        block = doc.sole_block() if len(doc) == 1 else doc[0]
+        table = block.find(['_atom_site_label', '_atom_site_occupancy'])
+    except Exception:
+        return out
+    for row in table:
+        lab = gemmi.cif.as_string(row[0])
+        m = re.match(r'^\s*[-+]?(\d*)(?:\.(\d*))?\((\d+)\)\s*$', row[1])
+        if not m:
+            out[lab] = 0.0
+            continue
+        out[lab] = int(m.group(3)) * 10.0 ** (-len(m.group(2) or ''))
+    return out
+
 # No cation-oxygen bond in any oxide is shorter than this. B-O runs to about
 # 1.37 A, C-O in carbonate to 1.28, Si-O to 1.60; 1.20 leaves clearance below
 # all of them. Like ANION_ANION_MIN this is a single constant with no
@@ -2873,6 +4166,33 @@ SPLIT_SITE_MAX = 1.20         # A, closer than this with occupancies summing to
 # overbonded at 8.258 v.u.
 
 CATION_ANION_ABSOLUTE_MIN = 1.20
+
+# v2.0.46: A HALOGEN THE CIF STATES IS POSITIVE IS A CATION.
+#
+# ALWAYS_ANION was taken literally: Cl, Br and I were anions whatever the
+# file said. In a perchlorate (Cl(7+)), chlorate (Cl(5+)), chlorite
+# (Cl(3+)), bromate or iodate each X-O bond was then read as two anions
+# 1.4-1.8 A apart: of 49 ICSD lithium, sodium and potassium chlorine
+# oxysalts, 42 were expunged on G2 for their own Cl-O bonds, and the
+# anion-centred sums treated Cl(7+) as an anion with nothing bonded to it.
+# Bond selection follows the stated valence too (classify_bond_pair), so
+# the other cations are not bonded to Cl(7+). Only a valence the CIF or the
+# user states makes the change, and only for an element given one sign: a
+# chloride perchlorate, with Cl at -1 and +7, needs per-site valences, and
+# is left as before.
+def positive_halogens(valences):
+    """The species of ALWAYS_ANION that a stated positive valence makes
+    cations in this structure. Keys that are site labels are ignored."""
+    out = set()
+    for el, v in (valences or {}).items():
+        if el in ALWAYS_ANION:
+            try:
+                if float(v) > 0:
+                    out.add(el)
+            except (TypeError, ValueError):
+                pass
+    return out
+
 
 def resolve_anions(elements, valences=None):
     """
@@ -2897,7 +4217,8 @@ def resolve_anions(elements, valences=None):
     Returns the set of element symbols acting as anions.
     """
     els = {e for e in elements if e}
-    anions = {e for e in els if e in ALWAYS_ANION}
+    # v2.0.46: less a halogen stated positive (positive_halogens)
+    anions = {e for e in els if e in ALWAYS_ANION} - positive_halogens(valences)
     for e in els & set(AMPHOTERIC_ANION):
         v = (valences or {}).get(e)
         if v is not None:
@@ -2907,11 +4228,135 @@ def resolve_anions(elements, valences=None):
                 continue
             except (TypeError, ValueError):
                 pass
-        # No stated oxidation state: anionic only if nothing more
-        # electronegative is present to take that role.
-        if not (els & set(ALWAYS_ANION)):
+        # No stated oxidation state. v2.0.46: the rule classify_bond_pair
+        # uses (acts_as_anion); it used to be 'no O, F, Cl, Br or I at all'.
+        if acts_as_anion(e, els):
             anions.add(e)
     return anions
+
+
+# v2.0.46: THE EDGE OF A SMALL POLYANION IS NOT A PACKING CONTACT.
+#
+# ANION_ANION_MIN is a statement about anions packed against one another. In
+# a carbonate the O-O edge of the CO3 triangle is fixed at 2.2 A by the
+# 1.28 A C-O bonds, in a nitrate at 2.16 A, and the F-F edges of BF4(-) and
+# PF6(-) at 2.25 and 2.26 A: all below the floor, and none of them a contact
+# between packed anions. Calcite-type carbonates (CaCO3, KCa(CO3)F) were
+# expunged on G2 for their own carbonate groups, and NaPF6 or LiBF4 would
+# have been. A pair of anions both bonded to the same polyanion centre, and
+# closer than the floor, is therefore set aside; the shortest such edge is
+# reported as polyanion_edge_min. Every other pair is tested as before, and
+# an edge at or above the floor, such as the O-O edge of a silicate
+# tetrahedron in a spinel, which IS part of the packing, is untouched. A
+# centre counts only where the structure makes it a cation.
+#
+# Each centre-ligand pair carries the longest bond it allows and the
+# smallest ligand-centre-ligand angle. The angle does the work: a carbonate
+# crushed to an O-C-O angle of 70 degrees has an edge of 1.47 A from
+# perfectly ordinary bonds, and no bond limit can see that. The bond limits
+# sit above the longest bond in structures that pass every other gate.
+# Measured on 870 ICSD entries and the four corpora:
+#
+#     pair    longest bond               smallest angle
+#     C-O     1.424 A (C2O5 bridge)      110.1
+#     N-O     1.397 A (Na3NO4, K3NO4)    108.6
+#     Si-O    1.830 A (SiO6)              86.0
+#     P-F     1.637 A                     87.8 (all NOT_ASSESSED: R3)
+#     B-F     1.416 A (95th percentile)  all NOT_ASSESSED or EXPUNGE
+#     Cl-O    1.70 A (95th percentile)   all NOT_ASSESSED or EXPUNGE
+#
+# Limits of 1.40 A for C-O and 1.35 A for N-O, tried first, expunged five
+# sodium and lithium pyrocarbonates and three orthonitrates on edges of
+# their own anions. Centres whose normal edges sit above the floor (SO4,
+# PO4, SiO4, SeO4, AsO4) stay in: a distorted tetrahedron or an
+# edge-sharing octahedron can still bring an edge below it, and the angle
+# still separates that from a crushed one. The same table says which bonds
+# hold a ligand to its centre (conditional_occupancy).
+POLYANION_PAIRS = {            # (centre, ligand): (longest bond A, smallest angle deg)
+    ('C', 'O'): (1.50, 100.0),     # CO3 120; C2O5 bridge 1.42
+    ('N', 'O'): (1.50, 100.0),     # NO3 120, NO2 115, NO4 109.5 at 1.39
+    ('B', 'O'): (1.60, 100.0),     # BO3 120, BO4 109.5
+    ('B', 'F'): (1.50, 100.0),     # BF4 109.5
+    ('Si', 'O'): (1.85, 80.0),     # SiO4 109.5, SiO6 cis 90
+    ('Si', 'F'): (1.80, 80.0),     # SiF6, cis 90
+    ('P', 'O'): (1.70, 95.0),      # PO4 109.5
+    ('P', 'F'): (1.70, 80.0),      # PF6, cis 90
+    ('S', 'O'): (1.60, 95.0),      # SO4 109.5, SO3 106
+    ('Se', 'O'): (1.80, 95.0),     # SeO4 109.5, SeO3 100-105
+    ('As', 'O'): (1.90, 80.0),     # AsO4 109.5, AsO6 cis 90
+    ('Cl', 'O'): (1.60, 95.0),     # ClO4 109.5, ClO3 106
+}
+POLYANION_CENTRES = frozenset(c for c, _ in POLYANION_PAIRS)
+POLYANION_BOND_MAX = max(b for b, _ in POLYANION_PAIRS.values())
+# v2.0.46: the most ligands each centre takes (conditional_occupancy), and
+# the most centres one ligand is bonded to (two, for the bridging O of a
+# pyro-anion)
+POLYANION_MOST_LIGANDS = {
+    ('C', 'O'): 4, ('N', 'O'): 4, ('B', 'O'): 4, ('B', 'F'): 4,
+    ('Si', 'O'): 6, ('Si', 'F'): 6, ('P', 'O'): 4, ('P', 'F'): 6,
+    ('S', 'O'): 4, ('Se', 'O'): 4, ('As', 'O'): 6, ('Cl', 'O'): 4}
+POLYANION_MOST_CENTRES = 2
+_POLYANION_EDGE_MIN = {}    # {cif_path: shortest edge set aside}, per call
+_CATION_CONTACT = {}        # {cif_path: (margin, d, label, label, floor)}, per call
+
+
+def polyanion_edge(centre, ligand, b1, b2, edge):
+    """Is a ligand-ligand distance `edge` the edge of a polyanion whose
+    centre is bonded to both at b1 and b2? See POLYANION_PAIRS."""
+    lim = POLYANION_PAIRS.get((centre, ligand))
+    if lim is None or b1 > lim[0] or b2 > lim[0]:
+        return False
+    import math as _m
+    c = (b1 * b1 + b2 * b2 - edge * edge) / (2.0 * b1 * b2)
+    ang = _m.degrees(_m.acos(max(-1.0, min(1.0, c))))
+    return ang >= lim[1]
+
+
+def polyanion_bond(centre, ligand, d):
+    """Is a centre-ligand distance d a bond inside one of the
+    POLYANION_PAIRS units?"""
+    lim = POLYANION_PAIRS.get((centre, ligand))
+    return lim is not None and d <= lim[0]
+
+
+# v2.0.46: A LIGAND THAT MOVES WITH ITS CENTRE.
+#
+# The bond valence sums weight each bond by the occupancy of the atom at its
+# far end (v1.8.3, A8), which assumes the two ends are filled independently.
+# Inside an orientationally disordered polyanion they are not: wherever the
+# nitrogen of a nitrite is, its two oxygens are too. ICSD 152184, NaNO2 with
+# N and O each at 0.5, summed N(3+) to 1.44 and was expunged on G7 for bonds
+# it has. So for a bond inside a POLYANION_PAIRS unit the weight is the
+# probability that the far end is filled GIVEN that this end is: its
+# occupancy over this site's, at most one. Every other bond keeps the plain
+# occupancy, because nothing says a sodium and its oxygen move together.
+#
+# That reading holds where each orientation has its own centre. Where the
+# model spreads one centre's ligands over more positions than any single
+# orientation fills, as high-temperature cubic NaClO4 does (ICSD 117375:
+# Cl on 4a and 32f, O on 96j, 96k and 32f, every occupancy below 0.34),
+# weighting every ligand in reach given the centre counted 47 oxygens and
+# summed Cl(7+) to 53. So the conditional weights are used only where they
+# give the centre no more ligands than it can take
+# (POLYANION_MOST_LIGANDS), and a ligand no more centres than
+# POLYANION_MOST_CENTRES; otherwise the plain occupancy stands, and the
+# average it gives is the honest figure. See conditional_ligand_count.
+def conditional_occupancy(p_far, p_here, centre, ligand, d):
+    """Weight of a bond in an occupancy-weighted sum, seen from a site of
+    occupancy p_here. centre and ligand name the pair as POLYANION_PAIRS
+    does, whichever end is summing."""
+    if (p_here is None or not 0.0 < p_here < 1.0 or p_far >= 1.0
+            or not polyanion_bond(centre, ligand, d)):
+        return p_far
+    return min(1.0, p_far / p_here)
+
+
+def conditional_ligand_count(bonds, p_here, centre, ligand):
+    """How many partners the conditional weights give one site: bonds is
+    [(far-end occupancy, distance, count)]. Only bonds inside a
+    POLYANION_PAIRS unit count."""
+    return sum(n * conditional_occupancy(p, p_here, centre, ligand, d)
+               for p, d, n in bonds if polyanion_bond(centre, ligand, d))
 
 
 def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
@@ -2922,6 +4367,10 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
     partly-occupied positions 0.18 A apart is not reporting a 0.18 A contact,
     and ICSD 194733 does exactly that. Pairs closer than SPLIT_SITE_MAX whose
     occupancies sum to no more than unity are therefore skipped.
+
+    v2.0.46: and so are such pairs anywhere below the packing floor, which
+    the model can always fill one at a time, and positions refined to zero
+    occupancy. See ALTERNATIVE_OCC_SUM_MAX.
 
     Returns (anion_anion_min, cation_cation_min), either possibly None.
 
@@ -2965,8 +4414,12 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
     """
     import numpy as _np
     import math as _math
+    _edges = []         # v2.0.46: polyanion edges set aside (POLYANION_CENTRES)
+    _gov = [None]       # v2.0.46: the cation contact nearest its floor
+    _hard = [None]      # ... of those not between mobile ions (mobile_pair)
+    _soft = [None]      # ... of those that are
 
-    def _scan(st, anion_set, rmax):
+    def _scan(st, anion_set, rmax, esd=None, sv=None, tot=None):
         # v2.0.14: the image range follows the search radius. At one image a
         # 6.5 A search in a 5 A cell cannot reach the neighbour it is looking
         # for, so widening rmax alone would have been a half fix.
@@ -2981,6 +4434,8 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         for s in st.sites:
             occ = getattr(s, 'occ', 1.0)
             occ = 1.0 if occ is None else float(occ)
+            if occ <= 0:
+                continue                          # v2.0.46: no atom there
             for op in st.spacegroup.operations():
                 f = wrap_into_cell(op.apply_to_xyz(
                     [s.fract.x, s.fract.y, s.fract.z]))
@@ -2989,23 +4444,47 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                         for k in rng:
                             p = st.cell.orthogonalize(
                                 gemmi.Fractional(f[0] + i, f[1] + j, f[2] + k))
-                            pts.append((s.element.name, p.x, p.y, p.z, occ))
+                            pts.append((s.element.name, p.x, p.y, p.z, occ,
+                                        s.label))
 
+        esd = esd or {}
         els = [p[0] for p in pts]
         occs = _np.array([p[4] for p in pts])
+        labs = [p[5] for p in pts]
+        # v2.0.46: each position's stated charge, for its pair's floor
+        sv = sv or {}
+        _ev = valences or {}
+        vals = [sv.get(p[5], _ev.get(p[0])) for p in pts]
+        sigs = _np.array([esd.get(p[5], 0.0) for p in pts])
+        # v2.0.46: the occupancy of each POSITION (_position_occupancies)
+        tot = tot or {}
+        poccs = _np.array([tot.get(p[5], (p[4], 0.0))[0] for p in pts])
+        psigs = _np.array([tot.get(p[5], (0.0, esd.get(p[5], 0.0)))[1]
+                           for p in pts])
         P = _np.array([[p[1], p[2], p[3]] for p in pts])
         is_anion = _np.array([e in anion_set for e in els])
+        # v2.0.46: see POLYANION_CENTRES
+        is_centre = _np.array([e in POLYANION_CENTRES and e not in anion_set
+                               for e in els])
 
         aa = cc = None
         for s in st.sites:
             el = s.element.name
             occ0 = getattr(s, 'occ', 1.0)
             occ0 = 1.0 if occ0 is None else float(occ0)
+            if occ0 <= 0:
+                continue                          # v2.0.46: no atom there
+            sig0 = esd.get(s.label, 0.0)
+            pocc0, psig0 = tot.get(s.label, (occ0, sig0))
+            v0 = sv.get(s.label, _ev.get(el))
             o = site_centre(st.cell, s)
             p0 = _np.array([o.x, o.y, o.z])
             d = _np.linalg.norm(P - p0, axis=1)
             m = _np.where((d > dedup_tol) & (d <= rmax))[0]
             el_is_anion = el in anion_set
+            _cen = (_np.where(is_centre & (d > dedup_tol)
+                              & (d <= POLYANION_BOND_MAX))[0]
+                    if el_is_anion else ())
             # v2.0.15: see CATION_FLOOR_EXCLUDED_ELEMENTS.
             if not el_is_anion and el in CATION_FLOOR_EXCLUDED_ELEMENTS:
                 continue
@@ -3017,14 +4496,43 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                         and els[idx] in CATION_FLOOR_EXCLUDED_ELEMENTS):
                     continue                      # v2.0.15: not a packing sphere
                 dist = float(d[idx])
-                if dist < SPLIT_SITE_MAX and (occ0 + occs[idx]) <= 1.02:
-                    continue                      # one atom, two positions
+                # v2.0.46: alternatives to the floor, not to SPLIT_SITE_MAX,
+                # and over-full only within the stated uncertainties
+                _floor = ANION_ANION_MIN if el_is_anion else CATION_CATION_MIN
+                _sig = (2.0 * psig0 if labs[idx] == s.label
+                        else _math.hypot(psig0, float(psigs[idx])))
+                _allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * _sig)
+                if (dist < max(SPLIT_SITE_MAX, _floor)
+                        and (pocc0 + poccs[idx] - 1.0) <= _allow + 1e-9):
+                    continue                      # never both filled
+                # v2.0.46: an edge of this anion's own polyanion, held short
+                # by the bonds to its centre, is not a packing contact
+                if (el_is_anion and dist < ANION_ANION_MIN and len(_cen)
+                        and els[idx] == el
+                        and any(polyanion_edge(
+                            els[_j], el, float(d[_j]),
+                            float(_np.linalg.norm(P[_j] - P[idx])), dist)
+                            for _j in _cen)):
+                    _edges.append(dist)
+                    continue
                 # v2.0.14: the bucket now asks the same question the filter
                 # asked, and asks it of the structure rather than of a list.
                 if el_is_anion:
                     aa = dist if aa is None else min(aa, dist)
                 else:
                     cc = dist if cc is None else min(cc, dist)
+                    # v2.0.46: judged against the floor for THIS pair
+                    _fl = cation_floor(el, v0, els[idx], vals[idx])
+                    _c = (dist - _fl, dist, s.label, labs[idx], _fl,
+                          pocc0, float(poccs[idx]))
+                    if _gov[0] is None or _c[0] < _gov[0][0]:
+                        _gov[0] = _c
+                    # v2.0.46: see mobile_pair
+                    _box = (_soft if mobile_pair(el, v0, pocc0, els[idx],
+                                                 vals[idx], float(poccs[idx]))
+                            else _hard)
+                    if _box[0] is None or _c[0] < _box[0][0]:
+                        _box[0] = _c
         return aa, cc
 
     try:
@@ -3037,16 +4545,33 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         _has_anion = bool(_anion_set & _els)
         _has_cation = bool(_els - _anion_set)
 
-        aa, cc = _scan(st, _anion_set, rmax)
+        _esd = _occupancy_esds(cif_path)
+        # v2.0.46: each site's own stated charge, for the pair floors
+        try:
+            _sv = {k: d.get('explicit_valence') for k, d in
+                   (extract_per_atom_valences(cif_path) or {}).items()
+                   if d.get('explicit_valence') not in (None, 0)}
+        except (OSError, UnicodeDecodeError, ValueError):
+            _sv = {}
+        _tot = _position_occupancies(st, _esd)
+        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot)
 
         # v2.0.14: one widened retry, and only where a bucket that SHOULD
         # have a member came back empty. A structure with no cations has no
         # cation-cation contact at any radius and is not a failure.
         if ((_has_anion and aa is None) or (_has_cation and cc is None)) \
                 and rmax < ANION_CONTACT_RMAX_WIDE:
-            aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE)
+            aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd,
+                             _sv, _tot)
             aa = aa if aa is not None else aa2
             cc = cc if cc is not None else cc2
+        _POLYANION_EDGE_MIN[str(cif_path)] = min(_edges) if _edges else None
+        # v2.0.46: the contact that decides: any below its floor that is not
+        # between mobile ions, else one that is (M11), else the nearest
+        _dec = (_hard[0] + (False,) if _hard[0] is not None and _hard[0][0] < 0
+                else _soft[0] + (True,) if _soft[0] is not None and _soft[0][0] < 0
+                else None if _gov[0] is None else _gov[0] + (False,))
+        _CATION_CONTACT[str(cif_path)] = _dec
         return aa, cc
     except (NameError, TypeError, AttributeError):
         # A defect in this function, not a property of the file. Fail loudly:
@@ -3057,6 +4582,76 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
             RuntimeError) as _e:
         _note_read_failure(cif_path, 'anion_anion_contacts', _e)
         return None, None
+
+# v2.0.46: CARBON THAT BOND VALENCE SUMS DO NOT DESCRIBE.
+#
+# Carbon bonded to carbon, hydrogen or nitrogen is organic, framework or
+# molecular carbon: a MOF linker, the formamidinium of a hybrid perovskite,
+# the cyanide of a Prussian blue analogue, the C2 unit of a carbide. Its
+# C-C, C-H and C-N bonds are covalent, there are no bond valence parameters
+# that describe them, and on 212 files from other programs every such
+# structure came out wrong in its own way: G7 on carbon in 19, its bonds to
+# C and H not counted; G1 on C=O at 1.19 A in 3; G2 on carboxylate O-O in 6.
+# UiO-66, MOF-5 and FAPbI3 all read as "the atoms cannot be where the file
+# says". They are NOT_ASSESSED, and say why, before anything is computed.
+# Carbon bonded only to oxygen or to metals (a carbonate, the isolated C of a
+# carbide) is assessed as before, and carbon sharing a position with N (a
+# carbonitride) is not bonded to it.
+MOLECULAR_CARBON_PARTNERS = {'C': 1.75, 'H': 1.25, 'D': 1.25, 'N': 1.60}  # A
+MOLECULAR_CARBON_NOTE = 'molecular carbon'      # eir.api reads this phrase
+
+
+def molecular_carbon(cif_path):
+    """The shortest contact from carbon to C, H or N close enough to be a
+    covalent bond, as (carbon label, partner label, distance in A), or None.
+    Positions refined to zero occupancy are left out, and so are contacts
+    under 0.85 A, which are one site written twice, not a bond."""
+    import itertools as _it
+    import numpy as _np
+    # a formula that names no carbon settles it without building anything
+    try:
+        with open(cif_path, encoding='utf-8', errors='ignore') as _f:
+            _hint = _formula_hint(_f.read())
+    except OSError:
+        _hint = None
+    if _hint is not None and 'C' not in _hint:
+        return None
+    st = load_structure_for_viz(cif_path)
+    if st is None:
+        return None
+    sites = [s for s in st.sites
+             if (1.0 if getattr(s, 'occ', None) is None else float(s.occ)) > 0]
+    cs = [s for s in sites if s.element.name == 'C']
+    if not cs:
+        return None
+    partners = [s for s in sites if s.element.name in MOLECULAR_CARBON_PARTNERS]
+    rmax = max(MOLECULAR_CARBON_PARTNERS.values())
+    ops = (list(st.spacegroup.operations()) if st.spacegroup is not None
+           else [gemmi.Op('x,y,z')])
+    rng = range(-image_range(st.cell, rmax), image_range(st.cell, rmax) + 1)
+    lab, lim, pts = [], [], []
+    for p in partners:
+        for op in ops:
+            f = wrap_into_cell(op.apply_to_xyz([p.fract.x, p.fract.y, p.fract.z]))
+            for i, j, k in _it.product(rng, repeat=3):
+                q = st.cell.orthogonalize(gemmi.Fractional(f[0] + i, f[1] + j, f[2] + k))
+                pts.append((q.x, q.y, q.z))
+                lab.append(p.label)
+                lim.append(MOLECULAR_CARBON_PARTNERS[p.element.name])
+    if not pts:
+        return None
+    P, L = _np.array(pts), _np.array(lim)
+    best = None
+    for c in cs:
+        o = site_centre(st.cell, c)
+        d = _np.linalg.norm(P - _np.array([o.x, o.y, o.z]), axis=1)
+        hit = _np.where((d > 0.85) & (d <= L))[0]
+        if len(hit):
+            k = hit[_np.argmin(d[hit])]
+            if best is None or d[k] < best[2]:
+                best = (c.label, lab[k], float(d[k]))
+    return best
+
 
 def visualize_problematic_site_3d(cif_path, element, site_label, bonds_info,
                                   deviation, formal_charge, bvs_value,

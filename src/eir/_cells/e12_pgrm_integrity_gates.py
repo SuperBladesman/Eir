@@ -137,6 +137,31 @@ PGRM_FULL_OCC = 0.98
 PGRM_PREMODERN_YEAR = 1950
 PGRM_HETEROVALENT_DV = 2
 
+# v2.0.46. G7: A SITE WHOSE SHELL IS TOO SMALL AND WHOSE SUM SAYS WHY.
+#
+# The coordination screen (cn_plausible) has been computed since v2.0.2 and
+# no gate read it. A CIF listing only the identity operation for Pm-3m
+# SrTiO3 gives Ti a shell of two oxygens and Sr one of four, sums of 1.354
+# and 0.748 v.u. and a GII of 2.07, and came out ACCEPT.
+#
+# A coordination number below the smallest Shannon tabulates is not a fault
+# on its own: the table is not exhaustive. On the 200-entry regression set
+# (spinels, sulfide spinels, rock salts, perovskites, layered oxides and
+# chromium oxides) it fires on two sites, Co(3+) at CN 4 as the minority
+# species of a spinel tetrahedral site and Ni(3+) at CN 4 in a sulfide
+# spinel, and neither is wrong. What separates missing bonds from an
+# untabulated coordination is the sum. A dominant species summing to less
+# than half its valence has lost bonds rather than lengthened them: no
+# dominant site in a sound tier of that set falls below -20%, and the two
+# sites above sit at -38% (a minority species) and -4%. The conjunction
+# fires on none of the 200.
+#
+# Measured on 4,806 ICSD structures (the 1,881 spinels and 938 perovskites
+# of the corpus, 1,254 pyrochlores and 733 fluorites): it fires once, on ICSD
+# 69461, a Tb2Ti2O7 whose 48f x appears to be quoted for the other origin, so
+# that Tb has two neighbours. G2 expunged it already.
+CN_DEFICIT_BVS_FRACTION = 0.50
+
 # The two packing floors come from CELL 1, where they are set from the
 # measured distributions. Re-declaring them here would be a second copy that
 # drifts: the structural self-check flagged exactly that when this cell first
@@ -281,6 +306,13 @@ def classify_site(row, struct):
     if _coords is None or isinstance(_coords, float) or _coords == '':
         return 'P1', 'no_position', 'site parsed without coordinates'
 
+    # v2.0.46: a hydrogen site is summed and reported, and gates nothing.
+    # X-ray H positions sit 0.1-0.2 A short of the nucleus, so no floor or
+    # table measured on heavier ions applies to them; a hydroxide is judged
+    # on its other sites.
+    if row.get('element') in CATION_FLOOR_EXCLUDED_ELEMENTS:
+        return ('-', '', '')
+
     # ---- G : can the atoms be where it says? ----------------------------
     if _pgrm_is_false(row.get('contact_above_floor')):
         d = _pgrm_f(row.get('min_bond_length'))
@@ -342,6 +374,20 @@ def classify_site(row, struct):
         if not _fall_through:
             return ('G4', 'cation_on_wrong_origin', _ev + '; not yet tested')
 
+    # v2.0.46: G7, see CN_DEFICIT_BVS_FRACTION. Asked after the tested
+    # origin hypothesis, which can explain a broken shell, and before the
+    # packing floors, because it says WHERE.
+    _cnmin = _pgrm_f(row.get('cn_shannon_min'))
+    _bpd = _pgrm_f(row.get('bvs_percent_diff'))
+    if (cn == cn and _cnmin == _cnmin and cn < _cnmin
+            and _bpd == _bpd and _bpd < -100.0 * CN_DEFICIT_BVS_FRACTION
+            and _pgrm_is_true(row.get('is_dominant_species'))):
+        return ('G7', 'coordination_incomplete',
+                f'{row.get("element")}({row.get("valence")}) at CN {int(cn)}, '
+                f'below the smallest tabulated ({int(_cnmin)}); bond valence '
+                f'sum {_pgrm_f(row.get("bvs")):.3f} for a valence of '
+                f'{row.get("valence")} ({_bpd:+.0f}%)')
+
     # ORDER WITHIN G. The packing floors are asked LAST, after the tested
     # origin hypothesis, because a supported shift EXPLAINS them.
     #
@@ -359,14 +405,36 @@ def classify_site(row, struct):
     if aa == aa and aa < _PGRM_ANION_FLOOR:
         return ('G2', 'anion_packing_impossible',
                 f'shortest anion-anion {aa:.3f} A, floor {_PGRM_ANION_FLOOR} A')
+    # v2.0.46: the floor depends on the pair (MONOVALENT_PAIR_MIN), so the
+    # scan's verdict is read, with the contact that decided it. Results from
+    # before 2.0.46 carry no contact and are judged as they were.
     cc = _pgrm_f(struct.get('cation_cation_min'))
-    if cc == cc and cc < _PGRM_CATION_FLOOR:
+    _cct = struct.get('cation_cation_contact')
+    _mobile = None      # v2.0.46: M11, asked after R (mobile_pair, CELL 1)
+    if _pgrm_has_value(_cct):
+        if _pgrm_is_false(struct.get('cation_packing_plausible')):
+            if _pgrm_is_true(struct.get('cation_contact_partly_occupied')):
+                _mobile = f'cation-cation contact {_cct}'
+            else:
+                return ('G5', 'cation_packing_impossible',
+                        f'cation-cation contact {_cct}')
+    elif cc == cc and cc < _PGRM_CATION_FLOOR:
         return ('G5', 'cation_packing_impossible',
                 f'shortest cation-cation {cc:.3f} A, floor {_PGRM_CATION_FLOOR} A')
     # ---- R : can we assess it? -----------------------------------------
     if row.get('bvs') is None or _pgrm_f(row.get('bvs')) != _pgrm_f(row.get('bvs')):
         return ('R1', 'no_bond_valence_parameters',
                 f'{row.get("element")}({row.get("valence")}) to {row.get("ligand_types")}')
+    # v2.0.46: a sum that leaves out a species sharing one of this site's
+    # ligand positions, for want of its parameters, is missing bonds. The
+    # omission has been recorded since 2.0.44 and no gate read it: Ho(3+) in
+    # the oxyhydride HoHO summed O alone at its occupancy, -29%, and came out
+    # ACCEPT once the hydride was no longer read as a cation.
+    _cu = row.get('colocated_unparameterised')
+    if isinstance(_cu, str) and _cu.strip():
+        return ('R1', 'no_bond_valence_parameters',
+                f'{row.get("element")}({row.get("valence")}) to {_cu.strip()}, '
+                f'which shares a ligand position')
     if _pgrm_f(row.get('cn_shannon_min')) != _pgrm_f(row.get('cn_shannon_min')):
         return ('R2', 'no_ionic_radius',
                 f'{row.get("element")}({row.get("valence")}) not tabulated')
@@ -394,6 +462,12 @@ def classify_site(row, struct):
     occ = _pgrm_f(row.get('occupancy'), 1.0)
     if occ == 0.0:
         return 'M5', 'zero_occupancy', 'site refined to no atom'
+
+    # v2.0.46: mobile ions on partly filled positions closer than their
+    # floor, read as never filled together; see mobile_pair in CELL 1.
+    if _mobile:
+        return ('M11', 'mobile_ions_close',
+                _mobile + '; read as positions not filled together')
 
     # v2.0.22 (4.1): the bond-valence distance screen, as an M FLAG.
     #
@@ -635,15 +709,19 @@ def classify_pgrm(df):
     # contact resolves - so G4 outranks G5 even though both condemn. A
     # site-specific fault outranks a structure-level symptom for the same
     # reason: it says WHERE.
+    # v2.0.46: G7 ranks with G3, directly below it, and everything after
+    # is renumbered rather than squeezed, so every existing pair keeps its
+    # order.
     _code_rank = {'P1': 0, 'P2': 0, 'P3': 0,
                   'G4': 1,      # tested: the cation is on the wrong origin
                   'G1': 2,      # this contact, at this site, is impossible
                   'G6': 3,      # shorter than anything measured for this ion
                   'G3': 4,      # this site has no shell at all
-                  'G5': 5,      # the cation sublattice is too close somewhere
-                  'G2': 6,      # the anion sublattice is too close somewhere
+                  'G7': 5,      # this site's shell is missing bonds
+                  'G5': 6,      # the cation sublattice is too close somewhere
+                  'G2': 7,      # the anion sublattice is too close somewhere
                   # v2.0.37: R4 ranks below R1-R3, which say WHY.
-                  'R1': 7, 'R2': 8, 'R3': 9, 'R4': 10,
+                  'R1': 8, 'R2': 9, 'R3': 10, 'R4': 11,
                   # v2.0.22: M8 outranks the model codes for the same reason
                   # G1 outranks G5 - it says WHERE, and it is a measurement.
                   # v2.0.25: M2 and M3 sort LAST among the M codes. They are
@@ -655,8 +733,10 @@ def classify_pgrm(df):
                   # rest for the same reason M8 does - it says WHERE, and it
                   # is a measurement. The others are renumbered rather than
                   # squeezed, so every existing pair keeps its order.
-                  'M5': 11, 'M8': 12, 'M10': 13, 'M7': 14, 'M4': 15,
-                  'M1': 16, 'M6': 17, 'M3': 18, 'M2': 19, '-': 99}
+                  # v2.0.46: M11 sits below M8, above M10, for the same
+                  # reason, and the rest are renumbered.
+                  'M5': 12, 'M8': 13, 'M11': 14, 'M10': 15, 'M7': 16,
+                  'M4': 17, 'M1': 18, 'M6': 19, 'M3': 20, 'M2': 21, '-': 99}
     _w = df.assign(_s=df['pgrm_tier'].map(sev),
                    _r=df['pgrm_code'].map(_code_rank).fillna(50))
     worst = (_w.sort_values(['_s', '_r'], ascending=[True, False])
@@ -688,3 +768,693 @@ def apply_pgrm_suppression(df):
               f"a P or G gate. The evidence is in pgrm_reason and "
               f"pgrm_evidence; no bond valence result is reported for them.")
     return df
+
+
+# ---------------------------------------------------------------------------
+# v2.0.46: KNOWN-ANSWER TESTS OF THE GATES. Here rather than in VALIDATE(),
+# which runs in CELL 6, before this cell defines classify_site.
+def VALIDATE_GATES(verbose=True):
+    """Known-answer tests of the integrity gates. Raises if any fails."""
+    results = []
+
+    def report(name, ok, detail=''):
+        results.append(bool(ok))
+        if verbose:
+            print(f"  {'PASS' if ok else 'FAIL'}  {name}")
+            if detail:
+                print(f"        {detail}")
+
+    if verbose:
+        print('=' * 70)
+        print('EIR GATE TESTS')
+        print('=' * 70)
+
+    # G7. The identity-only SrTiO3: Ti at CN 2, summing to 1.354 for a
+    # valence of 4. The same row as a minority species must not fire, nor
+    # Ni(3+) at an untabulated CN 4 with a sound sum (the sulfide spinel).
+    _row = {'coords': '(0.0, 0.0, 0.0)', 'element': 'Ti', 'valence': 4,
+            'cn': 2, 'cn_shannon_min': 4, 'bvs': 1.354,
+            'bvs_percent_diff': -66.2, 'is_dominant_species': True,
+            'ligand_types': 'O'}
+    _c = classify_site(_row, {})
+    report('1. G7: a dominant site missing bonds is expunged',
+           _c[0] == 'G7', f'Ti(4) at CN 2, -66%: {_c[0]} ({_c[2]})')
+    _cm = classify_site(dict(_row, is_dominant_species=False), {})
+    report('2. G7 leaves a minority species to the other gates',
+           _cm[0] != 'G7', f'as a minority species: {_cm[0]}')
+    _cn = classify_site(dict(_row, element='Ni', valence=3, cn=4,
+                             cn_shannon_min=6, bvs=2.882,
+                             bvs_percent_diff=-3.9), {})
+    report('3. G7 does not fire on an untabulated CN with a sound sum',
+           _cn[0] != 'G7', f'Ni(3) at CN 4, -4%: {_cn[0]}')
+
+    # R1 for a sum that leaves out a co-located species (Ho-H has no
+    # parameters; the hydride shares 8c with O in HoHO).
+    _cu = classify_site(dict(_row, element='Ho', valence=3, cn=8,
+                             cn_shannon_min=6, bvs=2.135,
+                             bvs_percent_diff=-28.8,
+                             colocated_unparameterised='H1 (H)'), {})
+    report('4. R1: a sum missing a co-located species is not assessed',
+           _cu[0] == 'R1', f'Ho(3) with H1 (H) unparameterised: {_cu[0]} ({_cu[2]})')
+
+    ok = all(results)
+    if verbose:
+        print()
+        print(f"  {'ALL GATE TESTS PASSED' if ok else 'SOMETHING FAILED'}"
+              f"  ({sum(results)}/{len(results)})")
+    if not ok:
+        raise AssertionError('Eir gate tests failed. Re-run '
+                             'VALIDATE_GATES(verbose=True) for the detail.')
+    return True
+
+
+VALIDATE_GATES()
+
+
+# ---------------------------------------------------------------------------
+# v2.0.46: KNOWN-ANSWER TESTS OF HOW A FILE IS READ. Every case is a way a
+# real CIF is written by some program or some era that Eir got wrong before
+# 2.0.46: symbols in upper case or with the sign first, decimals in the
+# symbol, no type column, deuterium, hydrides given only as --ox, Zintl
+# anions, hydroxides with their H located, and the anion rule without
+# stated valences. Add a case here whenever a new way of writing a file
+# turns up; tests/test_parsing.py runs the same cases end to end.
+def _parsing_cif(name, a, sg, sites, loop=None, type_col=True, cell=None,
+                 formula=None):
+    a_, b_, c_, al, be, ga = cell or (a, a, a, 90, 90, 90)
+    s = [f'data_{name}', f'_cell_length_a {a_}', f'_cell_length_b {b_}',
+         f'_cell_length_c {c_}', f'_cell_angle_alpha {al}',
+         f'_cell_angle_beta {be}', f'_cell_angle_gamma {ga}',
+         f"_symmetry_space_group_name_H-M '{sg}'"]
+    if formula:
+        s.append(f"_chemical_formula_sum '{formula}'")
+    if loop:
+        s += ['loop_', '_atom_type_symbol', '_atom_type_oxidation_number']
+        s += [f'{t} {v}' for t, v in loop]
+    s += ['loop_', '_atom_site_label'] + (['_atom_site_type_symbol'] if type_col else [])
+    s += ['_atom_site_fract_x', '_atom_site_fract_y', '_atom_site_fract_z',
+          '_atom_site_occupancy']
+    for lab, typ, x, y, z, occ in sites:
+        s.append(' '.join([lab] + ([typ] if type_col else [])
+                          + [str(x), str(y), str(z), str(occ)]))
+    return '\n'.join(s) + '\n'
+
+
+def _parsing_run(text, states=None, every=False):
+    """process_single_cif on CIF text, quietly, with --ox style states,
+    after the reading stage, as a batch reads it (v2.0.46). Each result
+    carries its reading record under 'reading'. every=True returns one
+    result per structure the text holds; otherwise the first."""
+    global PY3DMOL_AVAILABLE
+    d = tempfile.mkdtemp()
+    p = os.path.join(d, 'eir_parsing.cif')
+    written = [p]
+    _viz_was = globals().get('PY3DMOL_AVAILABLE', False)
+    try:
+        PY3DMOL_AVAILABLE = False
+        with open(p, 'w', encoding='utf-8') as f:
+            f.write(text)
+        out = []
+        for rec in read_cif_structures(p):
+            if rec['error']:
+                out.append({'success': False, 'error': rec['error'],
+                            'reading': rec})
+                continue
+            q = p
+            if rec['changed']:
+                q = os.path.join(d, 'as_read_' + rec['name'])
+                with open(q, 'w', encoding='utf-8', errors='surrogateescape') as f:
+                    f.write(rec['text'])
+                written.append(q)
+            reset_sign_inversions()
+            with contextlib.redirect_stdout(io.StringIO()):
+                r = process_single_cif(q, user_oxidation_states=states)
+            r['reading'] = rec
+            out.append(r)
+        return out if every else out[0]
+    finally:
+        PY3DMOL_AVAILABLE = _viz_was
+        for w in written:
+            try:
+                os.unlink(w)
+            except OSError:
+                pass
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass
+
+
+def _parsing_sites(r):
+    return [(s.get('element'), s.get('valence'), s.get('bvs'))
+            for s in (r.get('sites') or [])]
+
+
+def VALIDATE_PARSING(verbose=True):
+    """Known-answer tests of symbol parsing and anion rules. Raises if any
+    fails."""
+    results = []
+
+    def report(name, ok, detail=''):
+        results.append(bool(ok))
+        if verbose:
+            print(f"  {'PASS' if ok else 'FAIL'}  {name}")
+            if detail:
+                print(f"        {detail}")
+
+    if verbose:
+        print('=' * 70)
+        print('EIR PARSING TESTS')
+        print('=' * 70)
+
+    # 1. The one reading of a symbol.
+    _want = {('Sn4+', None): ('Sn', 4.0), ('SN4+', None): ('Sn', 4.0),
+             ('Sn+4', None): ('Sn', 4.0), ('O-2', None): ('O', -2.0),
+             ('O2-', None): ('O', -2.0), ('Mn3.5+', None): ('Mn', 3.5),
+             ('CO2+', None): ('Co', 2.0), ('HO3+', None): ('Ho', 3.0),
+             ('D1+', None): ('D', 1.0), ('Na0+', None): ('Na', 0.0),
+             ('Sn1', None): ('Sn', None), ('SN1', None): ('Sn', None),
+             ('CL1', None): ('Cl', None), ('Se1', None): ('Se', None),
+             ('S1', None): ('S', None), ('OW1', None): ('O', None),
+             ('HO1', frozenset({'H', 'Mg', 'O'})): ('H', None),
+             ('HO1', frozenset({'Ho', 'O'})): ('Ho', None),
+             ('X1', None): (None, None)}
+    _bad = {k: parse_atom_symbol(*k) for k, v in _want.items()
+            if parse_atom_symbol(*k) != v}
+    report(f'1. {len(_want)} symbols and labels read as meant', not _bad,
+           f'wrong: {_bad}' if _bad else '')
+
+    # 2. ICSD's own form, and a file already in it left byte for byte.
+    _c = [canonical_type_symbol('Mn', 3.5), canonical_type_symbol('D', 1.0),
+          canonical_type_symbol('Na', 0.0), canonical_type_symbol('O', -2.0)]
+    _icsd = _parsing_cif('icsd', 4.7374, 'P 42/m n m',
+                         [('Sn1', 'Sn4+', 0, 0, 0, 1), ('O1', 'O2-', 0.3056, 0.3056, 0, 1)],
+                         loop=[('Sn4+', 4), ('O2-', -2)], cell=(4.7374, 4.7374, 3.1864, 90, 90, 90))
+    _n0 = normalise_atom_types(_icsd)
+    report("2. ICSD's form written, and an ICSD file left unchanged",
+           _c == ['Mn4+', 'H1+', 'Na0+', 'O2-'] and _n0 == (_icsd, []),
+           f'{_c}; ICSD file changed: {_n0[0] != _icsd}')
+
+    # 3. A file without a type column gains one, read against the formula.
+    _bru = _parsing_cif('bru', 3.142, 'P -3 m 1',
+                        [('MG1', None, 0, 0, 0, 1), ('O1', None, 0.33333, 0.66667, 0.2221, 1),
+                         ('HO1', None, 0.33333, 0.66667, 0.4275, 1)],
+                        type_col=False, cell=(3.142, 3.142, 4.766, 90, 90, 120),
+                        formula='H2 Mg1 O2')
+    _n3, _notes3 = normalise_atom_types(_bru)
+    _types3 = re.findall(r'^(?:MG1|O1|HO1) (\S+)', _n3, re.M)
+    report('3. no type column: added from the labels, HO1 read as H in Mg(OH)2',
+           _types3 == ['Mg', 'O', 'H'], f'types {_types3}; notes {_notes3}')
+
+    # 4. One anion rule for packing and bonds, where no valence is stated.
+    _r4 = [sorted(resolve_anions({'Pb', 'S', 'Se'})), sorted(resolve_anions({'Li', 'P', 'S'})),
+           sorted(resolve_anions({'Ca', 'N', 'Cl'})), sorted(resolve_anions({'Mg', 'O', 'H'})),
+           classify_bond_pair('Se', 'S', None, {'Pb', 'S', 'Se'}),
+           classify_bond_pair('P', 'S', None, {'Li', 'P', 'S'}),
+           classify_bond_pair('N', 'Cl', None, {'Ca', 'N', 'Cl'}),
+           classify_bond_pair('I', 'O', None, {'K', 'I', 'O'})]
+    _w4 = [['S', 'Se'], ['S'], ['Cl', 'N'], ['O'], (None, None), ('P', 'S'),
+           (None, None), ('I', 'O')]
+    report('4. sulfoselenide, thiophosphate, nitride chloride, hydroxide, iodate',
+           _r4 == _w4, f'got {_r4}')
+
+    RUT = (4.7374, 4.7374, 3.1864, 90, 90, 90)
+
+    def rut(tsn, to, lsn='Sn1', type_col=True, loop=None):
+        return _parsing_cif('sno2', 4.7374, 'P 42/m n m',
+                            [(lsn, tsn, 0, 0, 0, 1), ('O1', to, 0.3056, 0.3056, 0, 1)],
+                            loop=loop, type_col=type_col, cell=RUT)
+
+    # 5-7. Upper case, sign first, no type column.
+    for _n, _what, _txt, _st in (
+            (5, "an upper-case 'SN4+' keeps its charge", rut('SN4+', 'O2-'), None),
+            (6, "GSAS-II's 'Sn+4' and 'O-2'", rut('Sn+4', 'O-2'), None),
+            (7, 'no type column, label SN1, states supplied',
+             rut(None, None, 'SN1', type_col=False), {'Sn': 4, 'O': -2})):
+        try:
+            _s = _parsing_sites(_parsing_run(_txt, _st))
+            _ok = len(_s) == 1 and _s[0][0] == 'Sn' and float(_s[0][1]) == 4.0
+        except Exception as _e:
+            _s, _ok = f'{type(_e).__name__}: {_e}', False
+        report(f'{_n}. {_what}', _ok, f'sites {_s}')
+
+    # 8. 'CO2+' with no oxidation-number loop used to stop the run: the
+    # fallback read 'O2+' out of it as oxygen at +2.
+    _coo = _parsing_cif('coo', 4.26, 'F m -3 m',
+                        [('Co1', 'CO2+', 0, 0, 0, 1), ('O1', 'O2-', 0.5, 0.5, 0.5, 1)])
+    try:
+        _s8 = _parsing_sites(_parsing_run(_coo))
+        _d8 = tempfile.mkdtemp()
+        _p8 = os.path.join(_d8, 'coo.cif')
+        with open(_p8, 'w', encoding='utf-8') as _f8:
+            _f8.write(_coo)
+        _ox8 = extract_cif_oxidation_states(_p8)[0]
+        os.unlink(_p8)
+        os.rmdir(_d8)
+        _ok8 = (_s8 and _s8[0][0] == 'Co' and float(_s8[0][1]) == 2.0
+                and _ox8.get('Co') == 2 and _ox8.get('O') == -2)
+    except Exception as _e:
+        _s8, _ox8, _ok8 = f'{type(_e).__name__}: {_e}', None, False
+    report("8. 'CO2+' is cobalt(2+), and oxygen stays oxygen(2-)", _ok8,
+           f'sites {_s8}; states read {_ox8}')
+
+    # 9. A decimal in the symbol.
+    try:
+        _s9 = _parsing_sites(_parsing_run(_parsing_cif(
+            'mno', 4.445, 'F m -3 m', [('Mn1', 'Mn2.5+', 0, 0, 0, 1), ('O1', 'O2-', 0.5, 0.5, 0.5, 1)])))
+        _ok9 = _s9 and _s9[0][0] == 'Mn' and abs(float(_s9[0][1]) - 2.5) < 1e-6
+    except Exception as _e:
+        _s9, _ok9 = f'{type(_e).__name__}: {_e}', False
+    report("9. 'Mn2.5+' is manganese at 2.5", _ok9, f'sites {_s9}')
+
+    # 10. A hydride given only as a supplied state shares oxygen's position.
+    _smho = lambda ts, to, th: _parsing_cif(
+        'smho', 5.4695, 'F m -3 m', [('Sm1', ts, 0, 0, 0, 1), ('O1', to, 0.25, 0.25, 0.25, 0.5),
+                                     ('H1', th, 0.25, 0.25, 0.25, 0.5)])
+    try:
+        _s10 = _parsing_sites(_parsing_run(_smho('Sm', 'O', 'H'), {'Sm': 3, 'O': -2, 'H': -1}))
+        _ok10 = _s10 and _s10[0][0] == 'Sm' and float(_s10[0][2]) > 2.5
+    except Exception as _e:
+        _s10, _ok10 = f'{type(_e).__name__}: {_e}', False
+    report('10. SmHO with H=-1 supplied: Sm summed over O and H', _ok10, f'sites {_s10}')
+
+    # 11. A hydroxide with its H located is not condemned for its O-H bond,
+    # and deuterium is hydrogen.
+    _br = lambda th: _parsing_cif(
+        'bru', 3.142, 'P -3 m 1',
+        [('Mg1', 'Mg2+', 0, 0, 0, 1), ('O1', 'O2-', 0.33333, 0.66667, 0.2221, 1),
+         ('H1', th, 0.33333, 0.66667, 0.4275, 1)],
+        loop=[('Mg2+', 2), ('O2-', -2), (th, 1)], cell=(3.142, 3.142, 4.766, 90, 90, 120))
+    try:
+        _r11 = _parsing_run(_br('H1+'))
+        _r11d = _parsing_run(_br('D1+'))
+        _h = [s for s in _r11['sites'] if s.get('element') == 'H']
+        _hd = [s for s in _r11d['sites'] if s.get('element') == 'H']
+        _row = dict(_h[0], coords=str(_h[0].get('coords')), contact_above_floor=False) if _h else {}
+        _c11 = classify_site(_row, {}) if _h else None
+        _ok11 = (len(_h) == 1 and _h[0].get('contact_above_floor') is not False
+                 and len(_hd) == 1 and _c11 and _c11[0] == '-')
+        _d11 = (f"H: contact_above_floor {_h[0].get('contact_above_floor') if _h else '-'}, "
+                f"gate {_c11 and _c11[0]}; D read as H: {len(_hd) == 1}")
+    except Exception as _e:
+        _ok11, _d11 = False, f'{type(_e).__name__}: {_e}'
+    report('11. Mg(OH)2 with H located: H summed, not gated; D read as H', _ok11, _d11)
+
+    # 12. A Zintl anion fails, and says why.
+    try:
+        _r12 = _parsing_run(_parsing_cif(
+            'mg2sn', 6.765, 'F m -3 m', [('Sn1', 'Sn4-', 0, 0, 0, 1), ('Mg1', 'Mg2+', 0.25, 0.25, 0.25, 1)],
+            loop=[('Sn4-', -4), ('Mg2+', 2)]))
+        _ok12 = 'Zintl' in str(_r12.get('error'))
+        _d12 = str(_r12.get('error'))
+    except Exception as _e:
+        _ok12, _d12 = False, f'{type(_e).__name__}: {_e}'
+    report('12. Mg2Sn: no bonds, and the reason is the Sn(4-) anion', _ok12, _d12)
+
+    # ---- v2.0.46: the reading stage (CELL 3) ---------------------------
+    # Each case is a feature of a file, not of the program that wrote it.
+    # Every one but the last was read wrongly, or not at all, before.
+    _rut = (4.7374, 4.7374, 3.1864, 90, 90, 90)
+    _sno2 = _parsing_cif('sno2', 4.7374, 'P 42/m n m',
+                         [('Sn1', 'Sn4+', 0, 0, 0, 1),
+                          ('O1', 'O2-', 0.3056, 0.3056, 0, 1)],
+                         loop=[('Sn4+', 4), ('O2-', -2)], cell=_rut)
+    _bonds = ('loop_\n_geom_bond_atom_site_label_1\n_geom_bond_atom_site_label_2\n'
+              '_geom_bond_distance\n_geom_bond_site_symmetry_2\n')
+
+    def _site(r, el):
+        s = [x for x in (r.get('sites') or []) if x.get('element') == el]
+        return s[0] if s else None
+
+    def _notes(r):
+        return '; '.join((r.get('reading') or {}).get('notes') or [])
+
+    def _case(n, name, fn):
+        try:
+            ok, detail = fn()
+        except Exception as _e:
+            ok, detail = False, f'{type(_e).__name__}: {_e}'
+        report(f'{n}. {name}', ok, detail)
+
+    try:
+        _SN = float(_site(_parsing_run(_sno2), 'Sn')['bvs'])
+    except Exception:
+        _SN = None
+
+    def _same_tin(r):
+        s = _site(r, 'Sn')
+        return (_SN is not None and s is not None and s.get('bvs') is not None
+                and abs(float(s['bvs']) - _SN) < 0.005)
+
+    def _t13():
+        r = _parsing_run(_sno2 + _bonds + '? ? ? ?\n')
+        return (_same_tin(r) and 'placeholders' in _notes(r)), _notes(r)
+    _case(13, "a bond list of '?' is set aside; Sn summed from the positions", _t13)
+
+    def _t14():
+        srt = _parsing_cif('srtio3', 3.905, 'P m -3 m',
+                           [('Sr1', 'Sr2+', 0.5, 0.5, 0.5, 1), ('Ti1', 'Ti4+', 0, 0, 0, 1),
+                            ('O1', 'O2-', 0.5, 0, 0, 1)],
+                           loop=[('Sr2+', 2), ('Ti4+', 4), ('O2-', -2)])
+        r = _parsing_run(srt + _bonds + 'Ti1 O1 1.9525 .\n')
+        s = _site(r, 'Sr')
+        return (s is not None and s.get('bvs') is not None
+                and 'set aside' in _notes(r)), f"Sr {None if s is None else s.get('bvs')}; {_notes(r)}"
+    _case(14, "an author's list of Ti-O only: Sr is summed too", _t14)
+
+    def _t15():
+        rs = _parsing_run("data_global\n_journal_name_full 'Test'\n\n" + _sno2, every=True)
+        return (len(rs) == 1 and _same_tin(rs[0])
+                and rs[0]['reading']['name'] == 'eir_parsing.cif'
+                and 'holds no atom sites' in _notes(rs[0])), _notes(rs[0])
+    _case(15, "a 'global' block and a phase block: one structure, the file's name", _t15)
+
+    def _t16():
+        rs = _parsing_run(_sno2 + '\n' + _sno2, every=True)
+        names = [r['reading']['name'] for r in rs]
+        return (len(rs) == 2 and all(_same_tin(r) for r in rs)
+                and names == ['eir_parsing__sno2.cif', 'eir_parsing__sno2_2.cif']), str(names)
+    _case(16, 'two structures in one file, under one block name: both read', _t16)
+
+    def _t17():
+        r = _parsing_run(_parsing_cif('sno2', 4.7374, 'P 42/m n m',
+                                      [('XX', 'Sn4+', 0, 0, 0, 1),
+                                       ('XX', 'O2-', 0.3056, 0.3056, 0, 1)],
+                                      loop=[('Sn4+', 4), ('O2-', -2)], cell=_rut))
+        return _same_tin(r) and 'renamed XX_1 to XX_2' in _notes(r), _notes(r)
+    _case(17, "one dummy label 'XX' for every atom: each read as itself", _t17)
+
+    def _t18():
+        r = _parsing_run(_parsing_cif('mgnio', 4.20, 'F m -3 m',
+                                      [('Mg1', 'Mg2+', 0, 0, 0, 0.5),
+                                       ('Mg1', 'Ni2+', 0, 0, 0, 0.5),
+                                       ('O1', 'O2-', 0.5, 0.5, 0.5, 1)],
+                                      loop=[('Mg2+', 2), ('Ni2+', 2), ('O2-', -2)]))
+        rows = [s for s in r.get('sites') or []
+                if s.get('bvs') is not None and s.get('valence') is not None
+                and float(s['valence']) > 0 and float(s.get('occupancy') or 1) != 0]
+        rebuilt = (sum((float(s['bvs']) - float(s['valence'])) ** 2 for s in rows)
+                   / len(rows)) ** 0.5 if rows else None
+        ni = _site(r, 'Ni')
+        return (ni is not None and rebuilt is not None and r.get('gii') is not None
+                and abs(rebuilt - float(r['gii'])) < 1e-3), (
+            f"gii {r.get('gii')}, rebuilt from the sites {rebuilt}; {_notes(r)}")
+    _case(18, "Ni sharing a position under the label 'Mg1': the index sums Ni as Ni", _t18)
+
+    def _t19():
+        r = _parsing_run(_sno2.replace("'P 42/m n m'", 'P 42/m n m'))
+        return _same_tin(r) and 'quoted' in _notes(r), _notes(r)
+    _case(19, "an unquoted space group, 'P 42/m n m': quoted and read", _t19)
+
+    def _t20():
+        r = _parsing_run(_sno2.replace('data_sno2', 'data_ SnO2 rutile'))
+        return _same_tin(r) and 'space after data_' in _notes(r), _notes(r)
+    _case(20, "'data_ SnO2 rutile', with a space: read", _t20)
+
+    def _t21():
+        r = _parsing_run(_sno2.replace('_cell_length_c', '_cell_length_a 4.70\n_cell_length_c'))
+        e = str(r.get('error'))
+        return (not r.get('success') and '_cell_length_a twice' in e
+                and "'4.7374'" in e and "'4.70'" in e), e
+    _case(21, 'a cell edge given twice, differently: not read, and the reason says which', _t21)
+
+    def _t21b():
+        t = _sno2.replace('_cell_length_c', '_cell_length_a 4.7374\n_cell_volume 71.5\n'
+                          '_cell_volume 71.5\n_cell_measurement_temperature 293\n'
+                          '_cell_measurement_temperature 295\n_cell_length_c')
+        r = _parsing_run(t)
+        return (_same_tin(r) and 'with the same value: kept one' in _notes(r)
+                and 'kept the first (293)' in _notes(r)), _notes(r)
+    _case('21b', 'repeats that agree, and a repeated temperature, are read', _t21b)
+
+    def _t22():
+        t = '\n'.join(l for l in _sno2.split('\n') if not l.startswith('_cell_'))
+        r = _parsing_run(t)
+        e = str(r.get('error'))
+        return (not r.get('success') and 'no cell' in e), e
+    _case(22, 'atom sites and no cell: not read, and the reason says so', _t22)
+
+    def _t23():
+        sh, inv = gemmi.Op('x+1/4,y+1/4,z'), gemmi.Op('x-1/4,y-1/4,z')
+        ops = [(inv * o * sh).wrap().triplet()
+               for o in gemmi.find_spacegroup_by_name('P 42/m n m').operations()]
+        t = ['data_sno2_shifted'] + [f'_cell_{k} {v}' for k, v in zip(
+            ('length_a', 'length_b', 'length_c', 'angle_alpha', 'angle_beta',
+             'angle_gamma'), _rut)]
+        t += ['loop_', '_symmetry_equiv_pos_as_xyz'] + [f"'{o}'" for o in ops]
+        t += ['loop_', '_atom_type_symbol', '_atom_type_oxidation_number',
+              'Sn4+ 4', 'O2- -2', 'loop_', '_atom_site_label', '_atom_site_type_symbol',
+              '_atom_site_fract_x', '_atom_site_fract_y', '_atom_site_fract_z',
+              '_atom_site_occupancy', 'Sn1 Sn4+ 0.75 0.75 0 1',
+              'O1 O2- 0.0556 0.0556 0 1']
+        r = _parsing_run('\n'.join(t) + '\n')
+        return _same_tin(r) and 'moved the origin' in _notes(r), _notes(r)
+    _case(23, 'operations in an untabulated origin: moved, with every position', _t23)
+
+    def _t24():
+        r = _parsing_run(_parsing_cif('calcite', 4.9896, 'R -3 c',
+                                      [('Ca1', 'Ca2+', 0, 0, 0, 1), ('C1', 'C4+', 0, 0, 0.25, 1),
+                                       ('O1', 'O2-', 0.2578, 0, 0.25, 1)],
+                                      loop=[('Ca2+', 2), ('C4+', 4), ('O2-', -2)],
+                                      cell=(4.9896, 4.9896, 17.061, 90, 90, 120)))
+        aa, pe = r.get('anion_anion_min'), r.get('polyanion_edge_min')
+        return (r.get('success') and (aa is None or aa >= ANION_ANION_MIN)
+                and pe is not None and abs(pe - 2.228) < 0.02), f'anion_anion_min {aa}, polyanion_edge_min {pe}'
+    _case(24, "calcite: the CO3 edge is not tested against the anion floor", _t24)
+
+    def _t25():
+        r = _parsing_run(_parsing_cif('napf6', 7.61, 'F m -3 m',
+                                      [('P1', 'P5+', 0, 0, 0, 1), ('Na1', 'Na1+', 0.5, 0.5, 0.5, 1),
+                                       ('F1', 'F1-', 0.2103, 0, 0, 1)],
+                                      loop=[('P5+', 5), ('Na1+', 1), ('F1-', -1)]))
+        aa, pe = r.get('anion_anion_min'), r.get('polyanion_edge_min')
+        return (r.get('success') and (aa is None or aa >= ANION_ANION_MIN)
+                and pe is not None and abs(pe - 2.263) < 0.02), f'anion_anion_min {aa}, polyanion_edge_min {pe}'
+    _case(25, 'NaPF6: nor are the F-F edges of PF6', _t25)
+
+    def _t26():
+        t = _parsing_cif('mapbi3', 6.33, 'P 1',
+                         [('Pb1', 'Pb2+', 0, 0, 0, 1), ('I1', 'I1-', 0.5, 0, 0, 1),
+                          ('I2', 'I1-', 0, 0.5, 0, 1), ('I3', 'I1-', 0, 0, 0.5, 1),
+                          ('C1', 'C', 0.383, 0.5, 0.5, 1), ('N1', 'N', 0.617, 0.5, 0.5, 1)])
+        r = _parsing_run(t, states={'Pb': 2, 'I': -1, 'C': -4, 'N': -3})
+        e = str(r.get('error'))
+        return (not r.get('success') and MOLECULAR_CARBON_NOTE in e
+                and 'C1-N1' in e), e
+    _case(26, 'carbon bonded to N: not assessed, and the bond named', _t26)
+
+    def _t27():
+        t = ('###  FullProf-generated CIF output file  (version: May 2011)  ###\n'
+             + _sno2.replace('data_sno2', "data_sno2\n_cod_database_code 1000000\n"
+                             "_computing_structure_refinement 'FULLPROF'"))
+        p = cif_provenance(t)
+        return (p == {'written_by': 'FullProf (May 2011)', 'refined_with': 'FULLPROF',
+                      'database': 'COD 1000000'}), str(p)
+    _case(27, 'provenance recorded: writer, refinement program, database', _t27)
+
+    def _t28():
+        r = _parsing_run(_sno2)
+        rd = r['reading']
+        return (not rd['changed'] and not rd['notes']), str(rd['notes'])
+    _case(28, 'a file already in order is read exactly as it is', _t28)
+
+    # ---- v2.0.46: halogens, G1 alternatives, polyanion limits ----------
+    def _perchl(cl_type, cl_state):
+        a = 5.0
+        x = 1.43 / (3 ** 0.5 * a)
+        return _parsing_cif('kclo4', a, 'P -4 3 m',
+                            [('Cl1', cl_type, 0, 0, 0, 1), ('K1', 'K1+', 0.5, 0.5, 0.5, 1),
+                             ('O1', 'O2-', round(x, 5), round(x, 5), round(x, 5), 1)],
+                            loop=[(cl_type, cl_state), ('K1+', 1), ('O2-', -2)])
+
+    def _t29():
+        r = _parsing_run(_perchl('Cl7+', 7))
+        cl = _site(r, 'Cl')
+        aa, pe = r.get('anion_anion_min'), r.get('polyanion_edge_min')
+        ok = (cl is not None and abs(float(cl['bvs']) - 7.0) < 0.1
+              and (aa is None or aa >= ANION_ANION_MIN)
+              and pe is not None and abs(pe - 2.335) < 0.02)
+        return ok, f"Cl {None if cl is None else cl.get('bvs')}; anion_anion_min {aa}; edge {pe}"
+    _case(29, 'a perchlorate typed Cl(7+): Cl is the cation, ClO4 an edge, not a contact', _t29)
+
+    def _t30():
+        r = _parsing_run(_perchl('Cl7+', 7))
+        an = r.get('anion_summary') or {}
+        worst = an.get('anion_worst_label')
+        return (worst is None or not str(worst).startswith('Cl')), f'anion summary {an}'
+    _case(30, 'the anion-centred sums no longer take Cl(7+) for an anion', _t30)
+
+    def _t30b():
+        # Li 3.46 A from Cl(7+), inside the bond search, and 2.03 A from O
+        a = 4.0
+        x = round(1.43 / (3 ** 0.5 * a), 5)
+        r = _parsing_run(_parsing_cif(
+            'liclo4', a, 'P -4 3 m',
+            [('Cl1', 'Cl7+', 0, 0, 0, 1), ('Li1', 'Li1+', 0.5, 0.5, 0.5, 1),
+             ('O1', 'O2-', x, x, x, 1)],
+            loop=[('Cl7+', 7), ('Li1+', 1), ('O2-', -2)]))
+        li = _site(r, 'Li')
+        lig = None if li is None else str(li.get('ligand_types'))
+        return lig == 'O', f'Li ligands {lig}'
+    _case('30b', 'nor do the cations: Li is bonded to O, not to Cl(7+) 3.46 A away', _t30b)
+
+    def _t31():
+        # an orientationally disordered nitrite: N 1/6 and O 1/3 on the cube
+        # axes, 0.53 A apart where two orientations overlap
+        a = 4.4
+        t = _parsing_cif('nano2', a, 'P m -3 m',
+                         [('Na1', 'Na1+', 0, 0, 0, 1), ('N1', 'N3+', 0.5, 0.5, 0.58, 0.16667),
+                          ('O1', 'O2-', 0.5, 0.5, 0.70, 0.33333)],
+                         loop=[('Na1+', 1), ('N3+', 3), ('O2-', -2)])
+        r = _parsing_run(t)
+        n = _site(r, 'N')
+        alt = r.get('alternative_contacts_set_aside')
+        ok = (n is not None and n.get('contact_above_floor') is not False
+              and alt is not None and 'N1-O1' in alt)
+        return ok, f"N contact_above_floor {None if n is None else n.get('contact_above_floor')}; set aside {alt}"
+    _case(31, 'G1: N and O positions of two orientations, 0.53 A apart, are alternatives', _t31)
+
+    def _t32():
+        # a CO3 group crushed to an O-C-O angle of 70 degrees, from ordinary
+        # 1.28 A bonds: the edge, 1.47 A, is no longer excused
+        import math as _m
+        a = 8.0
+        c0 = (0.5, 0.5, 0.5)
+        ang = [0.0, _m.radians(70.0), _m.radians(190.0)]
+        o = [(c0[0] + 1.28 * _m.cos(t) / a, c0[1] + 1.28 * _m.sin(t) / a, 0.5) for t in ang]
+        sites = [('Ca1', 'Ca2+', 0.5, 0.5, 0.8, 1), ('C1', 'C4+', 0.5, 0.5, 0.5, 1)]
+        sites += [(f'O{k + 1}', 'O2-', round(x, 5), round(y, 5), z, 1) for k, (x, y, z) in enumerate(o)]
+        r = _parsing_run(_parsing_cif('crushed', a, 'P 1', sites,
+                                      loop=[('Ca2+', 2), ('C4+', 4), ('O2-', -2)]))
+        aa = r.get('anion_anion_min')
+        return (aa is not None and aa < ANION_ANION_MIN), f'anion_anion_min {aa}'
+    _case(32, 'a carbonate crushed to 70 degrees: its 1.47 A edge is a contact again', _t32)
+
+    # ---- v2.0.46: the floor for two monovalent cations; polyanion limits;
+    # ---- a ligand weighted given its centre -------------------------------
+    def _li2o(a):
+        return _parsing_cif('li2o', a, 'F m -3 m',
+                            [('Li1', 'Li1+', 0.25, 0.25, 0.25, 1), ('O1', 'O2-', 0, 0, 0, 1)],
+                            loop=[('Li1+', 1), ('O2-', -2)])
+
+    def _t33():
+        r = _parsing_run(_li2o(4.61))
+        c = r.get('cation_cation_contact') or ''
+        return (r.get('cation_packing_plausible') is True and 'floor 2.00' in c
+                and abs(float(r.get('cation_cation_min') or 0) - 2.305) < 0.01), \
+            f"plausible {r.get('cation_packing_plausible')}; {c}"
+    _case(33, 'Li2O: Li-Li 2.305 A between two Li(+) passes their floor', _t33)
+
+    def _t34():
+        t = _parsing_cif('li3n', 3.648, 'P 6/m m m',
+                         [('N1', 'N3-', 0, 0, 0, 1), ('Li1', 'Li1+', 0, 0, 0.5, 1),
+                          ('Li2', 'Li1+', 0.33333, 0.66667, 0, 1)],
+                         loop=[('N3-', -3), ('Li1+', 1)],
+                         cell=(3.648, 3.648, 3.875, 90, 90, 120))
+        r = _parsing_run(t)
+        c = r.get('cation_cation_contact') or ''
+        return (r.get('cation_packing_plausible') is True and 'Li2-Li2' in c
+                and abs(float(r.get('cation_cation_min') or 0) - 2.106) < 0.01), \
+            f"plausible {r.get('cation_packing_plausible')}; {c}"
+    _case(34, 'Li3N: Li-Li 2.106 A in the Li2N layer passes', _t34)
+
+    def _t35():
+        r = _parsing_run(_li2o(3.60))
+        c = r.get('cation_cation_contact') or ''
+        return (r.get('cation_packing_plausible') is False and 'floor 2.00' in c), \
+            f"plausible {r.get('cation_packing_plausible')}; {c}"
+    _case(35, 'Li2O compressed to Li-Li 1.80 A still fails', _t35)
+
+    def _t36():
+        # a nitrite with N and both O at half occupancy: where N is, its O are
+        a = 6.0
+        t = _parsing_cif('half_nitrite', a, 'P 1',
+                         [('Na1', 'Na1+', 0, 0, 0, 1), ('N1', 'N3+', 0.5, 0.5, 0.5, 0.5),
+                          ('O1', 'O2-', 0.6743, 0.5, 0.61105, 0.5),
+                          ('O2', 'O2-', 0.3257, 0.5, 0.61105, 0.5)],
+                         loop=[('Na1+', 1), ('N3+', 3), ('O2-', -2)])
+        r = _parsing_run(t)
+        n = _site(r, 'N')
+        b = None if n is None else n.get('bvs')
+        cnd = None if n is None else n.get('ligand_occupancy_conditional')
+        return (b is not None and float(b) > 2.2 and cnd is not None), \
+            f'N bvs {b}; weighted given N: {cnd}'
+    _case(36, 'a half-filled nitrite: N sums its two O at full weight', _t36)
+
+    def _t36b():
+        # a perchlorate at 0.25 spread over four orientations, 16 O at 0.25,
+        # all 1.43 A from Cl: given Cl, 16 O is more than ClO4 holds, so the
+        # plain weights stand and Cl sums near 7, not near 28
+        import math as _m
+        a, d = 8.0, 1.43
+        dirs = [(sx, sy, sz) for sx in (1, -1) for sy in (1, -1) for sz in (1, -1)]
+        dirs += [(sx * _m.sqrt(2), 0, sz) for sx in (1, -1) for sz in (1, -1)]
+        dirs += [(0, sy * _m.sqrt(2), sz) for sy in (1, -1) for sz in (1, -1)]
+        sites = [('K1', 'K1+', 0, 0, 0, 1), ('Cl1', 'Cl7+', 0.5, 0.5, 0.5, 0.25)]
+        for k, (x, y, z) in enumerate(dirs):
+            f = d / (a * _m.sqrt(3))
+            sites.append((f'O{k + 1}', 'O2-', round(0.5 + x * f, 5),
+                          round(0.5 + y * f, 5), round(0.5 + z * f, 5), 0.25))
+        r = _parsing_run(_parsing_cif('spread_clo4', a, 'P 1', sites,
+                                      loop=[('K1+', 1), ('Cl7+', 7), ('O2-', -2)]))
+        cl = _site(r, 'Cl')
+        b = None if cl is None else cl.get('bvs')
+        cnd = None if cl is None else cl.get('ligand_occupancy_conditional')
+        return (b is not None and abs(float(b) - 7.0) < 1.0 and cnd is None), \
+            f'Cl bvs {b}; weighted given Cl: {cnd}'
+    _case('36b', 'a perchlorate spread over four orientations keeps the plain weights', _t36b)
+
+    def _t37():
+        got = (polyanion_edge('C', 'O', 1.42, 1.24, 2.18),   # pyrocarbonate bridge
+               polyanion_edge('N', 'O', 1.39, 1.39, 2.26),   # orthonitrate
+               polyanion_edge('C', 'O', 1.28, 1.28, 1.47),   # crushed to 70 degrees
+               polyanion_edge('Si', 'O', 1.78, 1.81, 2.29))  # shared SiO6 edge, 79 deg
+        return got == (True, True, False, False), f'{got}'
+    _case(37, 'polyanion edges: C2O5 and NO4 kept, crushed CO3 and SiO6 at 79 deg not', _t37)
+
+    # ---- v2.0.46: positions, not labels; mobile ions -----------------------
+    def _p2(na1, na2, extra=()):
+        # P2-type NaCoO2: Na on 2b and 2d, a/sqrt(3) = 1.634 A apart
+        return _parsing_cif('p2', 2.83, 'P 63/m m c',
+                            [('Co1', 'Co3+', 0, 0, 0, 1),
+                             ('O1', 'O2-', 0.33333, 0.66667, 0.0925, 1),
+                             ('Na1', 'Na1+', 0, 0, 0.25, na1),
+                             ('Na2', 'Na1+', 0.66667, 0.33333, 0.25, na2)] + list(extra),
+                            loop=[('Na1+', 1), ('Co3+', 3), ('O2-', -2), ('Ca2+', 2)],
+                            cell=(2.83, 2.83, 10.9, 90, 90, 120))
+
+    def _t38():
+        r = _parsing_run(_p2(0.60, 0.60))
+        c = str(r.get('cation_cation_contact'))
+        return (r.get('cation_packing_plausible') is False
+                and r.get('cation_contact_partly_occupied') is True
+                and 'positions 0.600 and 0.600 filled' in c),             f"plausible {r.get('cation_packing_plausible')}; mobile {r.get('cation_contact_partly_occupied')}: {c}"
+    _case(38, 'Na 0.60 and 0.60, 1.63 A apart: below the floor, between mobile ions (M11)', _t38)
+
+    def _t39():
+        r = _parsing_run(_p2(1.0, 0.60))
+        return (r.get('cation_packing_plausible') is False
+                and r.get('cation_contact_partly_occupied') is False),             f"plausible {r.get('cation_packing_plausible')}; mobile {r.get('cation_contact_partly_occupied')}"
+    _case(39, 'beside a full Na position the pair is filled together: G5, not M11', _t39)
+
+    def _t40():
+        # 2d shared by Na 0.40 and Ca 0.40: label by label every pair sums
+        # to 0.80, position by position 1.20
+        r = _parsing_run(_p2(0.40, 0.40, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.40)]))
+        c = str(r.get('cation_cation_contact'))
+        return (r.get('cation_packing_plausible') is False
+                and r.get('cation_contact_partly_occupied') is False and 'Ca2' in c),             f"plausible {r.get('cation_packing_plausible')}; mobile {r.get('cation_contact_partly_occupied')}: {c}"
+    _case(40, 'a shared position counts all it holds: Na 0.40 beside Na and Ca 0.40 each', _t40)
+
+    ok = all(results)
+    if verbose:
+        print()
+        print(f"  {'ALL PARSING TESTS PASSED' if ok else 'SOMETHING FAILED'}"
+              f"  ({sum(results)}/{len(results)})")
+    if not ok:
+        raise AssertionError('Eir parsing tests failed. Re-run '
+                             'VALIDATE_PARSING(verbose=True) for the detail.')
+    return True
+
+
+# VALIDATE_PARSING()   # eir package: run by eir.validate()

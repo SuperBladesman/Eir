@@ -6,7 +6,7 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ### eir-bvs 2.1.0 – unreleased
 
-**A command line, a Python interface and a one-page report, on the 2.0.45 engine**
+**A command line, a Python interface and a one-page report, on the 2.0.46 engine**
 
 - `pip install` from GitHub; `eir check`, `eir batch` and `eir validate`
   from the command line, and `eir.check()`, `eir.check_folder()` and
@@ -21,13 +21,295 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   `tools/build_engine.py`; CI fails if the two drift apart. No verdict, sum
   or index changes. On 200 ICSD entries every output file matched the
   notebook's, serially and in parallel (docs/PACKAGE.md).
-- Runs the 2.0.45 notebook stops on, where no file has an ICSD code or a
-  file with one has no author or journal, finish without grouping entries
-  by source paper, and say so.
 - Tested on Python 3.11 to 3.13 with pandas 2 and 3, on Linux, Windows
   and macOS.
 
 ## Eir 2.0 series
+
+### 2.0.46 – unreleased
+
+**Faults found while packaging Eir, by running it on the corpus, and by a battery of CIFs written the way other programs write them**
+
+- A run in which no file has an ICSD code (every Rietveld CIF checked on its
+  own), or in which a file with a code has no author or journal, no longer
+  stops in `flag_same_source_entries`. Such entries are groups of one.
+- The packing gates leave out positions refined to zero occupancy, and any
+  pair below the floor whose occupancies sum to one or less, which the model
+  can fill one at a time. The rule used to stop at 1.20 Å. A sum over one
+  is allowed 0.02, or three standard uncertainties of the occupancies as
+  deposited where that is more, so a model over-full only within its own
+  error bars is not expunged. The sum is of each position's occupancy, all
+  the species on it together: compared label by label, a lithiated
+  magnetite (ICSD 155030, Fe at 0.16 on 8a beside a 16c full of Li and Fe,
+  1.82 Å away) and two cation-excess magnesium ferrites (67847 and 94870,
+  Mg at 0.07 on 16c beside a full 8a) passed, and stay EXPUNGE (G5). ICSD 253190,
+  253192 and 261554 (P2-type sodium layered oxides, Na 2b and 2d about
+  1.70 Å apart) and 291603 (CrO2, Cr on octahedral and tetrahedral
+  interstices) move from EXPUNGE (G5) to FLAG (M1).
+- New gate G7, `coordination_incomplete`: a dominant site with fewer
+  neighbours than the smallest coordination tabulated for it, summing to
+  less than half its valence, is expunged. A CIF giving only the identity
+  operation for Pm-3m SrTiO3 used to come out ACCEPT with a GII of 2.07.
+  On 4,806 ICSD structures (1,881 spinels, 938 perovskites, 1,254
+  pyrochlores, 733 fluorites) it fires once, on ICSD 69461, a record
+  already expunged on G2.
+- The packing scan is given the oxidation states the CIF states, so N(3-)
+  or S(2-) beside oxygen is an anion rather than a cation. 2.0.45 tested
+  their bonds against the cation floor and expunged ICSD 172231 and 51587
+  (Mo-N, oxynitride pyrochlores), 14955 (Cd-S, an oxysulfide pyrochlore)
+  and 84078 (Zr-S, a Zr(O,S)2 fluorite) on G5. Bond selection, likewise,
+  no longer pairs two species the CIF states are anions: N-O, S-O, H-O,
+  Se-S and Te-S were selected as bonds, found no bond valence parameters
+  and left the structure NOT_ASSESSED (R1). A hydride sharing a position
+  with oxygen (the fluorite oxyhydrides LnHO) is now summed with it, as the
+  other shared anions have been since 2.0.44; where the pair has no
+  parameters (Ho-H, Dy-H, Er-H), the site is NOT_ASSESSED (R1) rather than
+  summed without it. A valence of zero, a pair with inverted signs and an
+  element typed with both signs are left to the electronegativity rule, as
+  before.
+- Every type symbol and label is read one way (`parse_atom_symbol`), and the
+  atom_site and atom_type loops are rewritten into ICSD's own form before
+  anything else reads the file (`normalise_atom_types`; an ICSD file passes
+  through unchanged). 2.0.45 summed an upper-case `SN4+` as Sn(2+), stopped
+  the run on `CO2+` (a scan of every line read `O2+` as oxygen at +2),
+  failed on `Mn2.5+`, dropped a file with no `_atom_site_type_symbol` column
+  without recording a failure, and did not recognise deuterium. Labels are
+  read against the formula, so `HO1` in Mg(OH)2 is hydrogen.
+- One rule decides which species are anions where no valence is stated, in
+  the packing scan and in bond selection alike: an amphoteric species is a
+  cation beside a more electronegative O or F, or beside a more
+  electronegative amphoteric species of another group (P or As against S),
+  and otherwise an anion (a sulfoselenide, a chalcohalide, a nitride
+  chloride). Two such anions are no longer paired as a bond.
+- A hydride given only as a supplied oxidation state (`--ox H=-1`) is now
+  summed where it shares oxygen's position.
+- Hydrogen sites are summed and reported but gate nothing, so a hydroxide
+  refined with its H located is no longer expunged on G1 for its O-H bond.
+- A Zintl anion (Sn(4-), Sb(3-); the bond valence table has no parameters
+  with Sn, Sb, Ge, Pb or Bi as the anion) fails with that reason, and the
+  package reports it as NOT_ASSESSED (R1, `unsupported_anion`) rather than
+  as an unreadable file.
+- CELL 11 no longer stops on a table with no bond lengths.
+- `bl_delta_mean`, `bl_ratio_min` and `bl_delta_min` are written for every
+  site, null where not computable, so the summary no longer stops on a run
+  with no measured minimum (ICSD 35327, CrO2, on its own).
+- **A reading stage before anything else reads a file**
+  (`read_cif_structures`, CELL 3). 212 CIFs written by thirteen other
+  programs (FullProf, Jana2006, Jana2020, GSAS-II, EXPGUI, TOPAS, MAUD,
+  VESTA, CrystalMaker, Materials Studio, pymatgen, and COD and AMCSD files)
+  failed in a handful of ways, and no way belonged to one program, so each
+  step tests the file for one feature and repairs that, whoever wrote it:
+  - a bond list is set aside and bonds are computed from the positions, as
+    for every ICSD entry. A loop of `?` placeholders (FullProf, Jana) left
+    no bonds at all, and an author's partial list (a Jana2006 Sr3LiRuO6,
+    Ru-O only) left Sr and Li out of the sums;
+  - each data block holding atom sites is a structure of its own, reported
+    as `<file>__<block>.cif`. Only the first block was read, and the first
+    block FullProf and Jana write, `global`, holds no atoms. Two blocks may
+    share a name;
+  - a label used for several atoms (VESTA's `XX`, CrystalMaker's shared
+    sites) is made unique;
+  - an unquoted value of several words is quoted, and `data_` followed by
+    a space is read. An item given twice with the same value is read once;
+    one given twice with different values keeps its first, unless it
+    defines the structure (a cell edge or angle, the space group, an atom
+    site or atom type column), when the file is not read and the reason
+    names the item and both values;
+  - operations listed in an origin no table holds are moved to a tabulated
+    setting, with every position moved by the same vector, which is the
+    same structure exactly: CrystalMaker's majorite (AMCSD 0001231) lists
+    I41/a with its origin half a lattice vector out, and stopped with "No
+    M-X bonds found";
+  - a file with no atom sites (a GSAS-II template), atom sites written as
+    single items, Cartesian coordinates only, or a block with no cell is a
+    failure that says so.
+  Where anything changes, the file as read is written to
+  `outputs/as_read/`, and every later cell reads it there (`cif_path_for`).
+  An ICSD entry is read unchanged: all 4,807 in the four corpora pass
+  through byte for byte. Who wrote, refined and deposited the file is
+  recorded (`cif_written_by`, `cif_refined_with`, `cif_database`), with
+  `cif_read_from`, `cif_block` and `cif_reading_notes`, and decides
+  nothing: 101 of the 212 had passed through COD, which rewrites what is
+  deposited.
+- **A polyanion's own edge is not a packing contact.** Two ligands bonded to
+  the same centre and closer than the 2.35 Å floor are not tested by G2,
+  and the shortest such edge is reported as `polyanion_edge_min`. Each
+  centre-ligand pair (C-O, N-O, B-O, B-F, Si-O, Si-F, P-O, P-F, S-O, Se-O,
+  As-O, Cl-O; `POLYANION_PAIRS`) has a longest bond and a smallest
+  ligand-centre-ligand angle, set above the longest bond in structures that
+  pass every other gate (C-O 1.42 Å in a pyrocarbonate bridge, N-O 1.40 Å in
+  an orthonitrate). The angle keeps a crushed polyanion on the floor: a CO3
+  at 70° has a 1.47 Å edge from ordinary bonds. Calcite-type carbonates were
+  expunged for their CO3 edge (2.2 Å), and NaPF6 or LiBF4 would have been
+  for their F-F edges (2.26 and 2.25 Å). An edge at or above the floor, such
+  as the O-O edge of a silicate tetrahedron in a spinel, is tested as
+  before.
+- **A halogen the CIF states is positive is a cation.** Cl, Br and I were
+  anions whatever the file said, so each Cl-O bond of a perchlorate,
+  chlorate or chlorite was read as two anions 1.4-1.8 Å apart: 42 of 49
+  ICSD lithium, sodium and potassium chlorine oxysalts were expunged on G2,
+  the anion-centred sums took Cl(7+) for an anion, and bond selection paired
+  the alkali cation with Cl. Two species the file states are both positive
+  are no longer a bond pair. An element the file types with both signs (a
+  chloride perchlorate) is left as before.
+- **G1 sets aside alternative positions.** A contact below the 1.20 Å floor
+  between two positions whose occupancies sum to one or less, within the
+  same allowance the packing gates use, is two orientations of one group
+  rather than a bond, and is listed in `alternative_contacts_set_aside`. The
+  anion-centred sums leave out the same pairs. 35 of 114 ICSD nitrates and
+  nitrites carried such a pair, 29 of them NaNO2, NaNO3, KNO2 and KNO3.
+- **A ligand that moves with its centre is weighted given the centre.** A
+  bond inside a polyanion (a `POLYANION_PAIRS` bond) counts at the far end's
+  occupancy over this site's, at most one, in the cation and anion sums
+  alike, because wherever a nitrite's N is, its two O are too. Every other
+  bond keeps the plain occupancy. ICSD 152184, NaNO2 with N and O each at
+  0.5, summed N(3+) to 1.44 and was expunged on G7 for bonds it has. Where
+  the conditional weights would give a centre more ligands than it can take
+  (four for ClO4, six for SiO6), or a ligand more than two centres, the
+  model spreads one group over more positions than any orientation fills,
+  and the plain occupancies stand: high-temperature cubic NaClO4 (ICSD
+  117375) would otherwise have summed Cl(7+) to 53. The ligands weighted
+  given their centre are listed in `ligand_occupancy_conditional`.
+- **Two monovalent cations may come closer.** The cation floor was measured
+  on perovskites, pyrochlores and spinels and expunged Li2O and Li3N on G5
+  for Li-Li contacts of 2.31 and 2.10 Å. A floor scaled by ionic radius does
+  not separate these from the faults G5 exists for: Li3N sits at 1.38 times
+  the radius sum, inside the 1.06 to 1.40 of the perovskites it condemns.
+  Charge does. A pair of cations of charge one or less (an alkali metal
+  whatever the file says) is held to 2.00 Å (`MONOVALENT_PAIR_MIN`); any
+  other pair stays at 2.40 Å. The contact that decides, with its floor, is
+  reported as `cation_cation_contact`.
+- **Mobile ions on partly filled positions are a FLAG** (M11,
+  `mobile_ions_close`), not an EXPUNGE: a contact below the floor between
+  two monovalent cations whose positions are both partly filled, as the
+  mobile ion of an ionic conductor often is, is read as positions never
+  filled together, whatever the refined occupancies sum to. A full position
+  beside it, or a cation of higher charge, still gives G5
+  (`cation_contact_partly_occupied` says which). Li10GeP2S12 written by
+  VESTA (Li 0.691 on positions 1.73 Å apart) leaves EXPUNGE, and is
+  NOT_ASSESSED (R3) for want of measured Li-S lengths; no ICSD entry of the
+  5,676 changes on it.
+- **Molecular carbon is NOT_ASSESSED** (R1, `molecular_carbon`). Carbon
+  bonded to C, H or N (a MOF linker, an organic or hybrid perovskite cation,
+  a cyanide, a carbide's C2 unit) is outside what bond valence sums
+  describe. 39 such structures among the 212 came out EXPUNGE on G7, G1 or
+  G2, or failed; the reason now names the bond. A carbonate, or a carbide's
+  isolated carbon, is assessed as before.
+- **The bond valence table is checked against its sources.** 32 entries
+  labelled Brown (2020) are in none of the 2009, 2011 and 2020 releases of
+  Brown's compilation; all came from the hand-compiled table of 1.0, and
+  none records a source. Fourteen of those pairs now take Brown's row by the
+  merge rule (V2+-O 1.79 to 1.70 Å, Yb2+-O 2.08 to 1.989, Ni3+-O 1.70 to
+  1.75, Hg+-O 1.74 to 1.90, Os4+, W4+, Tc4+, S2+ and six actinide pairs);
+  eighteen have no Brown row and are removed (Pr4+-O, Re4+ and Re6+-O,
+  U3+-O, Ag2+-O, Ra2+-O and others). Seventeen entries were Brown rows for
+  an anion charge other than Eir's (Pr3+-Se(1-) used for Pr3+-Se(2-),
+  Fe3+-C(2+) for C(4-)): two take the row at the ordinary charge and
+  fifteen are removed; three more were not cation-anion pairs. 1,385
+  entries to 1,349; the 36 removed are kept, with their values and why, in
+  `Data/bvs_parameters_excluded.json`. Each entry now records
+  `anion_charge` and `brown_code`, the loader leaves out one fitted for
+  another anion charge, and `tools/audit_bv_table.py` checks the table
+  against Brown's file.
+- **Chen and Adams (2017) fill gaps and replace unpublished values.** Their
+  softNC1 parameters (IUCrJ 4, 614, Table S1), fitted to 15,523 ICSD
+  cation environments over the first coordination shell, enter by the same
+  merge rule as any other published source: 105 for pairs nothing else
+  covers (Re4+ and Re6+-O, Ag3+-O, Au+-O, Dy3+-S, Yb2+-S, many selenides,
+  tellurides, arsenides and phosphides) and 73 in place of Brown's private
+  communications (Ni3+-O, V2+-O, Co2+-S, Mn2+-S, Cr3+-S, P5+-F and others).
+  Pairs fitted to fewer than three environments are left out. 1,349 entries
+  to 1,454. On the ordered sites of the test sets that use a replaced pair,
+  the median deviation from valence falls from 16.4% to 2.5% for Ni3+-O
+  (the RNiO3 nickelates), 26.7% to 6.7% for Co2+-S, 20.5% to 5.2% for
+  Ru6+-O and 14.4% to 9.8% for Cr3+-S. No verdict changes on the 4,806, the
+  870 or the 200; the GII changes on 216 entries, nine of them ACCEPT or
+  FLAG; three NOT_ASSESSED entries (two thiospinels and a telluride) move
+  from R1 to R3.
+  On the 212, two GaAs files move from R1 to R3, and Hf2S (pymatgen, a
+  metal-rich subsulfide given Hf(4+)) from R1 to EXPUNGE on G7. Tried in
+  place of Brese and O'Keeffe's extrapolated rows too, softNC1 was better
+  for some pairs and worse for others, so those stay.
+- **Equal-rank rows take the more recent fit; Np4+-O from Gilson and Burns
+  (2021).** Where two published sources of equal rank differ, the table
+  takes the more recent, unless Brown restricts it to a context ("from
+  transition metal complexes"): Pu4+-O Diwu et al. (2010) in place of
+  Zachariasen (1978), Sm2+-O Trzesowska et al. (2006), Cu3+-N Mahapatra et
+  al. (1996). Np4+-O takes Gilson and Burns (2021), Coord. Chem. Rev. 445,
+  213994, refitted on well-refined Np(IV) structures (R0 2.054 Å, b 0.417).
+  No other published fit was found for Pr4+-O, U3+-O, Np3+-O or Ra2+-O,
+  which stay R1. Six corpus entries change GII, all NOT_ASSESSED: NpO2
+  0.2% to 2.5% from valence, PuO2 1.2% to 0.6%.
+- A cation with no parameters for its anion at any valence is NOT_ASSESSED
+  (R1). It used to be dropped, and a file whose only pair it was failed as
+  unreadable: RaO, or W2C and Mo2C among the 212, which are now R1. An anion
+  the table has nothing for (a Zintl anion, boron in a boride) is left out
+  as before.
+- On the 4,806 ICSD structures of the four sets no verdict changes. 44
+  NOT_ASSESSED entries change their reason from R3 to R1: 37 Pr4+ oxides
+  (31 fluorites, 6 perovskites), two U3+ pyrochlores, one Pm oxide and four
+  spinels with ICSD's unspecified metal M. The GII changes on 152, of which
+  10 are ACCEPT or FLAG: five LiNi0.5Mn1.5O4 and NiAl2O4 spinels (Ni3+),
+  two Pr pyrochlores, two uranium fluorites and one LaVO3. Brown's values
+  move the Os4+ and Tc4+ perovskites from GII 0.41-0.76 to 0.09-0.32; his
+  Ni3+-O, a private communication and the only one he lists, puts the
+  rare-earth nickelates RNiO3 at 3.4-3.7 for a valence of 3, where the
+  unsourced 1.70 gave 2.9-3.2; Chen and Adams's published fit, below, now
+  replaces it. On the 870 ICSD exports, five iodine azide
+  entries that failed as unreadable now expunge on G2 with the other
+  azides; on the 212, W2C and Mo2C are R1; on the 200, no verdict changes.
+- The structural self-check scans its own notebook. It took the newest
+  notebook in the folder that mentioned EIR_VERSION anywhere, so with Huginn
+  3.9.3 beside it (which names the Eir version it reads) it scanned Huginn
+  and reported every function missing, and in a folder of several Eir
+  versions it could scan the wrong one. It now takes the notebook Jupyter
+  names in JPY_SESSION_NAME, or else the newest whose code sets this
+  EIR_VERSION. Found on NRM's first Windows run of 2.0.46, whose outputs on
+  53 fluorites otherwise match the cloud run of the same commit in every
+  column.
+- The GII takes each label's element from its type symbol before its first
+  letters. CrystalMaker labels the Si on majorite's octahedral position
+  `MgOc2`; the index took magnesium's sum for it, and post-processing
+  stopped on its own consistency check. ICSD labels lead with their element,
+  so there the two agree.
+- `eir.check()` on a file holding several structures returns one result per
+  structure, including any that cannot be read, and the one-page report
+  says how the file was read. A run in which nothing can be read still
+  writes the failed-files table.
+- On the 212: EXPUNGE 40 to 8, the ACCEPT tiers 57 to 75, NOT_ASSESSED 17
+  to 65 (each with its reason), and "No M-X bonds found" 77 to 50, which
+  are the elements, alloys and intermetallics, with no anion to bond to.
+  On the 4,806 ICSD structures of the four sets nothing changes in any
+  column: no entry needs the reading stage, none holds a polyanion edge
+  below the floor or molecular carbon, and every label leads with its
+  element.
+- On 870 ICSD entries exported to test the halogen, alternative-position,
+  conditional-weight, polyanion and lithium changes (polyanion salts,
+  lithium oxides and nitrides, and anions bonded to each other):
+  EXPUNGE 570 to 459, ACCEPT and FLAG 204 to 290, NOT_ASSESSED 72 to 97.
+  Li3N 33 expunged to 3, Li2O and related lithium oxides 18 to 4,
+  perchlorates, chlorates and chlorites 44 to 3, nitrates and nitrites 43
+  to 22 (21 to NOT_ASSESSED: no measured N(3+)-O bond lengths), carbonates
+  45 to 41. Peroxides, superoxides, disulfides, polysulfides and azides do
+  not change (see the README's known limitations). On the 200 no verdict
+  changes; on the 4,806 only the two magnesium ferrites under the packing
+  gates; the G5 evidence of 26 entries now names the pair and its floor.
+- 29 VALIDATE tests, four gate tests and 43 parsing tests in CELL 7b
+  (`VALIDATE_GATES()`, `VALIDATE_PARSING()`, which need the gates defined),
+  seventeen end-to-end parsing cases in `tests/test_parsing.py`, 29
+  end-to-end reading cases in `tests/test_reading.py` and seven on the
+  parameter table in `tests/test_parameters.py`, which fail on the commit
+  before the table was corrected (552f19c). The new tests fail on
+  2.0.45, apart from the controls: one parsing test and six of the
+  seventeen cases, which 2.0.45 already got right. The first sixteen reading
+  cases also fail on 2.0.46 as it stood before the reading stage, and the
+  13 added or changed since (halogens, alternatives, polyanion limits,
+  repeated items, the lithium floor, the conditional weight, positions and
+  mobile ions) on 2.0.46 as it stood before them; one more is a control. On 200 ICSD
+  entries the only verdicts that change are the four structures named under
+  the packing gates; the sulfoselenide spinel 640368 stays NOT_ASSESSED
+  (R1), now for the In-Se pair it has no parameters for rather than a Se-S
+  "bond".
 
 ### 2.0.45 – 23 October 2026
 

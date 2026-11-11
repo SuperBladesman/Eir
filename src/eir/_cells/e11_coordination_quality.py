@@ -1516,7 +1516,7 @@ def add_coordination_quality(batch_csv_path, cif_directory,
     for _, row in df.iterrows():
         fn = row.get('filename')
         el = row.get('element')
-        path = os.path.join(cif_directory, fn) if isinstance(fn, str) else None
+        path = cif_path_for(cif_directory, fn) if isinstance(fn, str) else None   # v2.0.46
 
         if path and path not in cache:
             # v2.0.28: the cache is filled above, so this is now a safety net
@@ -1616,7 +1616,10 @@ def add_coordination_quality(batch_csv_path, cif_directory,
         _spread = (pd.to_numeric(df['avg_bond_length'], errors='coerce')
                    - pd.to_numeric(df['min_bond_length'], errors='coerce'))
     else:
-        _spread = pd.Series([None] * len(df), index=df.index)
+        # v2.0.46: a float column. [None] * n is an object column, whose
+        # round() raises TypeError, and a batch whose table had no bond
+        # lengths at all stopped here.
+        _spread = pd.Series([float('nan')] * len(df), index=df.index, dtype=float)
     df['cn_shell_spread'] = _spread.round(4)
     df['cn_fault'] = [cn_fault(c, r, g, spread=s) for c, r, g, s in
                       zip(df['cn'], df['cn_relative'], _geo, _spread)]
@@ -1923,7 +1926,7 @@ def add_coordination_quality(batch_csv_path, cif_directory,
         # touches the frame, which does not belong in a worker.
         _ga_jobs = []
         for fn, g in df.groupby('filename'):
-            path = os.path.join(cif_directory, fn)
+            path = cif_path_for(cif_directory, fn)      # v2.0.46: as read
             # v2.0.13: keyed by SITE LABEL as well as element. Keying it by
             # element alone gave every site of an element whichever valence
             # came last, so in Co3O4 the 8a Co(2+) and the 16d Co(3+) were
@@ -2005,6 +2008,7 @@ def add_coordination_quality(batch_csv_path, cif_directory,
     df['cfg_gii_convention'] = 'cation_only'
     df['cfg_anion_anion_min_A'] = ANION_ANION_MIN
     df['cfg_cation_cation_min_A'] = CATION_CATION_MIN
+    df['cfg_monovalent_pair_min_A'] = MONOVALENT_PAIR_MIN       # v2.0.46
     df['cfg_bv_sum_cutoff'] = BV_SUM_CUTOFF
 
     # ------------------------------------------------------------------

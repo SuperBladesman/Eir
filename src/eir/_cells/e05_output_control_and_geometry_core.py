@@ -569,8 +569,8 @@ class BatchReporter:
         cc = result.get('cation_cation_min')
         if result.get('cation_packing_plausible') is False:
             add('cation_packing_plausible', False,
-                f'cation_cation_min {_bat_f(cc, 3)} A  <  CATION_CATION_MIN '
-                f'{CATION_CATION_MIN}')
+                f'cation contact {result.get("cation_cation_contact")} '
+                f'(shortest {_bat_f(cc, 3)} A)')
         if result.get('core_geometry_plausible') is False:
             add('structure_core_geometry_plausible', False,
                 f'shortest contact is '

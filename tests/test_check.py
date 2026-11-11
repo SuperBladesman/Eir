@@ -12,21 +12,23 @@ def test_accept(examples):
     assert name == 'gii'
     assert 0 < value < 0.2
     assert 'Nothing wrong found' in r.verdict()
-    assert any('Source grouping skipped' in n for n in r.run.notes)
+    assert r.run.notes == []        # engine 2.0.46 runs files with no ICSD code
 
 
-def test_failed_screen_is_reported(examples):
-    # Only the identity operator: the symmetry is never expanded, every
-    # cation is under-coordinated, and no gate reads the coordination screen.
+def test_missing_bonds_are_expunged(examples):
+    # Only the identity operator: the symmetry is never expanded, Ti is left
+    # with two oxygens and Sr with four. Engine 2.0.46 expunges it on G7.
     p = examples / 'SrTiO3_refined.cif'
     p.write_text(p.read_text().replace(
         '_space_group_IT_number 221\n',
         '_space_group_IT_number 221\nloop_\n_space_group_symop_operation_xyz\n'
         'x,y,z\n'))
     r = eir.check(p, oxidation_states={'Sr': 2, 'Ti': 4, 'O': -2})
+    assert (r.tier, r.code) == ('EXPUNGE', 'G7')
     x = r.explanation()
     assert 'coordination' in x['failed_screens']
-    assert x['screen_note'] and 'coordination' in x['screen_note']
+    assert x['screen_note'] is None         # the screen decided the verdict
+    assert 'bonds are missing' in r.verdict()
 
 
 def test_oxidation_states_from_argument(examples):

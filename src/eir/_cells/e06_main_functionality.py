@@ -164,6 +164,37 @@ except Exception as e:
 # DATABASE MANAGER (From Skuld 1.5 - UNCHANGED)
 # ============================================================================
 
+# v2.0.46: the anion charge each parameter set was fitted for. The table is
+# keyed (cation, valence, anion) with no anion charge, and Brown's
+# compilation lists some pairs only at an unusual one: Pr3+-Se for Se(1-) in
+# polyselenides, Fe3+-C for C(2+). Keyed without the charge,
+# those rows were used for Se(2-) and C(4-). Each entry now records
+# 'anion_charge', and one fitted for a charge other than the one Eir gives
+# that anion (ALWAYS_ANION, AMPHOTERIC_ANION) is not loaded. An entry with no
+# 'anion_charge', as in a table written for an earlier Eir, is loaded as
+# before. The entries taken out of the shipped table, and why, are in
+# Data/bvs_parameters_excluded.json.
+def bv_table_entries(data):
+    """The parameters Eir uses from a loaded bvs_parameters.json, keyed
+    (cation, valence, anion), and the keys left out because they were fitted
+    for another anion charge."""
+    import ast
+    charges = {**ALWAYS_ANION, **AMPHOTERIC_ANION}
+    kept, skipped = {}, []
+    for key, params in data.items():
+        try:
+            cation, cation_valence, anion = ast.literal_eval(key)
+        except (ValueError, SyntaxError, TypeError):
+            continue
+        q = params.get('anion_charge')
+        if q is not None and anion in charges and q != charges[anion]:
+            skipped.append(key)
+            continue
+        kept[(cation, cation_valence, anion)] = {
+            'R0': params['r0'], 'B': params.get('b', 0.37)}
+    return kept, skipped
+
+
 class DatabaseManager:
     """Manages external JSON databases for ionic radii and bond valence parameters"""
 
@@ -273,23 +304,17 @@ class DatabaseManager:
             return None
 
         try:
-            import ast
             with open(filepath, 'r') as f:
                 data = json.load(f)
-                self.bond_valence_params = {}
-                for key, params in data.items():
-                    # Keys are string representations of tuples: "('Na', 1, 'O')"
-                    try:
-                        cation, cation_valence, anion = ast.literal_eval(key)
-                        self.bond_valence_params[(cation, cation_valence, anion)] = {
-                            'R0': params['r0'],  # Note lowercase in JSON
-                            'B': params.get('b', 0.37)  # Note lowercase in JSON
-                        }
-                    except (ValueError, SyntaxError) as e:
-                        # Skip malformed keys
-                        continue
+            # Keys are string representations of tuples: "('Na', 1, 'O')";
+            # v2.0.46: see bv_table_entries
+            self.bond_valence_params, _skipped = bv_table_entries(data)
 
             print(f"✓ Loaded BVS parameters database with {len(self.bond_valence_params)} entries")
+            if _skipped:
+                print(f"⚠ {len(_skipped)} entries fitted for another anion charge "
+                      f"left out: {', '.join(_skipped[:6])}"
+                      f"{' ...' if len(_skipped) > 6 else ''}")
         except Exception as e:
             print(f"✗ Error loading BVS parameters: {e}")
             import traceback
@@ -825,6 +850,8 @@ def clean_cif_for_gemmi(cif_file_path):
         # about bytes; unquoting second, because it is about tokens.
         content, _n_ascii = normalise_cif_to_ascii(content)
         content, _n_unquoted = _unquote_atom_site_numbers(content)
+        # v2.0.46: one reading of every atom's symbol (normalise_atom_types)
+        content, _type_notes = normalise_atom_types(content)
 
         # v1.8.3 (B13): the two repairs below are load-bearing, not cosmetic.
         # Without the _chemical_name_structure_type strip, 22 of the 142
@@ -840,6 +867,7 @@ def clean_cif_for_gemmi(cif_file_path):
         if _n_unquoted:
             _repairs.append(f'unquoted {_n_unquoted} atom_site numeric value'
                             f'{"s" if _n_unquoted > 1 else ""}')
+        _repairs.extend(_type_notes)
 
         # Fix non-standard reverse rhombohedral centering ('HR' suffix)
         # Some older ICSD CIFs encode symops in the reverse setting, which gemmi
@@ -1011,6 +1039,23 @@ COLOCATED_TOL = 0.05          # A, the neighbour dedup's own tolerance
 COLOCATED_IMAGE_TOL = 0.02    # A, images closer than this are one atom, as
                               # ANION_DEDUP_TOL in CELL 3
 _EIR_COLOCATED = {}           # carrying label -> [(label, element, n), ...]
+# v2.0.46: pairs closer than CATION_ANION_ABSOLUTE_MIN that the model fills
+# one at a time, set aside by the bond finder: [(label, label, distance)]
+_EIR_ALTERNATIVES = []
+
+
+def _alternatives_summary():
+    """The pairs the bond finder set aside as alternatives, shortest
+    first, for the alternative_contacts_set_aside column; None if none."""
+    if not _EIR_ALTERNATIVES:
+        return None
+    best = {}
+    for a, b, d in _EIR_ALTERNATIVES:
+        k = tuple(sorted((a, b)))
+        best[k] = min(d, best.get(k, d))
+    items = sorted(best.items(), key=lambda kv: kv[1])
+    out = '; '.join(f'{a}-{b} {d:.3f} A' for (a, b), d in items[:6])
+    return out + (f' (+{len(items) - 6} more)' if len(items) > 6 else '')
 
 
 def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
@@ -1198,12 +1243,23 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
         # the number of such images (1 at identical coordinates).
         _EIR_COLOCATED.clear()
         _coloc_alias = {}
+        # v2.0.46: and any species the CIF types as an anion. H is not in
+        # _ANION_SET, so the hydride sharing 8c with oxygen in a fluorite
+        # oxyhydride (LnHO) was never recorded and the cation summed O alone
+        # at its partial occupancy (Ho 2.14 for a valence of 3). Only a
+        # species within COLOCATED_TOL of another anion is affected: H(+) in
+        # a hydroxide sits about 0.97 A from its oxygen and is never there.
+        # v2.0.46: and less a halogen the CIF states is positive, the central
+        # atom of a perchlorate or an iodate (_stated_positive_halogens).
+        _pos_hal = _stated_positive_halogens(cif_file_path)
+        _an_here = set(_ANION_SET) - _pos_hal
+        _coloc_set = (_an_here | _stated_anions(cif_file_path))
         _an_sites = [s for s in small_struct.sites
-                     if s.element.name in _ANION_SET]
+                     if s.element.name in _coloc_set]
         if len(_an_sites) > 1:
             _an_imgs = {}
             for _a in supercell_atoms:
-                if _a['element'] in _ANION_SET:
+                if _a['element'] in _coloc_set:
                     _an_imgs.setdefault(_a['label'], []).append(_a['position'])
             for _i, _si in enumerate(_an_sites):
                 if _si.label in _coloc_alias:
@@ -1227,6 +1283,19 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                     f"{_c} carries " + ", ".join(_l for _l, _e, _n in _v)
                     for _c, _v in _EIR_COLOCATED.items()))
 
+        # v2.0.46: G1's form of the packing gates' rule. Two positions closer
+        # than CATION_ANION_ABSOLUTE_MIN whose occupancies the model can fill
+        # one at a time are alternatives, not a bond. Disordered NaNO2, KNO2
+        # and KBF4 models put N and O positions 0.46 A apart at occupancies
+        # 1/6 and 1/3, and about 25 ICSD entries were expunged on G1 for a
+        # contact between two orientations that never coexist. Only below
+        # the floor: the real N-O bonds of the same disordered group also join
+        # partial positions. Hydrogen is left out: O-H is a bond at 0.97 A
+        # whatever the occupancies of a disordered hydroxyl.
+        _EIR_ALTERNATIVES.clear()
+        _alt_esd = _occupancy_esds(cif_file_path)
+        _alt_tot = _position_occupancies(small_struct, _alt_esd)
+
         # Now find neighbors by simple distance calculation
         for site in small_struct.sites:
             # v2.0.35: wrapped with its images. A site deposited at x = 1.288
@@ -1249,6 +1318,13 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                 # are both False while this is False, so a distance that is not
                 # a number is rejected here instead of silently admitted.
                 if not (0.01 <= distance <= max_bond_distance):
+                    continue
+                if (distance < CATION_ANION_ABSOLUTE_MIN
+                        and elem1_type not in CATION_FLOOR_EXCLUDED_ELEMENTS
+                        and atom_dict['element'] not in CATION_FLOOR_EXCLUDED_ELEMENTS
+                        and _are_alternatives(site, atom_dict['original_site'],
+                                              _alt_esd, _alt_tot)):
+                    _EIR_ALTERNATIVES.append((elem1, atom_dict['label'], distance))
                     continue
 
                 neighbors_for_site.append({
@@ -1287,10 +1363,10 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                 unique_neighbors.append(neighbor)
 
             _dbg(f"  Debug: Site {site.label} ({site.element.name}) has {len(unique_neighbors)} neighbors in supercell")
-            if site.element.name not in _ANION_SET:
+            if site.element.name not in _an_here:
                 _c = site_orth
                 _an = [(n['distance'], (n['position'].x, n['position'].y, n['position'].z))
-                       for n in unique_neighbors if n['element'] in _ANION_SET]
+                       for n in unique_neighbors if n['element'] in _an_here]
                 if len(_an) >= 2:
                     # Provisional: no valence exists yet, so no canonical CN
                     # and no per-bond valences. The inputs are kept so the
@@ -1681,8 +1757,15 @@ def has_bvs_parameters_for_pair(cation, anion, valence_dict=None):
         # is selected; the site then has no sum and the R facet reports R1
         # with the ion. Dropping it hid the gap and let the rest of the site
         # be judged as if Th were not there.
-        return any(k[0] == cation and k[2] == anion
-                   for k in db_manager.bond_valence_params)
+        #
+        # v2.0.46: the same holds when the table has no parameters for the
+        # pair at any valence (Ra2+-O, Pm3+-O, Pr3+-Se), as long as the
+        # table has parameters for some cation with that anion. Dropping the
+        # pair left the structure with no bonds, and it was reported as an
+        # unreadable file and expunged. An anion the table has nothing for
+        # (Sn(4-) in Mg2Sn, B in a boride) stays out as before, so a Zintl
+        # phase still fails as unsupported_anion and says why.
+        return any(k[2] == anion for k in db_manager.bond_valence_params)
     else:
         # Try common oxidation states from database
         cation_valences = db_manager.get_common_oxidation_states(cation)
@@ -3209,6 +3292,124 @@ def _cif_valence_is_usable(element, v):
         return False
     return True
 
+
+def _unsupported_anion_note(valences):
+    """
+    v2.0.46. Why a file found no bonds, where the reason is an anion Eir
+    cannot treat: Sn(4-) in Mg2Sn, Sb(3-) in InSb. The bond valence table
+    holds no parameters with Sn, Sb, Ge, Pb or Bi as the anion, so Zintl and
+    intermetallic phases cannot be assessed; before 2.0.46 they failed with
+    'No M-X bonds found' and no reason.
+    """
+    bad = []
+    for e, v in (valences or {}).items():
+        try:
+            if float(v) < 0 and e not in ANION_FORMERS:
+                bad.append(f'{e}({float(v):+g})')
+        except (TypeError, ValueError):
+            continue
+    if not bad:
+        return ''
+    return ('. ' + ', '.join(sorted(bad)) + (' is' if len(bad) == 1 else ' are')
+            + ' typed as an anion, and Eir has no bond valence parameters with '
+            + ('it' if len(bad) == 1 else 'them') + ' as the anion: Zintl and '
+            'intermetallic phases cannot be assessed')
+
+
+def _stated_anions(file_path):
+    """
+    v2.0.46. The amphoteric species (H, C, N, P, As, S, Se, Te, Si, B) the
+    CIF types with a usable negative valence, less any it types with both
+    signs. Used where a list of anions has to be decided before any bond is.
+    """
+    try:
+        _ox = dict(extract_cif_oxidation_states(file_path)[0] or {})
+    except Exception:
+        _ox = {}
+    _ox.update(_USER_VALENCES)           # v2.0.46: and what the user supplied
+    _mixed = _mixed_sign_elements(file_path)
+    _out = set()
+    for _e, _v in _ox.items():
+        if (_e in AMPHOTERIC_ANION and _e not in _mixed
+                and _cif_valence_is_usable(_e, _v)):
+            try:
+                if float(_v) < 0:
+                    _out.add(_e)
+            except (TypeError, ValueError):
+                pass
+    return _out
+
+
+def _stated_positive_halogens(file_path):
+    """
+    v2.0.46. The halogens (Cl, Br, I) the CIF or the user types with a
+    positive valence, less any typed with both signs: the central atom of a
+    perchlorate, chlorate, bromate or iodate. See positive_halogens.
+    """
+    try:
+        _ox = dict(extract_cif_oxidation_states(file_path)[0] or {})
+    except Exception:
+        _ox = {}
+    _ox.update(_USER_VALENCES)
+    return positive_halogens(_ox) - _mixed_sign_elements(file_path)
+
+
+def _mixed_sign_elements(file_path):
+    """
+    v2.0.46. Elements the CIF's _atom_type loop types with both signs, such
+    as S(6+) and S(2-) in a thiosulfate. extract_cif_oxidation_states keeps
+    the first value it meets for each element, which for these says nothing.
+    """
+    try:
+        _tm = extract_cif_oxidation_states(file_path)[3] or {}
+    except Exception:
+        return set()
+    _signs = {}
+    for _sym, _v in _tm.items():
+        _el = re.sub(r'[0-9+-]+', '', str(_sym))
+        _el = _el.capitalize() if len(_el) > 1 else _el.upper()
+        try:
+            _f = float(_v)
+        except (TypeError, ValueError):
+            continue
+        if _f:
+            _signs.setdefault(_el, set()).add(_f > 0)
+    return {_el for _el, _s in _signs.items() if len(_s) > 1}
+
+
+def _packing_valences(file_path, pair_valences):
+    """
+    v2.0.46. The oxidation states the packing scan may trust.
+
+    anion_anion_contacts asks resolve_anions which species are anions, and
+    resolve_anions takes a stated valence as settling it for the amphoteric
+    species (S, Se, Te, N, P, As, H, C, Si, B). Until 2.0.46 the scan was
+    never given one, so beside oxygen every one of them was a cation, and
+    its bonds to the real cations were tested against the cation floor. The
+    oxynitride pyrochlores ICSD 172231 and 51587 (Mo-N 2.00 A), the
+    oxysulfide pyrochlore 14955 (Cd-S 2.28 A) and the Zr(O,S)2 fluorite 84078
+    (Zr-S 2.35 A) were each expunged on G5 for a bond.
+
+    The CIF's states, and any the user supplies, are passed less three kinds
+    that would mislead:
+      * a valence _cif_valence_is_usable rejects: zero (unset), or negative
+        on a species that cannot be an anion;
+      * both species of any pair whose signs were found inverted (ICSD
+        651062, SrS as "S2+ 2" and "Sr2- -2"), which the electronegativity
+        rule then decides as before;
+      * an element the CIF types with both signs (S(6+) and S(2-) in a
+        thiosulfate), which one valence per element cannot describe.
+    Whatever is left out falls back to the rule 2.0.45 applied to everything.
+    """
+    vals = {e: v for e, v in (pair_valences or {}).items()
+            if _cif_valence_is_usable(e, v)}
+    for _pair in _SIGN_INVERSIONS:
+        for _e in _pair:
+            vals.pop(_e, None)
+    for _el in _mixed_sign_elements(file_path):
+        vals.pop(_el, None)
+    return vals
+
 def auto_assign_valences(processed_data, user_oxidation_states=None, per_atom_valences=None):
     """
     Assign oxidation states with priority:
@@ -3442,6 +3643,26 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                 if central_valence is None or ligand_valence is None:
                     continue
 
+                # v2.0.46: a bond inside a polyanion is weighted given this
+                # site (conditional_occupancy, CELL 3). _cond lists the
+                # ligands whose weight that changed.
+                _ph = []
+                for _l in site_info.get('labels') or ():
+                    _sd = site_occupancies.get(_l) or {}
+                    if _sd.get('element') == central_type:
+                        _o = _sd.get('occupancy')
+                        _ph.append(1.0 if _o is None else float(_o))
+                _ph = [min(1.0, sum(_ph)) if _ph else None]
+                _cond = []
+
+                def _w_here(label, distance, _ct=central_type, _lt=ligand_type,
+                            _ph=_ph, _cond=_cond):
+                    _o = _ligand_occupancy(label)
+                    _c = conditional_occupancy(_o, _ph[0], _ct, _lt, distance)
+                    if _c != _o and label not in _cond:
+                        _cond.append(label)
+                    return _c
+
                 # v2.0.3 (4b): THE CANONICAL SHELL.
                 #
                 # Everything below this point - Shannon radii, ionic potential,
@@ -3504,6 +3725,17 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                     # distinguishable in the output from one that was not.
                     _cn_method = ('gap_fallback_no_parameters' if _r0_c is None
                                   else 'gap_fallback_empty_shell')
+
+                # v2.0.46: given the centre, no more ligands than it can
+                # take, or the plain occupancies stand (conditional_ligand_count)
+                _most = POLYANION_MOST_LIGANDS.get((central_type, ligand_type))
+                if _ph[0] is not None and _most is not None and (
+                        conditional_ligand_count(
+                            [(_ligand_occupancy(_b.get('ligand_label')),
+                              _b['distance'], _b['count'])
+                             for _b in confirmed_bond_counts],
+                            _ph[0], central_type, ligand_type) > _most + 0.25):
+                    _ph[0] = None
 
                 element_calc_data = {'valence': central_valence,
                                      'ligand_valence': ligand_valence,
@@ -3584,7 +3816,7 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                         for bond_info in confirmed_bond_counts:
                             count = bond_info['count']
                             distance = bond_info['distance']
-                            occ = _ligand_occupancy(bond_info.get('ligand_label'))
+                            occ = _w_here(bond_info.get('ligand_label'), distance)
 
                             s = math.exp((r0_val - distance) / b_val)
                             bvs_total += (s * count * occ)
@@ -3628,7 +3860,7 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                                 for bond_info in confirmed_bond_counts:
                                     _l2 = bond_info.get('ligand_label')
                                     _t2 += (bond_info['count']
-                                            * _ligand_occupancy(_l2)
+                                            * _w_here(_l2, bond_info['distance'])
                                             * math.exp((_r2 - bond_info['distance'])
                                                        / _b2))
                                     if _l2 in colocated:
@@ -3655,7 +3887,8 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                         if _fs_bonds:
                             _fs_total = 0.0
                             for bond_info in _fs_bonds:
-                                _occ = _ligand_occupancy(bond_info.get('ligand_label'))
+                                _occ = _w_here(bond_info.get('ligand_label'),
+                                               bond_info['distance'])
                                 _s = math.exp((r0_val - bond_info['distance']) / b_val)
                                 _fs_total += (_s * bond_info['count'] * _occ)
                                 if bond_info.get('ligand_label') in colocated:
@@ -3688,7 +3921,8 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                         if _gap_bonds:
                             _gap_total = 0.0
                             for bond_info in _gap_bonds:
-                                _occ = _ligand_occupancy(bond_info.get('ligand_label'))
+                                _occ = _w_here(bond_info.get('ligand_label'),
+                                               bond_info['distance'])
                                 _s = math.exp((r0_val - bond_info['distance']) / b_val)
                                 _gap_total += (_s * bond_info['count'] * _occ)
                                 if bond_info.get('ligand_label') in colocated:
@@ -3733,7 +3967,8 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                             _ad_bonds = group_bond_counts(_cand, _ad_cn)
                             _ad_total = 0.0
                             for bond_info in _ad_bonds:
-                                _occ = _ligand_occupancy(bond_info.get('ligand_label'))
+                                _occ = _w_here(bond_info.get('ligand_label'),
+                                               bond_info['distance'])
                                 _s = math.exp((r0_val - bond_info['distance']) / b_val)
                                 _ad_total += (_s * bond_info['count'] * _occ)
                                 if bond_info.get('ligand_label') in colocated:
@@ -3772,11 +4007,13 @@ def perform_calculations_and_report(processed_data, b_param_default=0.37,
                     # v2.0.44: a shared position is one ligand whatever
                     # species hold it, so its occupancies are added.
                     element_calc_data['cn_occupancy_weighted'] = round(sum(
-                        b['count'] * (_ligand_occupancy(b.get('ligand_label'))
+                        b['count'] * (_w_here(b.get('ligand_label'), b['distance'])
                                       + sum(_n2 * _ligand_occupancy(_l2)
                                             for _l2, _e2, _n2 in colocated.get(
                                                 b.get('ligand_label'), ())))
                         for b in confirmed_bond_counts), 3)
+                    element_calc_data['ligand_occupancy_conditional'] = (
+                        ', '.join(_cond) or None)                    # v2.0.46
 
                 # --- Bond Length Distortion (BLD) ---
                 if confirmed_bond_counts and confirmed_cn > 0:
@@ -4027,11 +4264,21 @@ def calculate_global_instability_index(calculated_results, cif_path=None, site_o
             for label in site_labels:
                 # Resolve element for this label
                 element = None
+                # v2.0.46: from the type symbol first. A label need not begin
+                # with its element: CrystalMaker labels the Si sharing
+                # majorite's octahedral position 'MgOc2', the prefix test below
+                # read it as Mg, and the index took magnesium's sum for it.
+                # ICSD labels lead with their element, so there the two agree.
+                if per_atom_valences and label in per_atom_valences:
+                    _pel = per_atom_valences[label].get('element')
+                    if _pel in site_data['elements']:
+                        element = _pel
                 # v1.8.3 (A4): longest symbol first. site_data['elements'] is
                 # sorted alphabetically, so a one-letter symbol is otherwise
                 # tested before a two-letter one beginning with it - C before
                 # Cr, N before Na, B before Ba - and "Cr1" resolves to carbon.
-                for elem in sorted(site_data['elements'], key=len, reverse=True):
+                for elem in (sorted(site_data['elements'], key=len, reverse=True)
+                             if element is None else ()):
                     if label.upper().startswith(elem.upper()):
                         element = elem
                         break
@@ -4315,6 +4562,19 @@ def process_single_cif(file_path, user_oxidation_states=None):
     # CIF that brings its own bond list never reaches that function, and
     # must not inherit the previous file's record.
     _EIR_COLOCATED.clear()
+    _EIR_ALTERNATIVES.clear()          # v2.0.46: likewise
+    # v2.0.46: before parse_cif_file, which records shared anion positions.
+    _USER_VALENCES.clear()
+    _USER_VALENCES.update(user_oxidation_states or {})
+    # v2.0.46: outside what bond valence sums describe, said before any of it
+    # is computed (molecular_carbon, CELL 3)
+    _mc = molecular_carbon(file_path)
+    if _mc is not None:
+        results['error'] = (f'Not assessed: {MOLECULAR_CARBON_NOTE}, '
+                            f'{_mc[0]}-{_mc[1]} {_mc[2]:.3f} A. Covalent C-C, '
+                            f'C-H and C-N bonds are outside what bond valence '
+                            f'sums describe.')
+        return results
     cif_obj = parse_cif_file(file_path)
     if cif_obj is None:
         results['error'] = ("Failed to parse CIF file: "
@@ -4324,6 +4584,9 @@ def process_single_cif(file_path, user_oxidation_states=None):
     # Process first data block
     block_name = list(cif_obj.keys())[0]
     data_block = cif_obj[block_name]
+
+    # v2.0.46: the alternative positions the bond finder set aside (G1)
+    results['alternative_contacts_set_aside'] = _alternatives_summary()
 
     # Extract metadata
     results['metadata'] = {
@@ -4369,13 +4632,17 @@ def process_single_cif(file_path, user_oxidation_states=None):
         _pair_valences = dict(_cif_ox or {})
         if user_oxidation_states:
             _pair_valences.update(user_oxidation_states)
+        # v2.0.46: before bond selection, which reads it (classify_bond_pair)
+        _MIXED_SIGN_ELEMENTS.clear()
+        _MIXED_SIGN_ELEMENTS.update(_mixed_sign_elements(file_path))
 
         # Step 2: Auto-select bond types
         data_with_selected_bonds = auto_select_bond_types(
             initial_extracted_data, valences=_pair_valences)
 
         if not data_with_selected_bonds[block_name].get('selected_bond_types_for_analysis'):
-            results['error'] = "No M-X bonds found"  # Updated to M-X (not just M-O)
+            results['error'] = ("No M-X bonds found"  # Updated to M-X (not just M-O)
+                                + _unsupported_anion_note(_pair_valences))
             return results
 
         # Step 3: Auto-analyse coordination
@@ -4761,6 +5028,8 @@ def process_single_cif(file_path, user_oxidation_states=None):
                                                .get('valence_sources', {})
                                                .get(element)),
                         'colocated_ligands': elem_data.get('colocated_ligands'),
+                        'ligand_occupancy_conditional':                  # v2.0.46
+                            elem_data.get('ligand_occupancy_conditional'),
                         'colocated_unparameterised':
                             elem_data.get('colocated_unparameterised'),
                         'cn_before_void_guard':
@@ -4825,6 +5094,15 @@ def process_single_cif(file_path, user_oxidation_states=None):
                         site_result['bl_n_bonds'] = _bl['n_bonds']
                         site_result['bl_source'] = _bl['source']
                         site_result['bl_tier'] = _bl['tier']
+                        # v2.0.46: always present, null where not computable.
+                        # A configuration with too few bonds for a minimum
+                        # (Cr(4+)O6 has six) left bl_ratio_min out of the
+                        # row, so a run in which no site had one had no such
+                        # column, and CELL 14 stopped on it with a KeyError
+                        # (ICSD 35327, CrO2, run on its own).
+                        site_result['bl_delta_mean'] = None
+                        site_result['bl_ratio_min'] = None
+                        site_result['bl_delta_min'] = None
                         _obs_mean = site_result.get('avg_bond_length')
                         _obs_min = site_result.get('min_bond_length')
                         if _obs_mean is not None:
@@ -5059,8 +5337,10 @@ def process_single_cif(file_path, user_oxidation_states=None):
             results['cif_sign_inversion_detail'] = None
 
         # anion-anion screen: the only test here that looks at the anion
-        # sublattice rather than outward from a cation
-        _aa, _cc = anion_anion_contacts(file_path)
+        # sublattice rather than outward from a cation. v2.0.46: told which
+        # species the CIF states are anions (see _packing_valences).
+        _aa, _cc = anion_anion_contacts(
+            file_path, valences=_packing_valences(file_path, _pair_valences))
         # v2.0.14: `if _aa` discards a measured 0.0 as though it were
         # absent. dedup_tol keeps 0.0 from arising today, so this is a
         # correctness fix rather than a behaviour change - but 'no value'
@@ -5068,6 +5348,20 @@ def process_single_cif(file_path, user_oxidation_states=None):
         # switches a gate off.
         results['anion_anion_min'] = None if _aa is None else round(_aa, 4)
         results['cation_cation_min'] = None if _cc is None else round(_cc, 4)
+        # v2.0.46: the floor depends on the pair (MONOVALENT_PAIR_MIN), so
+        # the contact nearest its own floor decides, and is reported
+        _gv = _CATION_CONTACT.pop(str(file_path), None)
+        results['cation_cation_contact'] = (
+            None if _gv is None else
+            f'{_gv[2]}-{_gv[3]} {_gv[1]:.3f} A, floor {_gv[4]:.2f} A'
+            + (f'; positions {_gv[5]:.3f} and {_gv[6]:.3f} filled'
+               if _gv[7] else ''))
+        # v2.0.46: below the floor, but between mobile ions (mobile_pair)
+        results['cation_contact_partly_occupied'] = (
+            None if _gv is None else bool(_gv[7]))
+        # v2.0.46: the shortest polyanion edge the scan set aside, if any
+        _pe = _POLYANION_EDGE_MIN.pop(str(file_path), None)
+        results['polyanion_edge_min'] = None if _pe is None else round(_pe, 4)
 
         # v2.0.12: the anion's free positional parameter, where the structure
         # type defines one. Computed since v1.8.3 and never wired: it was
@@ -5105,10 +5399,13 @@ def process_single_cif(file_path, user_oxidation_states=None):
         # every structure in the three reference families, none of which
         # contains hydrogen.
         results['cation_packing_plausible'] = (
-            None if _cc is None else bool(ge(_cc, CATION_CATION_MIN)))
+            None if _cc is None else
+            bool(ge(_gv[1], _gv[4])) if _gv is not None else
+            bool(ge(_cc, CATION_CATION_MIN)))
         if results['cation_packing_plausible'] is False:
-            print(f"\n  CATION CONTACT TOO SHORT: two cations {_cc:.3f} A "
-                  f"apart, below the {CATION_CATION_MIN} A floor.")
+            _d, _fl = (_gv[1], _gv[4]) if _gv is not None else (_cc, CATION_CATION_MIN)
+            print(f"\n  CATION CONTACT TOO SHORT: two cations {_d:.3f} A "
+                  f"apart, below the {_fl:.2f} A floor for the pair.")
             print(f"  Cations repel; edge- and face-sharing polyhedra bring "
                   f"them to 2.6-3.0 A and no closer. A contact below this is "
                   f"a coordinate or symmetry fault, not chemistry.")
@@ -5190,8 +5487,12 @@ def process_single_cif(file_path, user_oxidation_states=None):
             # and no sum built on it means anything. The all_cations variant of
             # ICSD 11616 produced a Dy-O contact of 1.181 A, from which a shell
             # of one was built and the site reported as overbonded at 8.258 v.u.
+            # v2.0.46: not for hydrogen. O-H is about 0.97 A by neutrons and
+            # shorter by X-rays, and is a bond: Mg(OH)2 with its H located
+            # came out EXPUNGE on G1 at 0.979 A.
             _s['contact_above_floor'] = (
-                None if _d is None
+                None if (_d is None or _s.get('element')
+                         in CATION_FLOOR_EXCLUDED_ELEMENTS)
                 else bool(_d >= CATION_ANION_ABSOLUTE_MIN))
             if _s['contact_above_floor'] is False:
                 _s['cn_plausible'] = False
@@ -5448,6 +5749,8 @@ def _eir_prepare(cif_file, override_oxidation_states, fallback_oxidation_states)
     process. Nothing here reads or writes state shared with another file:
 
       _SIGN_INVERSIONS      cleared per structure since 2.0.27
+      _MIXED_SIGN_ELEMENTS  set per structure since 2.0.46
+      _USER_VALENCES        set per structure since 2.0.46
       _EIR_READ_FAILURES    returned as a delta and merged by the parent
       _NORMALISER_CACHE     a pure cache; a per-worker copy costs a little
       _ORIGIN_CHOICE_CACHE  repeated work and changes nothing
@@ -5646,6 +5949,15 @@ def batch_process_directory(directory_path):
         print(f"No CIF files found in {directory_path}")
         return None
 
+    # v2.0.46: THE READING STAGE (CELL 3). Every file is read once, here, and
+    # everything after reads what it produced: the file itself where nothing
+    # needed changing, which is every ICSD entry, or a corrected copy in
+    # outputs/as_read/, one per structure, where something did. A structure
+    # that cannot be read at all is a failure with its reason, recorded with
+    # the others below, rather than whatever the first parser to meet it said.
+    cif_files, _read_failures = read_folder(
+        cif_files, os.path.join(output_dir, AS_READ_DIR))
+
     # ============================================================================
     # STEP 1: Config file provides OVERRIDES (highest priority)
     # ============================================================================
@@ -5790,7 +6102,7 @@ def batch_process_directory(directory_path):
     # v2.0.18: one narrator for the whole run. See BatchReporter in CELL 1b
     # for what was wrong with printing from thirty places instead.
     _rep = BatchReporter(
-        directory_path, len(cif_files), EIR_VERSION,
+        directory_path, len(cif_files) + len(_read_failures), EIR_VERSION,
         log_path=os.path.join(output_dir, f'eir_batch_log_{_run_stamp}.txt'))
     _rep.open()
 
@@ -5800,8 +6112,9 @@ def batch_process_directory(directory_path):
     def _announce(_tf, _est, _bias, _w, _why):
         _parallel_banner(_rep._emit, 'calibration', _tf, _est, _bias, _w, _why)
 
-    _prepared = _prepare_all(cif_files, override_oxidation_states,
-                             fallback_oxidation_states, announce=_announce)
+    _prepared = (_prepare_all(cif_files, override_oxidation_states,
+                              fallback_oxidation_states, announce=_announce)
+                 if cif_files else [])      # v2.0.46: none may be readable
 
     for _prog_i, (cif_file, _pre) in enumerate(zip(cif_files, _prepared), 1):
         merge_read_failures(_pre['read_failures'])
@@ -5838,6 +6151,8 @@ def batch_process_directory(directory_path):
         if result['success']:
             # v2.0.27: computed in _eir_prepare, beside the sites it reads.
             error_flags = _pre['error_flags']
+            # v2.0.46: how the file was read, on every row (CELL 3)
+            result['metadata'].update(reading_columns(cif_file.name))
 
             # v2.0.11: no structure tier here either. The demotions that used
             # to happen below - partial instability index, unscreened cation -
@@ -5931,7 +6246,14 @@ def batch_process_directory(directory_path):
                     'cif_sign_inversion': result.get('cif_sign_inversion'),
                     'cif_sign_inversion_detail': result.get('cif_sign_inversion_detail'),
                     'anion_anion_min': result.get('anion_anion_min'),
+                    'polyanion_edge_min': result.get('polyanion_edge_min'),  # v2.0.46
+                    'alternative_contacts_set_aside': result.get(
+                        'alternative_contacts_set_aside'),                   # v2.0.46
                     'cation_cation_min': result.get('cation_cation_min'),
+                    'cation_cation_contact': result.get(
+                        'cation_cation_contact'),                            # v2.0.46
+                    'cation_contact_partly_occupied': result.get(
+                        'cation_contact_partly_occupied'),                   # v2.0.46
                     'anion_packing_plausible': result.get('anion_packing_plausible'),
         # v2.0.13a: computed and printed since v2.0.12 and never
         # exported, so the triage and summary both reported it as 0
@@ -5997,8 +6319,14 @@ def batch_process_directory(directory_path):
             _rep.failure(_prog_i, cif_file, result['error'])
             failed_files.append({
                 'filename': cif_file.name,
-                'error': result['error']
+                'error': result['error'],
+                **reading_columns(cif_file.name),      # v2.0.46
             })
+
+    # v2.0.46: the structures the reading stage could not read at all
+    for _k, _f in enumerate(_read_failures, len(cif_files) + 1):
+        _rep.failure(_k, _f['filename'], _f['error'])
+        failed_files.append(_f)
 
     # ============================================================================
     # STEP 5: Save results to CSV files
@@ -6155,6 +6483,13 @@ def batch_process_directory(directory_path):
                    failed_path=failed_file)
         return df
     else:
+        # v2.0.46: the failures are written even when nothing succeeded. A
+        # folder of templates, or of files none of which can be read, used to
+        # leave no record of why beyond the log.
+        if failed_files:
+            failed_file = os.path.join(
+                output_dir, f"eir_batch_failed_v{EIR_VERSION}_{_run_stamp}.csv")
+            pd.DataFrame(failed_files).to_csv(failed_file, index=False)
         _rep.close(n_rows=0, written=[], failed_path=failed_file)
         print("\n✗ No successful analyses")
         if failed_files:

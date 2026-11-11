@@ -17,6 +17,7 @@ def test_folder(examples):
     assert list(out.glob('eir_batch_results_*_structures.csv'))
     assert len(list((out / 'reports').glob('*.eir.html'))) == 3
     assert {r.tier for r in res.results()} == {'ACCEPT', 'EXPUNGE'}
-    # None of the examples has an ICSD code, where engine 2.0.45 stops in
-    # flag_same_source_entries; the package finishes and says so.
-    assert any('Source grouping skipped' in n for n in res.notes)
+    # None of the examples has an ICSD code; engine 2.0.46 runs them all
+    # through to the summary, which 2.0.45 did not.
+    assert res.notes == []
+    assert res.sites['source_group_size'].astype(int).eq(1).all()

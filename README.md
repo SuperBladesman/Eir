@@ -5,7 +5,7 @@
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Paper: Dalton Trans. 2026](https://img.shields.io/badge/paper-Dalton%20Trans.%202026%2C%2055%2C%202868-informational.svg)](https://doi.org/10.1039/D5DT03003J)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
-![Version 2.0.45](https://img.shields.io/badge/version-2.0.45-green.svg)
+![Version 2.0.46](https://img.shields.io/badge/version-2.0.46-green.svg)
 
 Eir reads a folder of CIF files and asks two questions of each structure:
 
@@ -14,7 +14,7 @@ Eir reads a folder of CIF files and asks two questions of each structure:
 
 The order matters. A bond valence sum is computed from bond lengths, so a length that cannot be right makes every number built on it meaningless, and often good-looking. ICSD 85235 (TbCrO₃) has a chromium octahedron within 0.0004 Å of the mean of every measured Cr³⁺–O bond, a global instability index (GII) of 0.0047, and two oxygens 2.191 Å apart against a family median of 2.750 Å. Judged on its chemistry it is the best structure in a 938-entry perovskite set; judged on its geometry it is impossible.
 
-Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.45, is a rebuild that checks the geometry before it reads the chemistry.
+Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.46, is a rebuild that checks the geometry before it reads the chemistry.
 
 ## What Eir checks
 
@@ -105,7 +105,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 24 tests against structures whose answers are known by hand, and the structural self-check. Run it again after changing anything.
+runs the 29 tests against structures whose answers are known by hand, the four gate tests, the 43 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions) and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 
@@ -159,7 +159,7 @@ outputs/
 - **The GII is cation-only.**
 - **ACCEPT_HETEROVALENT means a valence span of 2 or more on one position**, so Y³⁺/Zr⁴⁺ and Gd³⁺/Ce⁴⁺ count as homovalent.
 - **GII thresholds depend on the family.** The often-quoted 0.20 v.u. comes from simple ordered structures; spinels and many perovskites routinely exceed it while being perfectly stable. Read the number against the family, and always beside the tier.
-- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback; not Brown and Altermatt (1985). This matters for any comparison with published GII values.
+- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback, Chen and Adams (2017, softNC1) where Brown has nothing published, and Gilson and Burns (2021) for Np⁴⁺–O; not Brown and Altermatt (1985). This matters for any comparison with published GII values. Every entry traces to a published row at the anion charge Eir uses (or, for 127 pairs no published source covers, to Brown's own or Hu's unpublished values); `tools/audit_bv_table.py` checks it. Before 2.0.46, 52 entries did not, among them V²⁺–O, Yb²⁺–O, Ni³⁺–O, Pr⁴⁺–O and the actinide oxides; [Data/README.md](Data/README.md) lists what changed.
 - **Every threshold carries its measurement** in the comment beside it. Where one does not, the comment says so.
 
 ## Reference data
@@ -168,7 +168,7 @@ outputs/
 
 ## Versions
 
-The current engine is **2.0.45** (23rd October 2026), packaged as **eir-bvs 2.1.0**, which adds the command line, the Python interface and the report without changing a result. Every surviving earlier version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one.
+The current engine is **2.0.46**, packaged as **eir-bvs 2.1.0**, which adds the command line, the Python interface and the report without changing a result. The last released engine is 2.0.45 (23rd October 2026). Every surviving earlier version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one.
 
 To reproduce the rock salt study, use the version that accompanied it:
 
@@ -183,12 +183,12 @@ The history in this repository was rebuilt in 2026 from dated copies of every ve
 ## Known limitations
 
 - Two ICSD entries, 213392 and 38769, are not yet caught by the gates.
-- The notebook stops in `flag_same_source_entries` when no file in the folder has an ICSD code, which includes every Rietveld CIF, and when a file with a code has no author or journal. The package finishes these runs without grouping entries by source paper, which decides no verdict, and says so in the result and on the report.
-- The cation–cation packing gate (G5) treats two partly occupied positions as one atom on two places only when they are closer than 1.20 Å (`SPLIT_SITE_MAX`). Mutually exclusive positions further apart are counted as a contact, so P2-type sodium layered oxides, whose two Na positions sit about 1.7 Å apart, are expunged. Review G5 verdicts on such models by hand; the report flags them.
-- No gate reads the coordination screen on its own, so a structure whose cations all have implausible coordination numbers can still reach ACCEPT. The verdict and the report say when a screen has failed without deciding the verdict.
-- The anion–anion packing gate (G2) is conservative for anion-disorder models: it considers contacts between partially occupied anion positions that the model never fills together, and positions refined to zero occupancy. Review G2 verdicts on such models by hand.
+- The packing gates (G2, G5) leave out positions refined to zero occupancy and any pair of positions the model can fill one at a time, whose occupancies sum to one or less. Where a close pair's occupancies sum to more than one, some such pairs must be filled together, so the model implies the contact and the gate stands. Anion-disorder models refined that way, such as pyrochlores with oxygen on the 8b site beside a nearly full 48f, are still expunged; review them by hand.
+- G7, which expunges a site missing bonds, was set on the 200-entry regression set, where it fires on nothing. On 4,806 ICSD spinels, perovskites, pyrochlores and fluorites it fires once, on ICSD 69461, which G2 already expunges.
+- Anions bonded to each other (peroxides, superoxides, disulfides such as pyrite, polysulfides, azides) are expunged on G2 for their own O-O, S-S or N-N bond, and their cations would be summed with parameters fitted for O(2-), S(2-) or N(3-), which on these compounds put cation sums up to 55% over valence. Cations bonded to each other (hyponitrite and dinitramide N-N, closo-borate B-B) are expunged on G5 the same way. Read any verdict on such a structure as not assessed.
 - On a position shared by two anions, the coordination-quality columns written by CELL 7 (`contact_anion`, `expected_contact`, `shortest_contact_ratio`) describe the first-listed species. The bond valence sums use every species.
-- An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, Pr⁴⁺, Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
+- An ion with no bond valence parameters for its anion is reported as NOT_ASSESSED (R1). Pr⁴⁺–O, U³⁺–O, Np³⁺–O, Ag²⁺–O and Ra²⁺–O are among them: the values Eir carried for these until 2.0.46 are in no release of Brown's table, no other source was recorded, and Chen and Adams (2017) either do not cover them or fit them to fewer than three environments (Ag²⁺–O, two).
+- An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, N³⁺ (nitrites), Pr⁴⁺, Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
 
 Each will gain a `VALIDATE()` test as it is addressed.
 
@@ -200,7 +200,7 @@ If you use Eir, please cite the paper:
 
 and name the version you used. [CITATION.cff](CITATION.cff) has both in machine-readable form, and GitHub's "Cite this repository" button reads it.
 
-Please also cite the sources of the reference data: Gagné and Hawthorne (2015) for the bond valence parameters, and Gagné's bond length surveys (listed in `Data/gagne_bond_lengths.json`).
+Please also cite the sources of the reference data: Gagné and Hawthorne (2015), Brown's compilation and Chen and Adams (2017) for the bond valence parameters, and Gagné's bond length surveys (listed in `Data/gagne_bond_lengths.json`).
 
 ## Licence
 

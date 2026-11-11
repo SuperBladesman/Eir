@@ -13,9 +13,8 @@ Needs nbclient, nbformat and ipykernel (pip install nbclient ipykernel).
 Exits 0 when everything matches. The CIFs are only read; nothing is written
 inside the folder you name.
 
-Two kinds of folder cannot be compared, because the notebook stops on them
-and the package does not (see docs/PACKAGE.md): one in which no file has an
-ICSD code, or in which a file with a code has no author or journal.
+A folder whose files carry no oxidation states needs a config.json, as the
+notebook would otherwise stop to ask.
 """
 
 import argparse

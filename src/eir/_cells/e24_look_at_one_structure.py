@@ -129,7 +129,7 @@ def look_at(code, dfq=None, cif_directory=None, show_3d=False, max_views=4):
                     break
                 try:
                     visualize_problematic_site_3d(
-                        os.path.join(_dir, _s["filename"]),
+                        cif_path_for(_dir, _s["filename"]),
                         _s["element"], _s["site_label"], None,
                         _s.get("deviation"), _s.get("valence"),
                         _s.get("bvs"), filename=_s["filename"])

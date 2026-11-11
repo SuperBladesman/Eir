@@ -689,6 +689,205 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
            f"octahedron {_s_reg}; pyrochlore B site at x = 0.38 in six "
            f"orientations and orders {[None if v is None else round(v, 6) for v in _vals]}")
 
+    # -- 25. v2.0.46: entries without an ICSD code, an author or a journal ---
+    # 2.0.45 stopped the run in flag_same_source_entries on both: with no
+    # ICSD code anywhere (every Rietveld CIF checked on its own), and with a
+    # code but a null author or journal.
+    try:
+        _g0 = flag_same_source_entries(pd.DataFrame({
+            'filename': ['a.cif', 'b.cif'], 'icsd_code': [None, None],
+            'authors': [None, None], 'year': [None, None],
+            'journal': [None, None]}))
+        _g1 = flag_same_source_entries(pd.DataFrame({
+            'filename': ['a.cif', 'b.cif', 'c.cif', 'd.cif'],
+            'icsd_code': [1, 2, 3, None],
+            'authors': ['Smith, J.', 'Smith, J.', np.nan, 'Jones, K.'],
+            'year': [2001, 2001, 2001, 2001],
+            'journal': ['J. Solid State Chem.', 'J. Solid State Chem.',
+                        np.nan, 'J. Solid State Chem.']}))
+        _sz25 = {k: int(v) for k, v in
+                 zip(_g1['filename'], _g1['source_group_size'])}
+        _ok25 = (list(_g0['source_group_size']) == [1, 1]
+                 and not _g0['flag_multi_entry_source'].astype(bool).any()
+                 and _sz25 == {'a.cif': 2, 'b.cif': 2, 'c.cif': 1, 'd.cif': 1})
+        _det25 = (f"no codes: sizes {list(_g0['source_group_size'])}; codes with "
+                  f"one author missing: {_sz25} (a and b together, c and d alone)")
+    except Exception as _e25:
+        _ok25, _det25 = False, f'{type(_e25).__name__}: {_e25}'
+    report('25. entries without an ICSD code, author or journal stand alone',
+           _ok25, _det25)
+
+    # -- 26. v2.0.46: alternative positions are not a contact ----------------
+    # A P2-type NaCoO2: Na on 2b and 2d, a/sqrt(3) = 1.634 A apart. At 0.40
+    # and 0.60 the model can fill them one at a time, and the cation floor
+    # must not fire; at 0.60 and 0.60 it cannot, and it must. A rock salt
+    # with an oxygen position refined to zero occupancy 1.82 A from O1 must
+    # pass the anion floor: there is no atom there. And with uncertainties
+    # stated, 0.52(1) + 0.52(1) is over-full within 3 sigma and passes, where
+    # 0.55(1) + 0.55(1) is not and fails.
+    _P2 = (
+        "data_eir_validation_p2\n_cell_length_a 2.8300\n_cell_length_b 2.8300\n"
+        "_cell_length_c 10.9000\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+        "_cell_angle_gamma 120.\n_space_group_IT_number 194\n"
+        "_symmetry_space_group_name_H-M 'P 63/m m c'\n"
+        "loop_\n_atom_type_symbol\n_atom_type_oxidation_number\n"
+        "Na1+ 1\nCo3+ 3\nO2- -2\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "_atom_site_occupancy\n"
+        "Co1 Co3+ 0 0 0 1.\nO1 O2- 0.33333 0.66667 0.0925 1.\n"
+        "Na1 Na1+ 0 0 0.25 {o1:.2f}\nNa2 Na1+ 0.66667 0.33333 0.25 {o2:.2f}\n")
+    _RS0 = (_ROCKSALT_CIF.format(a=4.20, cat=cat, cv=cv, oocc=1.0)
+            + "O2 O2- 8 c 0.25 0.25 0.25 0.5 0.0\n")
+    try:
+        _r26a = _run_cif(_P2.format(o1=0.40, o2=0.60))
+        _r26b = _run_cif(_P2.format(o1=0.60, o2=0.60))
+        _r26c = _run_cif(_RS0)
+        _P2e = _P2.replace('{o1:.2f}', '{o1}').replace('{o2:.2f}', '{o2}')
+        _r26d = _run_cif(_P2e.format(o1='0.52(1)', o2='0.52(1)'))
+        _r26e = _run_cif(_P2e.format(o1='0.55(1)', o2='0.55(1)'))
+        _ok26 = (_r26a.get('cation_packing_plausible') is True
+                 and _r26b.get('cation_packing_plausible') is False
+                 and _r26c.get('anion_packing_plausible') is True
+                 and _r26d.get('cation_packing_plausible') is True
+                 and _r26e.get('cation_packing_plausible') is False)
+        _det26 = (f"Na 0.40 + 0.60: cation floor {_r26a.get('cation_packing_plausible')} "
+                  f"(min {_r26a.get('cation_cation_min')}), want True; 0.60 + 0.60: "
+                  f"{_r26b.get('cation_packing_plausible')} (min "
+                  f"{_r26b.get('cation_cation_min')}), want False; zero-occupancy O: "
+                  f"anion floor {_r26c.get('anion_packing_plausible')} (min "
+                  f"{_r26c.get('anion_anion_min')}), want True; 0.52(1) + "
+                  f"0.52(1), 2.8 sigma over: {_r26d.get('cation_packing_plausible')}"
+                  f", want True; 0.55(1) + 0.55(1), 7 sigma over: "
+                  f"{_r26e.get('cation_packing_plausible')}, want False")
+    except Exception as _e26:
+        _ok26, _det26 = False, f'{type(_e26).__name__}: {_e26}'
+    report('26. positions the model fills one at a time are not a contact',
+           _ok26, _det26)
+
+    # -- 27. v2.0.46: the bond-length columns are always written --------------
+    # Cr(4+)O6 has six measured bonds, too few for a minimum. 2.0.45 left
+    # bl_ratio_min out of the row, and a run with no other site stopped in
+    # the summary.
+    try:
+        _r27 = _run_cif(_ROCKSALT_CIF.format(a=3.90, cat='Cr', cv=4, oocc=1.0))
+        _s27 = (_r27.get('sites') or [{}])[0]
+        _ok27 = (_s27.get('bl_tier') is not None
+                 and all(k in _s27 for k in ('bl_delta_mean', 'bl_ratio_min',
+                                             'bl_delta_min'))
+                 and _s27.get('bl_ratio_min') is None)
+        _det27 = (f"Cr(4+) CN 6: bl_tier {_s27.get('bl_tier')}, keys present "
+                  f"{[k for k in ('bl_delta_mean', 'bl_ratio_min', 'bl_delta_min') if k in _s27]}, "
+                  f"bl_ratio_min {_s27.get('bl_ratio_min')} (want null)")
+    except Exception as _e27:
+        _ok27, _det27 = False, f'{type(_e27).__name__}: {_e27}'
+    report('27. the bond-length columns are written for every site', _ok27,
+           _det27)
+
+    # -- 28. v2.0.46: an anion the CIF states is an anion ---------------------
+    # A Zr(O,S)2 fluorite, O and S sharing 8c, Zr-(O,S) = a*sqrt(3)/4 = 2.21
+    # A. The CIF types S2-. 2.0.45 never gave the packing scan a valence, so
+    # beside oxygen S counted as a cation and Zr-S as a 2.21 A cation-cation
+    # contact (ICSD 84078). Nor may bond selection make S a cation bonded
+    # to O, which found no parameters and left such entries NOT_ASSESSED.
+    # SrS deposited with its signs inverted (ICSD 651062, "S2+ 2" and
+    # "Sr2- -2") must still put S on the anion side.
+    _ZROS = (
+        "data_eir_validation_zros\n_cell_length_a 5.1000\n_cell_length_b 5.1000\n"
+        "_cell_length_c 5.1000\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+        "_cell_angle_gamma 90.\n_space_group_IT_number 225\n"
+        "_symmetry_space_group_name_H-M 'F m -3 m'\n"
+        "loop_\n_atom_type_symbol\n_atom_type_oxidation_number\n"
+        "Zr4+ 4\nO2- -2\nS2- -2\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "_atom_site_occupancy\n"
+        "Zr1 Zr4+ 0 0 0 1.\nO1 O2- 0.25 0.25 0.25 0.8\n"
+        "S1 S2- 0.25 0.25 0.25 0.2\n")
+    _SRS = (
+        "data_eir_validation_srs\n_cell_length_a 6.0200\n_cell_length_b 6.0200\n"
+        "_cell_length_c 6.0200\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+        "_cell_angle_gamma 90.\n_space_group_IT_number 225\n"
+        "_symmetry_space_group_name_H-M 'F m -3 m'\n"
+        "loop_\n_atom_type_symbol\n_atom_type_oxidation_number\n"
+        "Sr2- -2\nS2+ 2\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "_atom_site_occupancy\n"
+        "Sr1 Sr2- 0 0 0 1.\nS1 S2+ 0.5 0.5 0.5 1.\n")
+    # And the fluorite oxyhydride SmHO: H(-) and O share 8c at 0.5 each,
+    # Sm-(O,H) = 2.37 A. Sm must be summed over both (3.14 for a valence of
+    # 3), not over O alone (1.88), as ICSD 434696 was.
+    _HOHO = (
+        "data_eir_validation_smho\n_cell_length_a 5.4695\n_cell_length_b 5.4695\n"
+        "_cell_length_c 5.4695\n_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+        "_cell_angle_gamma 90.\n_space_group_IT_number 225\n"
+        "_symmetry_space_group_name_H-M 'F m -3 m'\n"
+        "loop_\n_atom_type_symbol\n_atom_type_oxidation_number\n"
+        "Sm3+ 3\nO2- -2\nH1- -1\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "_atom_site_occupancy\n"
+        "Sm1 Sm3+ 0 0 0 1.\nO1 O2- 0.25 0.25 0.25 0.5\n"
+        "H1 H1- 0.25 0.25 0.25 0.5\n")
+    try:
+        _r28a = _run_cif(_ZROS)
+        _r28c = _run_cif(_HOHO)
+        _s28c = [s for s in (_r28c.get('sites') or []) if s.get('element') == 'Sm']
+        _b28c = float(_s28c[0].get('bvs')) if _s28c else float('nan')
+        _r28b = _run_cif(_SRS)
+        _a28 = 6.02 / math.sqrt(2.0)
+        _el28 = sorted({str(s.get('element')) for s in (_r28a.get('sites') or [])})
+        _ok28 = (_r28a.get('cation_packing_plausible') is True
+                 and _el28 == ['Zr']
+                 and abs(float(_r28a.get('cation_cation_min') or 0)
+                         - 5.10 / math.sqrt(2.0)) < 0.01
+                 and _r28b.get('anion_anion_min') is not None
+                 and abs(float(_r28b.get('anion_anion_min')) - _a28) < 0.01
+                 and abs(float(_r28b.get('cation_cation_min') or 0) - _a28) < 0.01
+                 and len(_s28c) == 1 and _b28c > 2.5)
+        _det28 = (f"Zr(O,S)2: cation floor {_r28a.get('cation_packing_plausible')} "
+                  f"(min {_r28a.get('cation_cation_min')}, want Zr-Zr 3.606), "
+                  f"cation sites {_el28} (want ['Zr']); "
+                  f"SrS with inverted signs: anion-anion "
+                  f"{_r28b.get('anion_anion_min')}, cation-cation "
+                  f"{_r28b.get('cation_cation_min')} (want S-S and Sr-Sr "
+                  f"{_a28:.3f}); SmHO: Sm sum {_b28c:.3f} (want over 2.5, "
+                  f"O and H both counted)")
+    except Exception as _e28:
+        _ok28, _det28 = False, f'{type(_e28).__name__}: {_e28}'
+    report('28. a species the CIF types as an anion is an anion to the packing '
+           'scan', _ok28, _det28)
+
+    # 29. v2.0.46: the parameter table. Every shipped entry records the anion
+    #     charge it was fitted for, and it is the charge Eir gives that
+    #     anion; an entry fitted for another charge is not loaded; and a
+    #     cation with no parameters for its anion is kept for an R1, not
+    #     removed from the structure.
+    try:
+        import os as _os29
+        with open(_os29.path.join(db_manager.data_dir, 'bvs_parameters.json')) as _f29:
+            _raw29 = json.load(_f29)
+        _kept29, _skip29 = bv_table_entries(_raw29)
+        _nocharge29 = [k for k, v in _raw29.items() if 'anion_charge' not in v]
+        _toy29 = {"('Pr', 3, 'Se')": {'r0': 2.72, 'b': 0.37, 'anion_charge': -1},
+                  "('Pr', 3, 'S')": {'r0': 2.6, 'b': 0.37, 'anion_charge': -2},
+                  "('Pr', 3, 'O')": {'r0': 2.1, 'b': 0.37}}
+        _k29, _s29 = bv_table_entries(_toy29)
+        _sel29 = has_bvs_parameters_for_pair('Ra', 'O', {'Ra': 2, 'O': -2})
+        _ok29 = (not _skip29 and not _nocharge29
+                 and len(_kept29) == len(_raw29)
+                 and sorted(_k29) == [('Pr', 3, 'O'), ('Pr', 3, 'S')]
+                 and _s29 == ["('Pr', 3, 'Se')"] and _sel29 is True)
+        _det29 = (f"shipped table: {len(_raw29)} entries, {len(_kept29)} loaded, "
+                  f"{len(_skip29)} at another anion charge, {len(_nocharge29)} "
+                  f"with no anion charge (want all loaded, none of either); "
+                  f"toy: kept {sorted(_k29)}, left out {_s29} (want Pr-O and "
+                  f"Pr-S kept, Pr-Se(1-) left out); Ra2+-O kept for R1: {_sel29}")
+    except Exception as _e29:
+        _ok29, _det29 = False, f'{type(_e29).__name__}: {_e29}'
+    report('29. the parameter table matches each anion charge', _ok29, _det29)
+
     if verbose:
         print()
         print("=" * 70)
