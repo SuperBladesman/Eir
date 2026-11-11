@@ -44,3 +44,9 @@ def test_the_released_versions_have_a_changelog_entry():
         assert m, v
         assert m.group(1) != 'unreleased', (v, 'CHANGELOG still says unreleased')
     assert released and re.fullmatch(r'\d{4}-\d{2}-\d{2}', released)
+
+
+def test_the_readme_gives_the_citation_doi():
+    doi = cff('doi')
+    readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert doi and f'https://doi.org/{doi}' in readme, doi

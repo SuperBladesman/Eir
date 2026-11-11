@@ -28,6 +28,8 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ### 2.0.46 – 11 November 2026
 
+Archived on Zenodo: https://doi.org/10.5281/zenodo.24138854.
+
 **Faults found while packaging Eir, by running it on the corpus, and by a battery of CIFs written the way other programs write them**
 
 - A run in which no file has an ICSD code (every Rietveld CIF checked on its

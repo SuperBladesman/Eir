@@ -211,4 +211,4 @@ Please also cite the sources of the reference data: Gagné and Hawthorne (2015),
 
 MIT, © Nik Reeves-McLaren, University of Sheffield. See [LICENSE](LICENSE).
 
-Questions and bug reports are welcome as GitHub issues.
+Questions and bug reports are welcome as GitHub issues. [CONTRIBUTING.md](CONTRIBUTING.md) says what to include in a report, and how to change the code or the reference data.
