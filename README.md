@@ -6,6 +6,7 @@
 [![Paper: Dalton Trans. 2026](https://img.shields.io/badge/paper-Dalton%20Trans.%202026%2C%2055%2C%202868-informational.svg)](https://doi.org/10.1039/D5DT03003J)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
 ![Version 2.0.46](https://img.shields.io/badge/version-2.0.46-green.svg)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24138853.svg)](https://doi.org/10.5281/zenodo.24138853)
 
 Eir reads a folder of CIF files and asks two questions of each structure:
 
@@ -202,7 +203,7 @@ If you use Eir, please cite the paper:
 
 > N. Reeves-McLaren, Automated Bond Valence Sum Analysis for Crystallographic Database Quality Assessment: A Systematic Study of Rock Salt Oxides, Halides, and Chalcogenides, *Dalton Trans.*, 2026, **55**, 2868. https://doi.org/10.1039/D5DT03003J
 
-and name the version you used. [CITATION.cff](CITATION.cff) has both in machine-readable form, and GitHub's "Cite this repository" button reads it.
+and name the version you used. Each release from 2.0.46 is archived on Zenodo with its own DOI: [10.5281/zenodo.24138854](https://doi.org/10.5281/zenodo.24138854) is 2.0.46, and [10.5281/zenodo.24138853](https://doi.org/10.5281/zenodo.24138853) always resolves to the latest release. [CITATION.cff](CITATION.cff) has these in machine-readable form, and GitHub's "Cite this repository" button reads it.
 
 Please also cite the sources of the reference data: Gagné and Hawthorne (2015), Brown's compilation and Chen and Adams (2017) for the bond valence parameters, and Gagné's bond length surveys (listed in `Data/gagne_bond_lengths.json`).
 
