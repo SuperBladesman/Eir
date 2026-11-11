@@ -55,18 +55,16 @@ Eir builds on existing work where it can. It reads CIFs and expands symmetry wit
 
 # Research impact statement
 
-Eir 1.2 underpinned a systematic study of 840 rock salt structures from the ICSD, which characterised the ways bond valence validation fails, from parameter inadequacy to database quality issues [@ReevesMcLaren2026Dalton]. Later versions screened 1,244 ambient-condition spinel structures [@ReevesMcLaren2026Spinels] and the oldest entries in the ICSD [@Gross2026]. Reports of faulty entries from these studies have been sent to FIZ Karlsruhe, which maintains the ICSD; FIZ Karlsruhe has deleted, or is deleting, 141 entries (about 4.3% of those analysed).
+Eir 1.2 underpinned a systematic study of 840 rock salt structures from the ICSD, which characterised the ways bond valence validation fails, from parameter inadequacy to database quality issues [@ReevesMcLaren2026Dalton]. Later versions screened 1,244 ambient-condition spinel structures [@ReevesMcLaren2026Spinels] and the oldest entries in the ICSD [@Gross2026]. Faulty entries identified in these studies, in others in preparation, and in targeted searches of the ICSD for particular faults have been reported to FIZ Karlsruhe, which maintains the database; FIZ Karlsruhe has deleted, or is deleting, 141 entries (about 4.3% of those analysed).
 
 Version 2.0.46 was tested against 4,806 ICSD structures in four families (1,881 spinels, 938 perovskites, 1,254 pyrochlores and 733 fluorites), 870 further ICSD entries chosen to test particular chemistries, and 212 CIFs written by thirteen other programs, with every change in a verdict between releases traced to its cause. Releases from 2.0.46 onwards are archived on Zenodo.
 
 # AI usage disclosure
 
-[DRAFT FOR NRM TO SETTLE. Models and versions: to confirm, *e.g.* Anthropic's Claude models through claude.ai and Claude Code, from Eir 1.0 (December 2025) to 2.0.46.]
-
-Eir was developed with generative AI from its first version. I framed each problem, made the design decisions described above (the order of the facets, not inferring oxidation states from the sums being checked, the precedence of parameter sources, reading CIFs by feature), and decided how each fault would be fixed; the AI wrote code and documentation to that specification. Correctness was checked independently of the code that produced it: against known-answer tests, against the published sources of every reference value, by manual review of flagged structures in the published studies, and by regression of each release against the last on thousands of ICSD entries, with every change in a verdict traced to a cause. This paper was drafted with [model] and revised by me. I have reviewed, modified and validated all AI-generated content.
+Eir was developed with one generative AI tool, Claude (Anthropic), using the latest Opus model available at each stage (late Claude Opus 4 releases and the Claude Opus 5 series), from Eir 1.0 (December 2025) to 2.0.46. I framed each problem, made the design decisions described above (the order of the facets, not inferring oxidation states from the sums being checked, the precedence of parameter sources, reading CIFs by feature), and decided how each fault would be fixed; Claude wrote code and documentation to that specification. I questioned and audited its output throughout. Correctness was checked independently of the code that produced it: against known-answer tests, against the published source of every reference value, by manual review of flagged structures in the published studies, and by regression of each release against the last on thousands of ICSD entries, with every change in a verdict traced to a cause. This paper was drafted with Claude Opus 5.5 and revised by me. I have reviewed, modified and validated all AI-generated content.
 
 # Acknowledgements
 
-[To confirm: funding, if any, for the work behind Eir.] I thank the students and colleagues in my group whose structures and questions exposed faults that later versions fixed.
+I thank Jianing Zhong, Jiaqi Lyu, Ming He and Peter Gross (University of Sheffield) for testing Eir and hunting its bugs. This work received no specific funding.
 
 # References
