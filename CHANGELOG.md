@@ -230,6 +230,16 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   metal-rich subsulfide given Hf(4+)) from R1 to EXPUNGE on G7. Tried in
   place of Brese and O'Keeffe's extrapolated rows too, softNC1 was better
   for some pairs and worse for others, so those stay.
+- **Equal-rank rows take the more recent fit; Np4+-O from Gilson and Burns
+  (2021).** Where two published sources of equal rank differ, the table
+  takes the more recent, unless Brown restricts it to a context ("from
+  transition metal complexes"): Pu4+-O Diwu et al. (2010) in place of
+  Zachariasen (1978), Sm2+-O Trzesowska et al. (2006), Cu3+-N Mahapatra et
+  al. (1996). Np4+-O takes Gilson and Burns (2021), Coord. Chem. Rev. 445,
+  213994, refitted on well-refined Np(IV) structures (R0 2.054 Å, b 0.417).
+  No other published fit was found for Pr4+-O, U3+-O, Np3+-O or Ra2+-O,
+  which stay R1. Six corpus entries change GII, all NOT_ASSESSED: NpO2
+  0.2% to 2.5% from valence, PuO2 1.2% to 0.6%.
 - A cation with no parameters for its anion at any valence is NOT_ASSESSED
   (R1). It used to be dropped, and a file whose only pair it was failed as
   unreadable: RaO, or W2C and Mo2C among the 212, which are now R1. An anion

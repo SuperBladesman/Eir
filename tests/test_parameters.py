@@ -36,7 +36,7 @@ def test_every_entry_is_for_the_charge_eir_gives_its_anion(table):
 def test_every_entry_names_its_source(table):
     refs = {v['reference'] for v in table.values()}
     assert refs == {'Gagne2015', 'Brown_2020', 'Brown_2009_Table2_ref54',
-                    'ChenAdams2017_softNC1'}, refs
+                    'ChenAdams2017_softNC1', 'GilsonBurns2021'}, refs
     assert all(v.get('brown_code') for v in table.values()
                if v['reference'] in ('Gagne2015', 'Brown_2020'))
     # Chen and Adams (2017) fits are used only where at least three
@@ -51,6 +51,10 @@ def test_published_fits_outrank_unpublished_values(table):
     ni = table["('Ni', 3, 'O')"]
     assert ni['reference'] == 'ChenAdams2017_softNC1'
     assert (ni['r0'], ni['b']) == (1.6565, 0.414)
+    # Np4+-O: Gilson and Burns (2021), refitted on well-refined Np(IV)
+    # structures, in place of Zachariasen (1978)
+    np4 = table["('Np', 4, 'O')"]
+    assert (np4['reference'], np4['r0'], np4['b']) == ('GilsonBurns2021', 2.054, 0.417)
 
 
 def test_the_excluded_entries_are_not_in_the_table(table):

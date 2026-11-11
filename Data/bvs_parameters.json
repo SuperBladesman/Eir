@@ -1869,11 +1869,11 @@
     "brown_code": "b"
   },
   "('Cr', 9, 'O')": {
-    "r0": 1.724,
-    "b": 0.37,
+    "r0": 1.79,
+    "b": 0.34,
     "reference": "Brown_2020",
     "anion_charge": -2,
-    "brown_code": "w"
+    "brown_code": "o"
   },
   "('Cr', 9, 'P')": {
     "r0": 2.27,
@@ -2177,11 +2177,11 @@
     "n_environments": 3
   },
   "('Cu', 3, 'N')": {
-    "r0": 1.768,
+    "r0": 1.753,
     "b": 0.37,
     "reference": "Brown_2020",
     "anion_charge": -3,
-    "brown_code": "l"
+    "brown_code": "t"
   },
   "('Cu', 3, 'O')": {
     "r0": 1.737,
@@ -5159,11 +5159,10 @@
     "brown_code": "p"
   },
   "('Np', 4, 'O')": {
-    "r0": 2.11,
-    "b": 0.35,
-    "reference": "Brown_2020",
-    "anion_charge": -2,
-    "brown_code": "p"
+    "r0": 2.054,
+    "b": 0.417,
+    "reference": "GilsonBurns2021",
+    "anion_charge": -2
   },
   "('Np', 5, 'Cl')": {
     "r0": 2.42,
@@ -6097,11 +6096,11 @@
     "brown_code": "p"
   },
   "('Pu', 4, 'O')": {
-    "r0": 2.09,
-    "b": 0.35,
+    "r0": 2.068,
+    "b": 0.385,
     "reference": "Brown_2020",
     "anion_charge": -2,
-    "brown_code": "p"
+    "brown_code": "bf"
   },
   "('Pu', 5, 'F')": {
     "r0": 1.96,
@@ -7266,11 +7265,11 @@
     "brown_code": "al"
   },
   "('Sm', 2, 'O')": {
-    "r0": 2.116,
+    "r0": 2.126,
     "b": 0.37,
     "reference": "Brown_2020",
     "anion_charge": -2,
-    "brown_code": "ai"
+    "brown_code": "al"
   },
   "('Sm', 3, 'As')": {
     "r0": 2.7,

@@ -13,15 +13,19 @@ Brown's bvparm2020.cif is not part of this repository; it is distributed by
 the IUCr (https://www.iucr.org/resources/data/datasets/bond-valence-parameters).
 Every entry in the table must match a row of it: same cation, valence and
 anion, the anion charge the entry records, its R0 and b, and the reference
-code the entry records ('bs' is Gagne and Hawthorne, 2015). The one entry
-taken from elsewhere, Fe4+-O from Brown (2009), Table 2, is listed as such.
+code the entry records ('bs' is Gagne and Hawthorne, 2015). The entries
+taken from elsewhere are listed in NOT_IN_BROWN_2020 with their values:
+Fe4+-O from Brown (2009), Table 2, and Np4+-O from Gilson and Burns (2021),
+Coord. Chem. Rev. 445, 213994, section 2.3.
 
 Each entry must also be the row the merge rule picks: Gagne and Hawthorne
 (2015) first, then Brown and Altermatt (1985, 'a'), then Brese and O'Keeffe
 (1991, 'b'), then any other published source, then the unpublished ones
 (Brown's private communications 'e', Sidey's 'bi', and Hu's 'bq', listed as
-'to be published'). Where rows of equal rank differ, the table's choice is
-reported, not failed: the 2025 merge did not take them in a fixed order.
+'to be published'). Where published rows of equal rank from different
+sources differ, the table takes the most recent, unless Brown restricts that
+row to a context ('in trans-metal complexes'). Rows of one source that differ
+(spin states, two fits in one paper) are reported, not failed.
 
 Exits 1 if any entry fails.
 """
@@ -38,7 +42,8 @@ TABLE = ROOT / 'Data' / 'bvs_parameters.json'
 EIR_ANION = {'O': -2, 'F': -1, 'Cl': -1, 'Br': -1, 'I': -1, 'S': -2, 'Se': -2,
              'Te': -2, 'N': -3, 'P': -3, 'As': -3, 'H': -1, 'C': -4, 'Si': -4,
              'B': -3}
-NOT_IN_BROWN_2020 = {"('Fe', 4, 'O')": 'Brown_2009_Table2_ref54'}
+NOT_IN_BROWN_2020 = {"('Fe', 4, 'O')": ('Brown_2009_Table2_ref54', 1.78, 0.37),
+                     "('Np', 4, 'O')": ('GilsonBurns2021', 2.054, 0.417)}
 
 
 # Sources Brown lists that are not published: his own private communications
@@ -77,14 +82,24 @@ def main(bvparm, softnc1=None):
     start = next(i for i, l in enumerate(lines)
                  if l.strip() == '_valence_param_details') + 1
     rows = defaultdict(list)
+    note = {}
     for l in lines[start:]:
         t = l.split()
         if len(t) >= 7 and re.match(r'^-?\d+$', t[1]) and re.match(r'^-?\d+$', t[3]):
             try:
-                rows[(t[0], int(t[1]), t[2])].append(
-                    (int(t[3]), float(t[4]), float(t[5]), t[6]))
+                r = (int(t[3]), float(t[4]), float(t[5]), t[6])
             except ValueError:
-                pass
+                continue
+            rows[(t[0], int(t[1]), t[2])].append(r)
+            # Brown's details column: '?' or 'unchecked' is no restriction
+            d = ' '.join(t[7:]).strip("'\" ")
+            free = d in ('', '?', 'unchecked') or 'all oxidation states' in d
+            note[(t[0], int(t[1]), t[2]) + r] = '' if free else d
+    year = {}
+    for l in lines:
+        m = re.match(r"^\s*([a-z]{1,2})\s+'.*?\((\d{4})\)", l)
+        if m:
+            year[m.group(1)] = int(m.group(2))
     table = json.loads(TABLE.read_text())
     bad, ties = [], []
     soft = read_softnc1(softnc1) if softnc1 else None
@@ -112,8 +127,9 @@ def main(bvparm, softnc1=None):
                 bad.append((k, 'a published Brown or Gagne row exists; softNC1 should not be used'))
             continue
         if k in NOT_IN_BROWN_2020:
-            if e.get('reference') != NOT_IN_BROWN_2020[k]:
-                bad.append((k, 'expected reference ' + NOT_IN_BROWN_2020[k]))
+            ref, r0, b = NOT_IN_BROWN_2020[k]
+            if e.get('reference') != ref or abs(e['r0'] - r0) > 1e-9 or abs(e['b'] - b) > 1e-9:
+                bad.append((k, f'expected {ref} {r0}/{b}'))
             continue
         q, code = e.get('anion_charge'), e.get('brown_code')
         if q is None or q != EIR_ANION.get(key[2]):
@@ -138,9 +154,21 @@ def main(bvparm, softnc1=None):
         best = min(rank(r[3], '') for r in others)
         if rank(code, '') != best:
             bad.append((k, f'merge rule picks rank {best}, table has {code!r}'))
-        elif len({(r[1], r[2]) for r in others if rank(r[3], '') == best}) > 1:
-            ties.append((k, code, [(r[1], r[2], r[3]) for r in others
-                                   if rank(r[3], '') == best]))
+        else:
+            tied = [r for r in others if rank(r[3], '') == best]
+            if len({(r[1], r[2]) for r in tied}) < 2:
+                continue
+            sources = {r[3] for r in tied}
+            if len(sources) > 1 and best < 3:
+                # different published sources: the most recent, unless
+                # Brown restricts it to a context
+                free = [r for r in tied if not note.get(key + r)]
+                pick = max(free or tied, key=lambda r: year.get(r[3], 0))
+                if pick[3] != code:
+                    bad.append((k, f"of equal-rank rows {[(r[1], r[2], r[3], year.get(r[3])) for r in tied]} "
+                                   f"the most recent unrestricted is {pick[3]!r}; table has {code!r}"))
+                    continue
+            ties.append((k, code, [(r[1], r[2], r[3]) for r in tied]))
     print(f'{len(table)} entries; {len(bad)} fail; {len(ties)} equal-rank choices')
     for k, why in bad:
         print('  FAIL', k, why)

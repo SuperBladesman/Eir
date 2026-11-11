@@ -159,7 +159,7 @@ outputs/
 - **The GII is cation-only.**
 - **ACCEPT_HETEROVALENT means a valence span of 2 or more on one position**, so Y³⁺/Zr⁴⁺ and Gd³⁺/Ce⁴⁺ count as homovalent.
 - **GII thresholds depend on the family.** The often-quoted 0.20 v.u. comes from simple ordered structures; spinels and many perovskites routinely exceed it while being perfectly stable. Read the number against the family, and always beside the tier.
-- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback, and Chen and Adams (2017, softNC1) where Brown has nothing published; not Brown and Altermatt (1985). This matters for any comparison with published GII values. Every entry traces to a published row at the anion charge Eir uses (or, for 127 pairs no published source covers, to Brown's own or Hu's unpublished values); `tools/audit_bv_table.py` checks it. Before 2.0.46, 52 entries did not, among them V²⁺–O, Yb²⁺–O, Ni³⁺–O, Pr⁴⁺–O and the actinide oxides; [Data/README.md](Data/README.md) lists what changed.
+- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback, Chen and Adams (2017, softNC1) where Brown has nothing published, and Gilson and Burns (2021) for Np⁴⁺–O; not Brown and Altermatt (1985). This matters for any comparison with published GII values. Every entry traces to a published row at the anion charge Eir uses (or, for 127 pairs no published source covers, to Brown's own or Hu's unpublished values); `tools/audit_bv_table.py` checks it. Before 2.0.46, 52 entries did not, among them V²⁺–O, Yb²⁺–O, Ni³⁺–O, Pr⁴⁺–O and the actinide oxides; [Data/README.md](Data/README.md) lists what changed.
 - **Every threshold carries its measurement** in the comment beside it. Where one does not, the comment says so.
 
 ## Reference data

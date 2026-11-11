@@ -502,7 +502,13 @@
     "reference": "Brown_2020",
     "anion_charge": -2,
     "brown_code": "e",
-    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6565, b 0.414, 15 environments): a published fit ranks above an unpublished value"
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6565, b 0.414, 15 environments): a published fit ranks above an unpublished value",
+    "replaced_before": {
+      "r0": 1.7,
+      "b": 0.37,
+      "reference": "Brown2020",
+      "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+    }
   },
   "('Ni', 4, 'F')": {
     "r0": 1.61,
@@ -758,7 +764,13 @@
     "reference": "Brown_2020",
     "anion_charge": -2,
     "brown_code": "e",
-    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6158, b 0.477, 4 environments): a published fit ranks above an unpublished value"
+    "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 1.6158, b 0.477, 4 environments): a published fit ranks above an unpublished value",
+    "replaced_before": {
+      "r0": 1.79,
+      "b": 0.37,
+      "reference": "Brown2020",
+      "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+    }
   },
   "('V', 5, 'S')": {
     "r0": 2.25,
@@ -799,5 +811,129 @@
     "anion_charge": -1,
     "brown_code": "e",
     "reason": "replaced in 2.0.46 by Chen and Adams (2017), softNC1 (R0 2.1386, b 0.478, 5 environments): a published fit ranks above an unpublished value"
+  },
+  "('Np', 4, 'O')": {
+    "r0": 2.11,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "p",
+    "reason": "replaced in 2.0.46 by Gilson and Burns (2021), Coord. Chem. Rev. 445, 213994: Np(IV)-O refitted by the method of Diwu et al. (2010) on well-refined structures (R0 2.054, b 0.417), more recent and dedicated",
+    "replaced_before": {
+      "r0": 2.08,
+      "b": 0.37,
+      "reference": "Brown2020",
+      "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+    }
+  },
+  "('Pu', 4, 'O')": {
+    "r0": 2.09,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "p",
+    "reason": "replaced in 2.0.46 by Diwu et al. (2010), Inorg. Chem. 49, 3337 (R0 2.068, b 0.385): of two published rows of equal rank, the more recent fit",
+    "replaced_before": {
+      "r0": 2.05,
+      "b": 0.37,
+      "reference": "Brown2020",
+      "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+    }
+  },
+  "('Sm', 2, 'O')": {
+    "r0": 2.116,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "ai",
+    "reason": "replaced in 2.0.46 by Trzesowska, Kruszynski and Bartczak (2006), Acta Cryst. B62, 745 (R0 2.126, b 0.37): of two published rows of equal rank, the more recent fit"
+  },
+  "('Ac', 3, 'O')": {
+    "r0": 2.164,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('Am', 4, 'O')": {
+    "r0": 2.04,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('Hg', 1, 'O')": {
+    "r0": 1.74,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('Os', 4, 'O')": {
+    "r0": 1.74,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('Pa', 4, 'O')": {
+    "r0": 2.04,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('Pu', 3, 'O')": {
+    "r0": 2.09,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('S', 2, 'O')": {
+    "r0": 1.6,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('Tc', 4, 'O')": {
+    "r0": 1.78,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('W', 4, 'O')": {
+    "r0": 1.89,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('Yb', 2, 'O')": {
+    "r0": 2.08,
+    "b": 0.37,
+    "reference": "Brown2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row under the merge rule: no row of Brown (2009, 2011 or 2020) has these values; from the hand-compiled table of Eir 1.0"
+  },
+  "('S', 2, 'N')": {
+    "r0": 1.597,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row at the anion charge Eir uses: this row was fitted for another anion charge"
+  },
+  "('S', 2, 'S')": {
+    "r0": 2.1,
+    "b": 0.35,
+    "reference": "Brown_2020",
+    "reason": "replaced in 2.0.46 by Brown (2020)'s row at the anion charge Eir uses: this row was fitted for another anion charge"
+  },
+  "('Cu', 3, 'N')": {
+    "r0": 1.768,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "l",
+    "reason": "replaced in 2.0.46 by Mahapatra et al. (1996), J. Am. Chem. Soc. 118, 11555 (R0 1.753, b 0.37): of two published rows of equal rank, Brown restricts the more recent (Shields et al. 2000) to transition metal complexes"
+  },
+  "('Cr', 9, 'O')": {
+    "r0": 1.724,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "w",
+    "reason": "replaced in 2.0.46 by Allmann (1975), Monatsh. Chem. 106, 779 (R0 1.79, b 0.34): of two published rows of equal rank, Brown restricts the more recent (Wood et al. 2000) to transition metal complexes. Valence-unstated; Eir does not use it"
   }
 }
