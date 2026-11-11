@@ -9,6 +9,14 @@ authors:
     orcid: "https://orcid.org/0000-0002-1061-1230"
 version: 2.0.46
 date-released: 2026-11-11
+doi: 10.5281/zenodo.24138854
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.24138854
+    description: "This version, 2.0.46, archived on Zenodo"
+  - type: doi
+    value: 10.5281/zenodo.24138853
+    description: "All versions on Zenodo; resolves to the latest release"
 abstract: >-
   Eir reads CIF files and asks of each structure whether it can be
   assessed at all and, if so, how well its bond valence sums agree with the
