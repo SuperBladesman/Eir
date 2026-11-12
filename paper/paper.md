@@ -16,7 +16,7 @@ affiliations:
   - name: School of Chemical, Materials and Biological Engineering, University of Sheffield, United Kingdom
     index: 1
     ror: 05krs5044
-date: DRAFT
+date: 12 November 2026
 bibliography: paper.bib
 ---
 
