@@ -4048,8 +4048,8 @@ SPLIT_SITE_MAX = 1.20         # A, closer than this with occupancies summing to
 # the floor no gate reads the contact, and the reported minimum is unchanged.
 #
 # A position refined to zero occupancy holds no atom and is left out of both
-# packing scans altogether (Richmond's anion-disorder pyrochlore models put O
-# on the empty 8b site at zero occupancy in 11 entries).
+# packing scans altogether (in an anion-disorder pyrochlore set, 11 entries
+# put O on the empty 8b site at zero occupancy).
 ALTERNATIVE_OCC_SUM_MAX = 1.02
 
 # v2.0.46: AND THE DEPOSITOR'S OWN UNCERTAINTIES.
@@ -4065,7 +4065,7 @@ ALTERNATIVE_OCC_SUM_MAX = 1.02
 # for two labels and doubled for two images of one label, whose occupancy is
 # one parameter.
 #
-# Measured on Richmond's pyrochlores: of the 18 entries on G2 whose closest
+# Measured on 1,254 ICSD pyrochlores: of the 18 entries on G2 whose closest
 # pair sums to 1.10 or less, six lie within 3 sigma and are released (189344,
 # 173796, 213453, 121049, 180491, 173792); nine are over-full by 4 to 32
 # sigma and stay; 213452 sits at 3.0 sigma and stays; two give no
