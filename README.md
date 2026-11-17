@@ -5,7 +5,7 @@
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Paper: Dalton Trans. 2026](https://img.shields.io/badge/paper-Dalton%20Trans.%202026%2C%2055%2C%202868-informational.svg)](https://doi.org/10.1039/D5DT03003J)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
-![Version 2.0.46](https://img.shields.io/badge/version-2.0.46-green.svg)
+![Version 2.0.47](https://img.shields.io/badge/version-2.0.47-green.svg)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24138853.svg)](https://doi.org/10.5281/zenodo.24138853)
 
 Eir reads a folder of CIF files and asks two questions of each structure:
@@ -15,7 +15,7 @@ Eir reads a folder of CIF files and asks two questions of each structure:
 
 The order matters. A bond valence sum is computed from bond lengths, so a length that cannot be right makes every number built on it meaningless, and often good-looking. ICSD 85235 (TbCrO₃) has a chromium octahedron within 0.0004 Å of the mean of every measured Cr³⁺–O bond, a global instability index (GII) of 0.0047, and two oxygens 2.191 Å apart against a family median of 2.750 Å. Judged on its chemistry it is the best structure in a 938-entry perovskite set; judged on its geometry it is impossible.
 
-Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.46, is a rebuild that checks the geometry before it reads the chemistry.
+Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.47, comes from a rebuild that checks the geometry before it reads the chemistry.
 
 ## What Eir checks
 
@@ -169,10 +169,10 @@ outputs/
 
 ## Versions
 
-The current release is engine **2.0.46**, packaged as **eir-bvs 2.1.0** (11th November 2026), which adds the command line, the Python interface and the report. Every surviving version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one. To install a particular release rather than the latest code, name its tag:
+The current release is engine **2.0.47**, packaged as **eir-bvs 2.1.1** (17th November 2026). eir-bvs 2.1.0 added the command line, the Python interface and the report. Every surviving version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one. To install a particular release rather than the latest code, name its tag:
 
 ```bash
-pip install "git+https://github.com/SuperBladesman/Eir.git@v2.0.46"
+pip install "git+https://github.com/SuperBladesman/Eir.git@v2.0.47"
 ```
 
 To reproduce the rock salt study, use the version that accompanied it:

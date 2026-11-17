@@ -12,7 +12,7 @@ eir.engine.look_at(85235, dfq=result.sites)
 eir.engine.PGRM_TIER_MEANING
 ```
 
-The version the engine reports, `EIR_VERSION`, is the notebook's, and it is what the output files are named after (`eir_batch_results_v2.0.46_...`), so Huginn reads a package run exactly as it reads a notebook run. The package has a version of its own (`eir-bvs 2.1.0`), because it adds a command line and a report but changes no result.
+The version the engine reports, `EIR_VERSION`, is the notebook's, and it is what the output files are named after (`eir_batch_results_v2.0.47_...`), so Huginn reads a package run exactly as it reads a notebook run. The package has a version of its own (`eir-bvs 2.1.1`), because it adds a command line and a report but changes no result.
 
 `python tools/build_engine.py --check` fails if the cells in `src/eir/_cells/` are not the notebook's. CI runs it on every push.
 
