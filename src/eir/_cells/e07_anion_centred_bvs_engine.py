@@ -152,9 +152,10 @@ ANION_RMAX = 5.0
 # Eir's first choice; 0.20 is 10% of O(2-). On 1,118 sound structures in
 # the 2.0.47 check set (CELL 7), leaving out the borosulfates, the worst
 # anion has a median deviation of 0.085 and every anion is within 0.20 in
-# 89.8% of them. The borosulfates are left out because these sums treat
-# their S(6+) as an anion.
+# 89.8% of them. The borosulfates are left out because these sums treated
+# their S(6+) as an anion (fixed at 2.0.47, _is_anion_site).
 ANION_CONSISTENT_TOL = 0.20   # |BVS - formal| below which the anion "balances"
+ANION_SUMMARY_GII_TOL = 0.30  # v2.0.47: see summarise_anion_bvs
 
 
 def _load_structure_for_anion_bvs(cif_path):
@@ -602,13 +603,17 @@ def summarise_anion_bvs(anion_results, cation_gii=None):
     devs = np.array(vals)
     balances = bool(np.all(np.abs(devs) <= ANION_CONSISTENT_TOL))
 
+    # v2.0.47: named, value unchanged. The same 0.30 v.u. as
+    # CATION_GII_TOLERANCE (CELL 7), whose comment says what it rests on;
+    # this cell runs first, so it carries its own copy, and a test in CELL 7
+    # checks the two agree.
     diagnosis = None
     if cation_gii is not None:
-        if cation_gii > 0.30 and balances:
+        if cation_gii > ANION_SUMMARY_GII_TOL and balances:
             diagnosis = 'parameter_offset'
-        elif cation_gii > 0.30 and not balances:
+        elif cation_gii > ANION_SUMMARY_GII_TOL and not balances:
             diagnosis = 'structure_or_data_problem'
-        elif cation_gii <= 0.30 and balances:
+        elif cation_gii <= ANION_SUMMARY_GII_TOL and balances:
             diagnosis = 'consistent'
         else:
             diagnosis = 'check_anion'
