@@ -25,8 +25,8 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   `tools/build_engine.py`; CI fails if the two drift apart. No verdict, sum
   or index changes. On 200 ICSD entries every output file matched the
   notebook's, serially and in parallel (docs/PACKAGE.md).
-- Tested on Python 3.11 to 3.13 with pandas 2 and 3, on Linux, Windows
-  and macOS.
+- Tested on Python 3.11 to 3.13 with pandas 2 and 3 on Linux, and on
+  Python 3.13 with pandas 3 on Windows and macOS.
 
 ## Eir 2.0 series
 
@@ -49,7 +49,7 @@ Tested on 6,949 ICSD structures: the check set; the fluorites, pyrochlores and p
 - The GII applies the site table's test of a CIF valence, so a declared zero, or a negative valence on an element that forms no anions, is replaced as the table replaces it. 23 structures declaring such valences had no index (R4): 15 are now ACCEPT, one ACCEPT_IMPRECISE, six FLAG on M1 and one on M8. One of the 15, ICSD 25427 (LiN₂ at 33 GPa, GII 2.27 v.u.), should not be; see Known limitations in the README.
 - Each cation sees candidate neighbours out to 1.30 times its shortest anion contact, at least 4.2 Å and at most 6.0 Å, rather than a fixed 4.2 Å. Caesium iodides had kept only their bonds under 4.2 Å: 16 leave G7 for R3 (no measured bond lengths for bonds to I), one for R1, and ICSD 82934, a broken model G7 had been hiding, is EXPUNGE on G2. Every site whose shortest contact is under 3.23 Å is unchanged.
 - G1's floor for N–O is 1.05 Å, just under the shortest N–O in a well-refined ordered structure (nitrosonium in NOHSO₄, 1.060 Å); every other pair keeps 1.20 Å, and so does the rule that decides which partial positions are alternatives. 44 nitrates, nitrites and nitronium salts leave G1: six ordered nitrates to ACCEPT (ICSD 297, 1685, 26639, 66710, 66711, 92596), 15 to M8 (short contacts, sodium nitrate at high temperature among them) and 10 to M10 (the nitronium salts), seven to NOT_ASSESSED (three nitrites among them) and six to another EXPUNGE gate.
-- The anion-centred sums no longer take a cation for an anion: S(6+) in a sulfate is summed once, as a cation. 97 of 101 borosulfates had read `anion_only_deviates`; 42 now read `cation_and_anion_agree`, and 56 still deviate on their O, N or Cl sums.
+- The anion-centred sums no longer take a cation for an anion: S(6+) in a sulfate is summed once, as a cation. 97 of 101 borosulfates had read `anion_only_deviates`; 41 of them now read `cation_and_anion_agree`, and 56 still deviate on their O, N or Cl sums.
 - The half-lattice shift screen no longer proposes shifts for H or D; 114 of the check set's 121 proposals were on H. Two hydrogen-bonded entries move from G4 to G5, still EXPUNGE.
 - G4 does not rest a verdict on a shift test that compared a coordination number Eir itself doubts. ICSD 430738 (Gd₃BO₃S₃) moves from EXPUNGE to ACCEPT, and nine perovskites (eight oxides and CsPbI₃) from G4 to G5 or G2, still EXPUNGE, now on a measured contact.
 - On a position two anions share, `contact_anion`, `expected_contact`, `shortest_contact_ratio` and the uncertainty columns no longer depend on which species the CIF lists first, and the per-species screen sees both. One oxynitride (ICSD 51587) gains the uncertainty it had silently lacked and is ACCEPT_IMPRECISE.
@@ -61,7 +61,7 @@ Tested on 6,949 ICSD structures: the check set; the fluorites, pyrochlores and p
 *Thresholds*
 
 - `MAX_JT_AXIAL_RATIO` 1.30 → 1.40, into the gap between bonded axials (to 1.33) and the next contact (from 1.50). `DISTORTED_BAV_MIN` and `DISTORTED_BAUR_MIN` are set on data, the 95th percentiles of the 389 ordered octahedra in sound structures of the check set (58.3 deg², 0.084); `is_distorted` marked 64% of them, and on 2.0.47's own run marks 9.7%. No gate reads either. `SPLIT_SITE_MAX` is removed: since 2.0.46 it decided nothing.
-- Every named threshold now says where its value comes from: a reference, a calculation, a measurement on named data, or a value set by hand with what has since been checked. Every inline cut-off that can move a verdict is now named the same way, its value unchanged.
+- Every named threshold now says where its value comes from (a reference, a calculation, a measurement on named data, or a value set by hand with what has since been checked) or is marked `UNSOURCED`. Six are still marked so, four of them cut-offs first named in this release. Every inline cut-off that can move a verdict is now named the same way, its value unchanged.
 
 *A name*
 

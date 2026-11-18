@@ -49,7 +49,7 @@ The shift screen proposes and never corrects. Each proposal is applied to a copy
 
 ## Getting started
 
-You need Python 3.11 or later. Eir is tested with Python 3.11 to 3.13 and with pandas 2 and 3, on Linux, Windows and macOS.
+You need Python 3.11 or later. Eir is tested with Python 3.11 to 3.13 and pandas 2 and 3 on Linux, and with Python 3.13 and pandas 3 on Windows and macOS.
 
 ```bash
 git clone https://github.com/SuperBladesman/Eir.git
