@@ -381,9 +381,20 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
 
     # v2.0.46: a halogen stated positive is a cation here, decided per site
     # so that a chloride perchlorate keeps its chloride (positive_halogens).
+    # v2.0.47: and any site the cation table reports at a positive valence
+    # is a cation, whatever its element. S(6+) in a sulfate was taken as an
+    # anion as well, and reported 5.5 to 5.8 v.u. short of its charge in 97
+    # of the 101 borosulfates (bvs_diagnosis anion_only_deviates). Decided
+    # by the site's own label, so the sulfide of a thiosulfate stays an anion.
     def _is_anion_site(label, element):
         if element not in ANION_ELEMENTS:
             return False
+        if label in valences:
+            try:
+                if float(valences[label]) > 0:
+                    return False
+            except (TypeError, ValueError):
+                pass
         v = valences.get(label, valences.get(element))
         try:
             return not (element in ALWAYS_ANION and float(v) > 0)
@@ -441,7 +452,16 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
         neighbours.sort()
 
         anion_elem = site.element.name
-        expected = abs(valences.get(anion_elem, -2))
+        # v2.0.47: an element-level valence that is positive came from a
+        # cation site of the same element (the S(6+) of a sulfate); the
+        # anion takes its own default instead.
+        _ev = valences.get(anion_elem, -2)
+        try:
+            if float(_ev) > 0:
+                _ev = {**ALWAYS_ANION, **AMPHOTERIC_ANION}.get(anion_elem, -2)
+        except (TypeError, ValueError):
+            pass
+        expected = abs(_ev)
         # v2.0.46: given this anion, no more polyanion centres than
         # POLYANION_MOST_CENTRES, or the plain occupancies stand
         _given = site.occ

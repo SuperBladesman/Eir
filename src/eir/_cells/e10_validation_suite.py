@@ -952,6 +952,89 @@ I1 I1- 3 d 0.5 0. 0. 0.5 1.
         _ok31, _det31 = False, f'{type(_e31).__name__}: {_e31}'
     report('31. a 12-coordinate Cs keeps its whole shell', _ok31, _det31)
 
+    # 32. v2.0.47: a site the cation table reports at a positive valence is
+    #     never summed as an anion. The rock salt with S(6+) on the cation
+    #     site is not chemistry; it is the smallest structure in which S is a
+    #     cation, as it is in every sulfate.
+    _d32 = tempfile.mkdtemp()
+    _p32 = os.path.join(_d32, 'eir_validation_s6.cif')
+    try:
+        with open(_p32, 'w', encoding='utf-8') as _f32:
+            _f32.write(_ROCKSALT_CIF.format(a=3.0, cat='S', cv=6, oocc=1.0))
+        _viz_was = globals().get('PY3DMOL_AVAILABLE', False)
+        try:
+            PY3DMOL_AVAILABLE = False
+            with contextlib.redirect_stdout(io.StringIO()):
+                _r32 = process_single_cif(_p32)
+                _a32 = (anion_bvs_for_structure(_p32, _r32.get('sites', []))
+                        if _r32.get('success') else None)
+        finally:
+            PY3DMOL_AVAILABLE = _viz_was
+        _res32 = (_a32[0] if isinstance(_a32, tuple) else _a32) or []
+        _labs32 = sorted({str(x.get('anion_label')) for x in _res32})
+        _ok32 = (_r32.get('success') and _a32 is not None
+                 and 'S1' not in _labs32 and 'O1' in _labs32)
+        _det32 = f'anion sums for {_labs32}: want O1 alone, never S1'
+    except Exception as _e32:
+        _ok32, _det32 = False, f'{type(_e32).__name__}: {_e32}'
+    finally:
+        try:
+            os.unlink(_p32)
+            os.rmdir(_d32)
+        except OSError:
+            pass
+    report('32. a cation is never summed as an anion', _ok32, _det32)
+
+    # 33. v2.0.47: the half-lattice screen proposes no shift for hydrogen.
+    #     O-H...O puts the acceptor 1.6 to 1.9 A from H, so an H site's shell
+    #     spread passes SHIFT_SPREAD_SUSPECT: 114 of the 121 shifts proposed in
+    #     the check set were on H. An invented P-1 cell puts H 1.0 A from one
+    #     O and 1.6 A from the next; a Li in the same place is proposed a
+    #     shift, which shows the geometry would trigger the screen.
+    _c33 = """data_eir_validation_h_bond
+_cell_length_a 4.000000
+_cell_length_b 4.000000
+_cell_length_c 6.000000
+_cell_angle_alpha 90.
+_cell_angle_beta 90.
+_cell_angle_gamma 90.
+_space_group_IT_number 2
+_symmetry_space_group_name_H-M 'P -1'
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+O1 O2- 0.1 0.1 0.1 1.
+O2 O2- 0.1 0.1 0.53333 1.
+H1 H1+ 0.1 0.1 0.26667 1.
+"""
+    _d33 = tempfile.mkdtemp()
+    _p33 = os.path.join(_d33, 'eir_validation_h_bond.cif')
+    try:
+        with open(_p33, 'w', encoding='utf-8') as _f33:
+            _f33.write(_c33)
+        _s33 = [dict(element=_e, coords=(0.1, 0.1, 0.26667), cn=2,
+                     site_label=_e + '1', valence=1) for _e in ('H', 'Li')]
+        with contextlib.redirect_stdout(io.StringIO()):
+            half_lattice_screen(_p33, _s33)
+        _ok33 = (not _s33[0].get('proposed_shift')
+                 and bool(_s33[1].get('proposed_shift')))
+        _det33 = (f"H: {_s33[0].get('proposed_shift')!r} (want none); Li in "
+                  f"the same place: {_s33[1].get('proposed_shift')!r} at "
+                  f"spread {_s33[1].get('shift_shell_spread')}")
+    except Exception as _e33:
+        _ok33, _det33 = False, f'{type(_e33).__name__}: {_e33}'
+    finally:
+        try:
+            os.unlink(_p33)
+            os.rmdir(_d33)
+        except OSError:
+            pass
+    report('33. no shift is proposed for hydrogen', _ok33, _det33)
+
     if verbose:
         print()
         print("=" * 70)

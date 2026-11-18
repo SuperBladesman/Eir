@@ -2983,6 +2983,13 @@ def half_lattice_screen(cif_path, sites, verbose=False):
         coords = _s.get('coords')
         if not coords or len(coords) != 3:
             continue
+        # v2.0.47: never for hydrogen, as the cation floor already has it
+        # (CATION_FLOOR_EXCLUDED_ELEMENTS). O-H...O puts the acceptor about
+        # 1.8 A from H, so an H site's shell spread is 1.9 to 3.1 and passed
+        # SHIFT_SPREAD_SUSPECT: 81 of the 84 H sites in sound borosulfates,
+        # and 114 of the 121 shifts proposed in the check set.
+        if _s.get('element') in CATION_FLOOR_EXCLUDED_ELEMENTS:
+            continue
         try:
             res = propose_half_lattice_shift(
                 st.cell, pts, tuple(float(c) for c in coords),
