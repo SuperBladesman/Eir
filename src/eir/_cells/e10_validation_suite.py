@@ -909,6 +909,49 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
         _ok30, _det30 = False, f'{type(_e30).__name__}: {_e30}'
     report('30. the index counts a site declared at zero valence', _ok30, _det30)
 
+    # 31. v2.0.47: a large cation keeps its whole first shell. Cubic CsPbI3
+    #     (Pm-3m) puts twelve I round Cs at a/sqrt(2), 4.448 A at a = 6.29 A,
+    #     beyond the 4.2 A the candidate shell used to stop at, where Cs had
+    #     no neighbours at all and dropped out of the table.
+    _cspbi3 = """data_eir_validation_cspbi3
+_cell_length_a 6.290000
+_cell_length_b 6.290000
+_cell_length_c 6.290000
+_cell_angle_alpha 90.
+_cell_angle_beta 90.
+_cell_angle_gamma 90.
+_space_group_IT_number 221
+_symmetry_space_group_name_H-M 'P m -3 m'
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_B_iso_or_equiv
+_atom_site_occupancy
+Cs1 Cs1+ 1 b 0.5 0.5 0.5 0.5 1.
+Pb1 Pb2+ 1 a 0. 0. 0. 0.5 1.
+I1 I1- 3 d 0.5 0. 0. 0.5 1.
+"""
+    try:
+        _r31 = _run_cif(_cspbi3)
+        _s31 = (next((s for s in _r31.get('sites', [])
+                      if s.get('element') == 'Cs'), None)
+                if _r31.get('success') else None)
+        _d31 = 6.29 / 2 ** 0.5
+        _ok31 = (_s31 is not None and _s31.get('cn') == 12
+                 and abs((_s31.get('avg_bond_length') or 0) - _d31) < tol_len)
+        _det31 = (f'Cs-I at a/sqrt(2) = {_d31:.4f} A: Cs must be in the table '
+                  f'with CN 12 at that distance. Got '
+                  + (f"CN {_s31.get('cn')}, d = {_s31.get('avg_bond_length')}"
+                     if _s31 else 'no Cs site'))
+    except Exception as _e31:
+        _ok31, _det31 = False, f'{type(_e31).__name__}: {_e31}'
+    report('31. a 12-coordinate Cs keeps its whole shell', _ok31, _det31)
+
     if verbose:
         print()
         print("=" * 70)
