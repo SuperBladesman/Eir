@@ -1058,7 +1058,35 @@ def _alternatives_summary():
     return out + (f' (+{len(items) - 6} more)' if len(items) > 6 else '')
 
 
-def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
+# v2.0.47: THE CANDIDATE SHELL, NAMED. Until 2.0.47 this was a default
+# argument of 4.2 A, outside every review of the named thresholds, and it
+# expunged sound caesium iodides: a 12-coordinate Cs keeps only its bonds
+# under 4.2 A, so Cs3Sb2I9 (ICSD 84990), with three I at 4.151 A and six at
+# 4.212 A, had CN 3, a sum of 0.217 against 1 and came out EXPUNGE on G7.
+# 19 of the 37 assessed caesium iodide ternaries in ICSD went that way.
+#
+# CANDIDATE_SHELL_MIN: MEASURED at 1.8.1. At 3.5 A the true shell boundary of
+# layered oxides fell outside the list, and 4.2 A is kept as the reach every
+# site gets.
+# CANDIDATE_SHELL_FACTOR: CHOSEN, the same 1.30 as CN_RELATIVE_CUTOFF (CELL 7)
+# and SHELL_EXTENSION_CUTOFF, so the candidates cover every contact the
+# independent coordination count would count. A site whose shortest contact
+# is d0 sees out to max(4.2 A, 1.30 d0): 5.40 A for the Cs above.
+# CANDIDATE_SHELL_MAX: CHOSEN, a ceiling on that reach, above 1.30 times the
+# longest shortest contact in any set tested (Cs-I, 4.464 A in ICSD
+# 139400, so 5.80 A).
+#
+# Why not simply raise the 4.2 A: at 5.0 A for every site, the octahedral Ti
+# of the titanium sulfide spinels took eight second-shell S into its bond
+# valence shell (CN 14, GII up by as much as 0.09). Tying the reach to the
+# site's own shortest contact leaves every site whose shortest contact is
+# under 3.23 A exactly as it was.
+CANDIDATE_SHELL_MIN = 4.2
+CANDIDATE_SHELL_FACTOR = 1.30
+CANDIDATE_SHELL_MAX = 6.0
+
+
+def calculate_bonds_from_positions(cif_file_path, max_bond_distance=CANDIDATE_SHELL_MIN):
     """
     Calculate bond distances from CIF using proper crystallographic symmetry operations.
 
@@ -1192,7 +1220,10 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
         _dbg(f"  Generating 3×3×3 supercell for coordination analysis...")
 
         supercell_atoms = []
-        _img_n = image_range(small_struct.cell, max_bond_distance)
+        # v2.0.47: images out to the ceiling, so a site whose reach exceeds
+        # max_bond_distance still has its neighbours to choose from.
+        _reach_max = max(max_bond_distance, CANDIDATE_SHELL_MAX)
+        _img_n = image_range(small_struct.cell, _reach_max)
         _img_rng = range(-_img_n, _img_n + 1)
 
         # For each site in asymmetric unit
@@ -1317,7 +1348,7 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                 # distance the two are identical, and for NaN the exclusions
                 # are both False while this is False, so a distance that is not
                 # a number is rejected here instead of silently admitted.
-                if not (0.01 <= distance <= max_bond_distance):
+                if not (0.01 <= distance <= _reach_max):
                     continue
                 if (distance < CATION_ANION_ABSOLUTE_MIN
                         and elem1_type not in CATION_FLOOR_EXCLUDED_ELEMENTS
@@ -1361,6 +1392,19 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=4.2):
                 if _alias is not None:
                     neighbor = dict(neighbor, label=_alias[0], element=_alias[1])
                 unique_neighbors.append(neighbor)
+
+            # v2.0.47: each site's own reach (CANDIDATE_SHELL_FACTOR). Its
+            # shortest contact to an anion sets it; a site with none, or an
+            # anion site, keeps max_bond_distance as before.
+            _d0 = min((n['distance'] for n in unique_neighbors
+                       if n['element'] in _an_here
+                       and site.element.name not in _an_here), default=None)
+            _reach = max_bond_distance
+            if _d0 is not None:
+                _reach = min(max(max_bond_distance,
+                                 CANDIDATE_SHELL_FACTOR * _d0), _reach_max)
+            unique_neighbors = [n for n in unique_neighbors
+                                if n['distance'] <= _reach]
 
             _dbg(f"  Debug: Site {site.label} ({site.element.name}) has {len(unique_neighbors)} neighbors in supercell")
             if site.element.name not in _an_here:
