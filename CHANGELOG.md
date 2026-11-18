@@ -38,7 +38,7 @@ Tested on 6,949 ICSD structures: the check set; the fluorites, pyrochlores and p
 
 *New codes*
 
-- **R5 `coordination_compound`** (NOT_ASSESSED, asked before G): a CO, NO, CN or nitro unit bonded through C or N to a metal. The ionic model cannot describe the unit, and G1, G2, G5 and G7 were condemning that reading rather than the entry. 58 of the 95 nitrosyl compounds that reach a verdict, every one EXPUNGE before, and no other structure.
+- **R5 `coordination_compound`** (NOT_ASSESSED, asked before G): a CO, NO, CN or nitro unit bonded through C or N to a metal. The ionic model cannot describe the unit, and G1, G2, G5 and G7 were condemning that reading rather than the entry. 58 of the 95 nitrosyl compounds that reach a verdict, every one EXPUNGE or stopping the batch before, and no other structure.
 - **R6 `index_not_reproducible`** (NOT_ASSESSED): the checks cannot rebuild the reported index from the site table. This used to stop the whole batch; it now marks the structure, and fires on none of the 6,949.
 - **R7 `symmetry_not_read`** (NOT_ASSESSED, asked first): the operations the CIF lists are not those of the group Eir reads, because gemmi does not know the setting by its symbol and Eir falls back to the standard one. ICSD 31299 and 31300 ('F 41/d d m Z') were expunged on G2 for a structure they do not describe; 39782 ('C 1 1 21/m') on G1.
 - **P2 `multiplicity_mismatch`** (EXPUNGE): a fully occupied site's symmetry images do not number its stated multiplicity. ICSD 38769 (CoFe₂O₄, O stated 32, giving 8), which passed every gate, and 213536.

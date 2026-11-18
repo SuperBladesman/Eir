@@ -19,7 +19,7 @@ Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at sca
 
 ## What Eir checks
 
-Four facets, asked in order. The first failure stops the assessment.
+Four facets, asked in order; the first failure stops the assessment. Two Reference questions come early, because otherwise the geometry gates would judge Eir's misreading rather than the file: R7 (Eir has not read the file's symmetry) is asked before everything, and R5 (a coordination compound) before G.
 
 | | Facet | Asks | On failure |
 |---|---|---|---|
