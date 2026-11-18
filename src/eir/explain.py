@@ -193,6 +193,11 @@ def _reason_sentence(code, reason, site):
             + ', so the checks against measured bond lengths cannot be made.',
         'no_index':
             'The recommended instability index could not be calculated.',
+        'index_not_reproducible':
+            'Eir could not rebuild this structure\u2019s instability index '
+            'from its own table of sites, so the two describe different '
+            'things and no verdict is given. This is a fault in Eir, not in '
+            'the entry; please report it.',
         'zero_occupancy':
             f'{_a_site(site)} is refined to zero occupancy: there is no atom '
             f'there.',

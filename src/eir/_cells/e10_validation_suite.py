@@ -888,6 +888,27 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
         _ok29, _det29 = False, f'{type(_e29).__name__}: {_e29}'
     report('29. the parameter table matches each anion charge', _ok29, _det29)
 
+    # 30. v2.0.47: the index counts the sites the table reports, at the
+    #     valence it reports. Test 10 checks the table alone; the index took
+    #     the CIF's zero as given and skipped the site, so the two disagreed
+    #     and the rebuild in CELL 7 stopped a whole batch (ICSD 10311, Ru0+).
+    try:
+        _a30 = _lattice_for_bvs(cv + 0.200, R0, b)
+        _r30 = _run_cif(_ROCKSALT_ZERO_VALENCE_CIF.format(a=_a30, cat=cat))
+        _s30 = (next((s for s in _r30.get('sites', [])
+                      if s.get('element') == cat), None)
+                if _r30.get('success') else None)
+        _g30 = _r30.get('gii') if _r30.get('success') else None
+        _ok30 = (_s30 is not None and _s30.get('valence') == cv
+                 and _g30 is not None and abs(_g30 - 0.200) < tol_gii)
+        _det30 = (f'{cat}0+ declared, a = {_a30:.5f} A puts {cat} at '
+                  f'{cv + 0.200:.3f} v.u.: the table must report {cat}({cv}) and '
+                  f'the index 0.200. Got valence '
+                  f'{_s30.get("valence") if _s30 else None}, GII {_g30}')
+    except Exception as _e30:
+        _ok30, _det30 = False, f'{type(_e30).__name__}: {_e30}'
+    report('30. the index counts a site declared at zero valence', _ok30, _det30)
+
     if verbose:
         print()
         print("=" * 70)
