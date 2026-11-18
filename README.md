@@ -52,10 +52,16 @@ The shift screen proposes and never corrects. Each proposal is applied to a copy
 You need Python 3.11 or later. Eir is tested with Python 3.11 to 3.13 and with pandas 2 and 3, on Linux, Windows and macOS.
 
 ```bash
-pip install "git+https://github.com/SuperBladesman/Eir.git"
+git clone https://github.com/SuperBladesman/Eir.git
+cd Eir
+pip install .
 ```
 
+That installs Eir and keeps the three example structures in `examples/`. To install Eir alone, without them, `pip install "git+https://github.com/SuperBladesman/Eir.git"` does it.
+
 ### Check one structure
+
+From the `Eir` folder:
 
 ```bash
 eir check examples/MgO.cif

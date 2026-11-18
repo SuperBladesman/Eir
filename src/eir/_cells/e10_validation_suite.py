@@ -1035,6 +1035,20 @@ H1 H1+ 0.1 0.1 0.26667 1.
             pass
     report('33. no shift is proposed for hydrogen', _ok33, _det33)
 
+    # 34. v2.0.47: a ligand at its centre's own position is no polyanion edge
+    #     and no division by zero. N and O sharing a position in disordered
+    #     nitrosonium and nitrate models stopped six files with no verdict.
+    try:
+        _e34 = (polyanion_edge('N', 'O', 0.0, 1.24, 1.24),
+                polyanion_edge('N', 'O', 1.24, 0.0, 1.24),
+                polyanion_edge('N', 'O', 1.24, 1.24, 2.148))
+        _ok34 = _e34 == (False, False, True)
+        _det34 = (f'b = 0 on either side: {_e34[:2]} (want False, False); a '
+                  f'nitrate O-N-O at 120 degrees: {_e34[2]} (want True)')
+    except Exception as _x34:
+        _ok34, _det34 = False, f'{type(_x34).__name__}: {_x34}'
+    report('34. a ligand on its centre is no polyanion edge', _ok34, _det34)
+
     if verbose:
         print()
         print("=" * 70)
