@@ -378,6 +378,16 @@ def classify_site(row, struct):
         _fall_through = False
         _sv = row.get('shift_verdict')
         _sv = None if (_sv is None or _sv != _sv) else str(_sv)
+        # v2.0.47: the shift screen compares the site's first cn bonds at the
+        # two positions, so a cn the tool itself doubts (cn_fault set) makes
+        # the comparison, and any verdict on it, untrustworthy - M8's and
+        # M10's own guard. ICSD 430738 (Gd3BO3S3) was EXPUNGE on G4: its BO3
+        # group, three O at 1.36 to 1.41 A, was compared as four bonds
+        # (cn_exceeds_relative), the shift cleared that one screen, and the
+        # GII went from 0.128 to 1.151. Such a site falls through to the
+        # gates that judge on a measurement.
+        if _pgrm_has_value(row.get('cn_fault')):
+            _sv, _fall_through = None, True
         if _sv:
             _ev = str(row.get('shift_evidence') or _ev)
             if _sv == 'not diagnostic':
@@ -923,6 +933,19 @@ def VALIDATE_GATES(verbose=True):
     _g6 = classify_site(dict(_sound6, min_bond_length=1.0,
                              contact_above_floor=False),
                         {'gii_recommended_value': 0.1})
+    # v2.0.47. G4 does not rest on a shift screen built on a doubted cn.
+    _sh9 = dict(_row, cn=4, bvs=2.95, bvs_percent_diff=-1.8, bl_tier=1.0,
+                element='B', valence=3, cn_shannon_min=3,
+                proposed_shift='0,0,0.5', shift_shell_spread=1.9,
+                proposed_spread=1.1, shift_verdict='supported',
+                shift_evidence='screens 1 -> 0, GII 0.128 -> 1.151')
+    _g9a = classify_site(_sh9, {'gii_recommended_value': 0.128})
+    _g9b = classify_site(dict(_sh9, cn_fault='cn_exceeds_relative'),
+                         {'gii_recommended_value': 0.128})
+    report('9. G4 rests on no shift screen built on a doubted cn',
+           _g9a[0] == 'G4' and _g9b[0] != 'G4',
+           f'supported shift: {_g9a[0]}; the same with cn_fault set: {_g9b[0]}')
+
     report('8. R6: an index the table cannot rebuild is not assessed, after G',
            _r6[0] == 'R6' and _g6[0] == 'G1',
            f'index_check only: {_r6[0]}; with a contact under the floor: {_g6[0]}')
