@@ -39,7 +39,9 @@
 # ===========================================================================
 PGRM_SUPPRESS = False
 
-# v2.0.22, item 4.1. Two thresholds for G6, and NEITHER IS MEASURED.
+# v2.0.22, item 4.1. Two thresholds for G6. Neither was measured when it
+# was set; v2.0.47 measures where the ratio sits and gives the reason for
+# the sample size (the last paragraph below).
 #
 # They were chosen to sit clear of a test this project already built and
 # rejected: 'is the shortest contact below the shortest ever observed for this
@@ -59,6 +61,16 @@ PGRM_SUPPRESS = False
 #
 # Named so the choice is visible and can be moved. What IS measured is Gagne's
 # minimum and its sample count; these two numbers are a reading of them.
+#
+# v2.0.47: both CHOSEN; the ratio now MEASURED. On 3,818 sites of
+# configurations with n >= 50 in the 2.0.47 check set (CELL 7), three sit
+# below 0.90, all in structures G6 expunges (Zn(2+) tetrahedra at 0.850
+# and 0.862, a Cu(2+) site at 0.878); the 0.1st percentile is 0.917.
+# Below 1.00 sit 4.9% of all such sites and 4.2% of those in sound
+# structures, which is why the minimum alone could not be the test. For
+# the sample size, a reason rather than a measurement: the chance that one
+# more bond from the same population falls below the shortest of n is
+# 1/(n+1), 2% at n = 50.
 MEASURED_MIN_RATIO = 0.90
 MEASURED_MIN_SAMPLE = 50
 
@@ -135,6 +147,10 @@ PGRM_FULL_OCC = 0.98
 #
 # See Eir_2_0_29_provenance.md for the full sweep.
 PGRM_PREMODERN_YEAR = 1950
+# v2.0.47: CHOSEN, as a definition. A shared position whose species differ
+# in valence by 2 or more is heterovalent (M3, ACCEPT_HETEROVALENT); a span
+# of 1, Y(3+)/Zr(4+) or Fe(2+)/Fe(3+), is homovalent (M2). The README
+# states the same rule.
 PGRM_HETEROVALENT_DV = 2
 
 # v2.0.46. G7: A SITE WHOSE SHELL IS TOO SMALL AND WHOSE SUM SAYS WHY.

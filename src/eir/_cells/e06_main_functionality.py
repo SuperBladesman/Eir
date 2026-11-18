@@ -1889,6 +1889,16 @@ ECON_TRIGGER_TOLERANCE = 1.25
 
 # Ceiling on shell extension, as a multiple of the shortest bond. Matches
 # CN_RELATIVE_CUTOFF in CELL 7 so the two agree by construction.
+#
+# v2.0.47: MEASURED with CN_RELATIVE_CUTOFF, whose value it shares. Set at
+# 2.0.2. ECON_TRIGGER_TOLERANCE above decides when the guard extends a
+# shell; this decides how far it can reach. It acts on the gap shell
+# (guarded_shell_cn), not the canonical one; the check is against the
+# bond valence shell, the one a reach has to respect. On 975 ordered sites
+# in sound structures in the 2.0.47 check set (CELL 7), the first contact
+# outside the bond valence shell lies beyond 1.30 times the shortest bond
+# at all but 15, every one K, Rb, Cs, Na or Pb in a borosulfate; in the
+# rock salts, spinels and chromium oxides it is never closer than 1.58.
 SHELL_EXTENSION_CUTOFF = 1.30
 
 
@@ -2120,6 +2130,10 @@ def group_bond_counts(sorted_cn_bonds, cn):
     return out
 
 
+# v2.0.47: CHOSEN; MEASURED in cn_fault below. A shell that really counts
+# one bond N times has no spread at all. Of the 243 sites the integer-ratio
+# rule once called duplicates in 1,881 ICSD spinels, none had a spread
+# under 0.05 A (median 0.753 A).
 DUPLICATE_SPREAD_MAX = 0.05   # A. See cn_fault.
 
 
@@ -2536,11 +2550,27 @@ def coordination_plausible(element, valence, cn,
 # coordination is judged split rather than merely distorted. A regular
 # octahedron sits near 1.02, a Jahn-Teller 4+2 near 1.37 (ICSD 79873, which
 # must NOT be flagged), a strongly tilted A site near 1.5.
+#
+# v2.0.47: CHOSEN at 2.0.2 among the three reference values above;
+# MEASURED since. On 3,584 cation sites other than H in sound structures in
+# the 2.0.47 check set (CELL 7), the spread has a median of 1.00 and a 99th
+# percentile of 1.20; four sites exceed 1.50, two Li and two Pb with
+# shells of 9 or 10. Every 4+2 octahedron in the set lies at 1.33 or below
+# (MAX_JT_AXIAL_RATIO, CELL 1). Hydrogen is not exempt: O-H...O puts the
+# acceptor about 1.8 A from H, 81 of the 84 H sites in sound borosulfates
+# exceed 1.50, and 114 of the 121 shifts proposed in the set are on H.
+# This and the three settings below decide which shifts are proposed
+# (proposed_shift), and so what G4 can test.
 SHIFT_SPREAD_SUSPECT = 1.50
 
 # How much better the alternative must be before it is worth proposing.
 # Deliberately demanding: the cost of a false proposal on a sound structure is
 # higher than the cost of missing a marginal one.
+# v2.0.47: CHOSEN at 2.0.2; what it implies is DERIVED. With
+# SHIFT_SPREAD_SUSPECT, a shift is proposed only if it takes a spread
+# above 1.50 to below 1.50/1.30 = 1.15 at the margin, inside the 99th
+# percentile of sound sites (1.20). The type case, ICSD 209078, goes from
+# 1.80 to 1.03, a factor of 1.75.
 SHIFT_IMPROVEMENT = 1.30
 
 # Bonds compared at each candidate position. Six is the octahedral first shell
@@ -2552,11 +2582,25 @@ SHIFT_SHELL_SIZE = 6
 # v2.0.35 because _anion_points and _shell_at each carried their own copy of
 # 4.0 and nothing tied them together: the points were generated for one radius
 # and searched at another.
+# v2.0.47: DERIVED. A search radius, which has to reach the bonds compared
+# (the site's own CN). Every oxide bond in Gagne's bond-length data lies
+# within 4.0 A except those of Cs(+) at CN 11 and above (to 4.20 A) and
+# Tl(+) at CN 12 (4.01 A); on 3,567 sites in sound structures in the
+# 2.0.47 check set (CELL 7) the longest bond in any shell is 3.73 A.
 SHIFT_SEARCH_MAX = 4.0
 
 # Above this many candidate translations the space group has too little
 # symmetry for the test to mean anything. P1 admits every translation, so the
 # screen would "improve" any site by sliding it onto the nearest anion.
+# v2.0.47: CHOSEN at 2.0.6; what it selects is DERIVED. Counted with
+# normaliser_translations for all 230 space groups (standard settings):
+# 208 give 15 or fewer and the other 22 give 23 or more, every one a polar
+# group whose origin is free along one or more axes, so the count samples a
+# continuous freedom: P1 511; Pm and Pc 127; Cm and Cc 63; P2, P21 and the
+# ten primitive groups Pmm2 to Pnn2 31; P3, P31, P32, P3m1 and P3c1 23.
+# Any value from 15 to 22 selects the same groups. C2, the C-, A- and
+# I-centred mm2 groups and P4 to P42bc give exactly 15, are polar too, and
+# are tested.
 NORMALISER_MAX_CANDIDATES = 15
 
 _NORMALISER_CACHE = {}

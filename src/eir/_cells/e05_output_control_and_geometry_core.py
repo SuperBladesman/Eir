@@ -1000,10 +1000,15 @@ def cshm(centre, ligs, geometry):
 # Alias of PROVISIONAL_ANIONS (CELL 1), where the reasoning lives.
 _ANION_SET = PROVISIONAL_ANIONS
 
-# Thresholds for is_distorted. NOT MEASURED: inherited from v1.x and never
-# tested against a dataset, unlike ECON_REGULAR_MIN, ANION_ANION_MIN and
-# CATION_CATION_MIN, each of which carries its measurement beside it. Treat
-# is_distorted as indicative until these are set the same way.
+# Thresholds for is_distorted. UNSOURCED as values: inherited from v1.x
+# and, unlike ANION_ANION_MIN and CATION_CATION_MIN, not set on a dataset.
+# (This note used to name ECON_REGULAR_MIN as measured; it was not then,
+# see CELL 7.) Where they sit is MEASURED at 2.0.47, on ordered sites in
+# sound structures in the 2.0.47 check set (CELL 7): the bond angle
+# variance exceeds 25 deg^2 at 57% of 386 six-coordinate sites (median
+# 29.9) and 10% of 413 four-coordinate ones; the Baur index exceeds 0.02
+# at 15% and 4%. So is_distorted marks most octahedra in sound structures
+# (64%): read it as 'not regular', not as a fault. No gate reads it.
 DISTORTED_BAV_MIN = 25.0      # bond angle variance, deg^2
 DISTORTED_BAUR_MIN = 0.02     # Baur index
 _EIR_GEOMETRY = {}
