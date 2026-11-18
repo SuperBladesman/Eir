@@ -4,9 +4,9 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## The eir-bvs package
 
-### eir-bvs 2.1.1 – 17 November 2026
+### eir-bvs 2.1.1 – unreleased
 
-**The 2.0.47 engine.** Nothing in the package changed.
+**The 2.0.47 engine.** The one-page report explains the five new codes (R5, R6, R7, P2, M12). Nothing else in the package changed.
 
 ### eir-bvs 2.1.0 – 11 November 2026
 
@@ -30,21 +30,42 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
-### 2.0.47 – 17 November 2026
+### 2.0.47 – unreleased
 
-**Comments only: a name removed, and every named threshold says where its value comes from**
+**Every fault the 2.0.47 checks found, fixed; five new codes; a name removed, and every threshold says where its value comes from**
 
-- A personal name came back into two comments in CELL 1 during the 2.0.46
-  work. Both now describe the dataset; [docs/HISTORY.md](docs/HISTORY.md)
-  records how it came back.
-- Every named threshold now says where its value comes from: a reference,
-  a calculation, a measurement on named data, or a value set by hand with
-  what has since been checked. That covers the seven the README's claim
-  missed and seventeen more found by a sweep; the README says which
-  thresholds the claim covers.
-- No code changed. Apart from `EIR_VERSION`, every code cell parses to the
-  same syntax tree as in 2.0.46, so every result is the same; only the
-  version string differs.
+Tested on 6,949 ICSD structures: the check set; the fluorites, pyrochlores and perovskites; 312 entries from earlier checks; and 19 sets exported to test these changes (nitrates, nitrosyl compounds, caesium and rubidium iodides, homopolar and polyanion compounds). 161 of the 6,939 structures 2.0.46 assessed change verdict, and ten files it could not finish now get one. Every change is listed by name in the description of the pull request that made it. Each fix that moves a verdict in these runs has a `VALIDATE()` test that fails on 2.0.46.
+
+*New codes*
+
+- **R5 `coordination_compound`** (NOT_ASSESSED, asked before G): a CO, NO, CN or nitro unit bonded through C or N to a metal. The ionic model cannot describe the unit, and G1, G2, G5 and G7 were condemning that reading rather than the entry. 58 of the 95 nitrosyl compounds that reach a verdict, every one EXPUNGE before, and no other structure.
+- **R6 `index_not_reproducible`** (NOT_ASSESSED): the checks cannot rebuild the reported index from the site table. This used to stop the whole batch; it now marks the structure, and fires on none of the 6,949.
+- **R7 `symmetry_not_read`** (NOT_ASSESSED, asked first): the operations the CIF lists are not those of the group Eir reads, because gemmi does not know the setting by its symbol and Eir falls back to the standard one. ICSD 31299 and 31300 ('F 41/d d m Z') were expunged on G2 for a structure they do not describe; 39782 ('C 1 1 21/m') on G1.
+- **P2 `multiplicity_mismatch`** (EXPUNGE): a fully occupied site's symmetry images do not number its stated multiplicity. ICSD 38769 (CoFe₂O₄, O stated 32, giving 8), which passed every gate, and 213536.
+- **M12 `off_special_position`** (FLAG): a coordinate is off the special position its multiplicity names by more than its own rounding and three times its uncertainty. Eir reads the special position meant; the flag says the file does not. ICSD 213392 (CoFe₂O₄, 192 O per cell as written), 213396, 135344 and 154853.
+
+*Faults fixed*
+
+- The GII applies the site table's test of a CIF valence, so a declared zero, or a negative valence on an element that forms no anions, is replaced as the table replaces it. 23 structures declaring such valences had no index (R4): 15 are now ACCEPT, one ACCEPT_IMPRECISE, six FLAG on M1 and one on M8. One of the 15, ICSD 25427 (LiN₂ at 33 GPa, GII 2.27 v.u.), should not be; see Known limitations in the README.
+- Each cation sees candidate neighbours out to 1.30 times its shortest anion contact, at least 4.2 Å and at most 6.0 Å, rather than a fixed 4.2 Å. Caesium iodides had kept only their bonds under 4.2 Å: 16 leave G7 for R3 (no measured bond lengths for bonds to I), one for R1, and ICSD 82934, a broken model G7 had been hiding, is EXPUNGE on G2. Every site whose shortest contact is under 3.23 Å is unchanged.
+- G1's floor for N–O is 1.05 Å, just under the shortest N–O in a well-refined ordered structure (nitrosonium in NOHSO₄, 1.060 Å); every other pair keeps 1.20 Å, and so does the rule that decides which partial positions are alternatives. 44 nitrates, nitrites and nitronium salts leave G1: six ordered nitrates to ACCEPT (ICSD 297, 1685, 26639, 66710, 66711, 92596), 15 to M8 (short contacts, sodium nitrate at high temperature among them) and 10 to M10 (the nitronium salts), seven to NOT_ASSESSED (three nitrites among them) and six to another EXPUNGE gate.
+- The anion-centred sums no longer take a cation for an anion: S(6+) in a sulfate is summed once, as a cation. 97 of 101 borosulfates had read `anion_only_deviates`; 42 now read `cation_and_anion_agree`, and 56 still deviate on their O, N or Cl sums.
+- The half-lattice shift screen no longer proposes shifts for H or D; 114 of the check set's 121 proposals were on H. Two hydrogen-bonded entries move from G4 to G5, still EXPUNGE.
+- G4 does not rest a verdict on a shift test that compared a coordination number Eir itself doubts. ICSD 430738 (Gd₃BO₃S₃) moves from EXPUNGE to ACCEPT, and nine perovskites (eight oxides and CsPbI₃) from G4 to G5 or G2, still EXPUNGE, now on a measured contact.
+- On a position two anions share, `contact_anion`, `expected_contact`, `shortest_contact_ratio` and the uncertainty columns no longer depend on which species the CIF lists first, and the per-species screen sees both. One oxynitride (ICSD 51587) gains the uncertainty it had silently lacked and is ACCEPT_IMPRECISE.
+- `bvs_diagnosis` reads `gii_recommended_value`. On the per-species `gii`, 583 of 1,173 sound structures in the check set read `cation_only_deviates`; now 114 of 1,187.
+- A ligand at its centre's own position (N and O sharing a site in disordered nitrosonium and nitrate models) divided by zero and the file failed with no verdict; six such files now get one.
+- The structure verdict quotes the worst of the sites failing a contact gate, on the measure that gate judges, rather than the last row; and G4's evidence names the shift it tested.
+- `flag_all_error_types` cites Reeves-McLaren, *Dalton Trans.*, 2026, **55**, 2868. The README's Getting started clones the repository, so the example it checks is there.
+
+*Thresholds*
+
+- `MAX_JT_AXIAL_RATIO` 1.30 → 1.40, into the gap between bonded axials (to 1.33) and the next contact (from 1.50). `DISTORTED_BAV_MIN` and `DISTORTED_BAUR_MIN` are set on data, the 95th percentiles of the 389 ordered octahedra in sound structures of the check set (58.3 deg², 0.084); `is_distorted` marked 64% of them, and on 2.0.47's own run marks 9.7%. No gate reads either. `SPLIT_SITE_MAX` is removed: since 2.0.46 it decided nothing.
+- Every named threshold now says where its value comes from: a reference, a calculation, a measurement on named data, or a value set by hand with what has since been checked. Every inline cut-off that can move a verdict is now named the same way, its value unchanged.
+
+*A name*
+
+- A personal name came back into two comments in CELL 1 during the 2.0.46 work. Both now describe the dataset; [docs/HISTORY.md](docs/HISTORY.md) records how it came back.
 
 ### 2.0.46 – 11 November 2026
 
