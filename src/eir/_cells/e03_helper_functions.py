@@ -1484,7 +1484,28 @@ TRANSITION_METALS = {
     'La', 'Ce', 'Pr', 'Nd', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu',
 }
 
-# Thresholds for EXPUNGE tier
+# Thresholds for is_minority_species (until 2.0.11 they also set the 1.7
+# EXPUNGE tier).
+#
+# v2.0.47: CHOSEN at 1.7.0; where they sit is MEASURED. A species under
+# 0.05 of its position's total occupancy (an absolute occupancy before
+# 1.8.3), sharing the position with one over 0.90 of it, is
+# is_minority_species (reported, and asked the what-if valence question)
+# unless the same element is over 0.90 on another site, which is anti-site
+# exchange. antisite_exchange applies MAJORITY_OCC_THRESHOLD the same way
+# for has_antisite_disorder: a note on the verdict, a section of the
+# triage, and WAGII as the recommended index where no position is shared.
+# No gate reads either. is_dominant_species, which G7, M8, M10 and CELL 2's
+# structure screens read, is the fullest species on its position and uses
+# no threshold.
+#
+# In the 2.0.47 check set (CELL 7), 192 of 1,843 shared cation
+# positions (10.4%) hold a species under 0.05 of the position, and beside
+# 90% of those the other species is over 0.90 of it (median 0.975). About
+# 1,600 partial occupancies are deposited with an uncertainty, with a
+# median of 0.006 (90th percentile 0.030), so 0.05 is about eight median
+# uncertainties: a species below it has been refined as present, but it
+# is small.
 MINORITY_OCC_THRESHOLD = 0.05  # Occupancy below which a species is "minority"
 MAJORITY_OCC_THRESHOLD = 0.90  # Occupancy above which another species dominates
 
@@ -3221,6 +3242,17 @@ VIZ_DEFAULT_COLOUR = '#c0c0c0'
 # taken as an error in the deposited coordinates rather than as chemistry. The
 # 15% margin allows for normal bond-length variation and thermal motion while
 # still catching genuine overlaps. Same value the batch post-processor uses.
+#
+# v2.0.47: CHOSEN; where it sits is MEASURED. RADII_CN_SLOPE (CELL 2) takes
+# 0.85 as its value at CN 6 and scales it with coordination. On 701
+# six-coordinate sites in ICSD perovskites with GII below 0.25 the 2nd
+# percentile of the contact ratio is 0.918, 0.068 above it, and the slope
+# keeps about that spacing at every CN. The margin is thinner where two
+# cations share a position and the file gives one geometry for both: on
+# six-coordinate sites in sound structures with GII below 0.25 in
+# the 2.0.47 check set (CELL 7), the 2nd percentile is 0.910 on
+# 299 single-species sites and 0.886 on 1,211 shared or partly occupied
+# ones.
 IMPLAUSIBLE_CONTACT_FRACTION = 0.85
 
 # Second, independent geometry test, expressed in the tool's own terms.
@@ -3245,6 +3277,13 @@ IMPLAUSIBLE_CONTACT_FRACTION = 0.85
 # That is fine for catching a misplaced atom and weaker as independent
 # evidence, so having one test that depends on the parameter set and one that
 # does not is worth the extra column.
+# v2.0.47: CHOSEN; where it sits is MEASURED. BVS_DISTANCE_CN_SLOPE
+# (CELL 2) takes 0.90 as its value at CN 6: on 646 six-coordinate sites in
+# ICSD perovskites with GII below 0.25 the 2nd percentile is 0.945, and a
+# fixed 0.90 failed 1.1% of them. On the sites IMPLAUSIBLE_CONTACT_FRACTION
+# describes in the 2.0.47 check set (CELL 7), the 2nd percentile is
+# 0.932 on 299 single-species sites and 0.898 on the 1,211 others, 44 of
+# which sit below 0.90; none is the dominant species, so M8 asks none.
 IMPLAUSIBLE_BVS_DISTANCE_FRACTION = 0.90
 
 
@@ -3500,6 +3539,17 @@ BV_SUM_CUTOFF = 0.02
 # and wrong for everything else.
 BV_CUT_A = 0.4167
 BV_CUT_N = 1.391
+# v2.0.47: the floor is DERIVED, the ceiling CHOSEN and checked, both on
+# the data the fit above was made on. Of its 147 configurations, the 141
+# with O are the ones checked here (the other six are N). The floor
+# binds on three, Cs(+) at CN 15 and 18 and K(+) at CN 15, where the fit
+# gives 0.0075 to 0.0096. 0.01 is the weakest bond recorded in any of the
+# 141: 0.0098 v.u., Cs(+)-O at 4.195 A, CN 18. Below it the fit would admit
+# contacts weaker than any observed bond. The ceiling binds on ten: C(4+),
+# S(4+) and N(5+) at CN 3; S, Se, Cr, Mo and W(6+), Cl and Re(7+) at CN 4.
+# Their weakest observed bonds are 0.780 v.u. (Cr(6+)-O) and stronger, so
+# 0.60 drops none of them; the fit alone, 0.62 to 0.91, comes within 7% of
+# the Cr(6+) bond.
 BV_CUT_MIN, BV_CUT_MAX = 0.01, 0.60
 
 
@@ -4026,6 +4076,12 @@ def mobile_pair(el1, v1, p1, el2, v2, p2):
 # The cost is stated: a genuinely impossible H position is now invisible to
 # G5. It was never visible to a floor measured without hydrogen in it.
 CATION_FLOOR_EXCLUDED_ELEMENTS = frozenset({'H', 'D'})
+# v2.0.47: UNSOURCED, and it DECIDES NOTHING since 2.0.46. The
+# alternatives rule now runs to the packing floor, and max(SPLIT_SITE_MAX,
+# floor) is the floor (2.35 or 2.40 A). Set at 1.8.8 and never measured.
+# For scale, 1.20 A is 0.31 A below the shortest metal-oxygen bond in
+# Gagne's bond-length data (Be(2+), 1.506 A) and above the shortest C-N,
+# N-O and N-N bonds there (1.137 to 1.194 A).
 SPLIT_SITE_MAX = 1.20         # A, closer than this with occupancies summing to
                               # <= 1 means one atom written as two positions
 
@@ -4048,8 +4104,16 @@ SPLIT_SITE_MAX = 1.20         # A, closer than this with occupancies summing to
 # the floor no gate reads the contact, and the reported minimum is unchanged.
 #
 # A position refined to zero occupancy holds no atom and is left out of both
-# packing scans altogether (Richmond's anion-disorder pyrochlore models put O
-# on the empty 8b site at zero occupancy in 11 entries).
+# packing scans altogether (in an anion-disorder pyrochlore set, 11 entries
+# put O on the empty 8b site at zero occupancy).
+#
+# v2.0.47: DERIVED from rounding, and MEASURED. Two occupancies written to
+# two decimal places can sum to 1.01 by rounding alone (0.34 and 0.67). On
+# species sharing one position, where the same rounding applies, in
+# the 2.0.47 check set (CELL 7): of 1,153 positions deposited
+# without uncertainties, none sums to more than 1.010, so 0.02 is twice
+# the largest excess. An inline <= 1.02 from 1.8.8, named at 2.0.46;
+# OCC_ESD_K below widens it to the deposited uncertainties.
 ALTERNATIVE_OCC_SUM_MAX = 1.02
 
 # v2.0.46: AND THE DEPOSITOR'S OWN UNCERTAINTIES.
@@ -4065,7 +4129,7 @@ ALTERNATIVE_OCC_SUM_MAX = 1.02
 # for two labels and doubled for two images of one label, whose occupancy is
 # one parameter.
 #
-# Measured on Richmond's pyrochlores: of the 18 entries on G2 whose closest
+# Measured on 1,254 ICSD pyrochlores: of the 18 entries on G2 whose closest
 # pair sums to 1.10 or less, six lie within 3 sigma and are released (189344,
 # 173796, 213453, 121049, 180491, 173792); nine are over-full by 4 to 32
 # sigma and stay; 213452 sits at 3.0 sigma and stays; two give no
@@ -4164,6 +4228,17 @@ def _occupancy_esds(cif_path):
 # a bond. The all_cations variant of ICSD 11616 produced a Dy-O contact of
 # 1.181 A, from which Eir built a shell of one and reported the site as
 # overbonded at 8.258 v.u.
+#
+# v2.0.47: CHOSEN, and the first two sentences above are wrong. Gagne's
+# bond-length data record N(5+)-O bonds from 1.150 A (CN 3, mean 1.247, sd
+# 0.030, 468 bonds), C(4+)-O from 1.228 A and B(3+)-O from 1.298 A; leaving
+# out H, which the floor skips, only N and C go below 1.20 A. Real N-O
+# bonds run shorter still where Gagne has no configuration: ICSD 210694, a
+# nitronium borosulfate (N(5+) at CN 2, N-O 1.114 A, GII 0.106), is
+# expunged on G1. G1 reads only the contact, so any nitrate with one N-O
+# bond under 1.20 A goes the same way whatever its sums. How far to lower
+# it for N-O, tested on ICSD nitrates and nitronium and nitrosyl salts, is
+# an open issue.
 
 CATION_ANION_ABSOLUTE_MIN = 1.20
 
@@ -4291,6 +4366,29 @@ POLYANION_BOND_MAX = max(b for b, _ in POLYANION_PAIRS.values())
 # v2.0.46: the most ligands each centre takes (conditional_occupancy), and
 # the most centres one ligand is bonded to (two, for the bridging O of a
 # pyro-anion)
+#
+# v2.0.47: the ligand counts are SOURCED; the centre count is CHOSEN, and is
+# not the bound from chemistry that 2.0.46 called it. Both were set at
+# 2.0.46, where they stop cubic NaClO4 (ICSD 117375) summing Cl(7+) to 53.
+#
+# POLYANION_MOST_LIGANDS is the largest coordination number Gagne's
+# bond-length data record for the centre's highest oxidation state:
+# N(5+)-O 4 (the orthonitrates, Na3NO4 among them), B(3+)-O 4, Si(4+)-O 6,
+# P(5+)-O 4, S(6+)-O 4, Se(6+)-O 4, As(5+)-O 6 and Cl(7+)-O 4. C(4+)-O is
+# 3 there; 4 is the CO4 of the high-pressure orthocarbonates (Sr2CO4,
+# Laniel et al., Acta Cryst. B77 (2021) 131; Ca2CO4, Binck et al., Am.
+# Mineral. 107 (2022) 336). The fluorides are BF4-, SiF6(2-) and PF6-.
+# Only bonds within the POLYANION_PAIRS limits count, so the long secondary
+# bonds of Se(4+) and As(3+) are not ligands here.
+#
+# POLYANION_MOST_CENTRES: two, the bridging ligand of a pyro-anion, is the
+# common case, not a limit. O is bonded to three Si in stishovite, to three
+# B in high-pressure borates such as YB7O12 (Fuchs et al., Eur. J. Inorg.
+# Chem. (2019) 271), and to four B in cubic boracite. The bound acts only on
+# a partly occupied ligand bonded to partly occupied centres: where the
+# conditional weights would give it more than 2.25 centres, its sum falls
+# back to plain occupancies, as before 2.0.46. Ordered structures, these
+# three among them, are unaffected.
 POLYANION_MOST_LIGANDS = {
     ('C', 'O'): 4, ('N', 'O'): 4, ('B', 'O'): 4, ('B', 'F'): 4,
     ('Si', 'O'): 6, ('Si', 'F'): 6, ('P', 'O'): 4, ('P', 'F'): 6,
@@ -4597,6 +4695,19 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
 # Carbon bonded only to oxygen or to metals (a carbonate, the isolated C of a
 # carbide) is assessed as before, and carbon sharing a position with N (a
 # carbonitride) is not bonded to it.
+#
+# v2.0.47: DERIVED from published bond lengths; none was fitted. The test
+# needs only the shortest contact from a carbon to C, H or N, and in
+# organic, framework or molecular carbon that is an ordinary covalent
+# bond: C-H 0.95 to 1.10 A, multiple bonds of C to C or N 1.14 to 1.40 A,
+# single C-C and C-N bonds about 1.53 and 1.47 A (Allen et al., J. Chem.
+# Soc. Perkin Trans. 2 (1987) S1). Each limit sits above those, and below
+# the nearest approach of the same partner in carbon that is assessed: C-H
+# 1.25 against about 1.90 A from C to the hydroxyl H of a bicarbonate (C-O
+# 1.34, O-H 0.97 A at 110 degrees), C-C 1.75 against 3.06 A between the
+# carbons of TiC. The longest C-C single bond reported, 1.806 A (Ishigaki
+# et al., Chem 4 (2018) 795), lies above 1.75, but a molecule with one has
+# ordinary C-C and C-H bonds as well.
 MOLECULAR_CARBON_PARTNERS = {'C': 1.75, 'H': 1.25, 'D': 1.25, 'N': 1.60}  # A
 MOLECULAR_CARBON_NOTE = 'molecular carbon'      # eir.api reads this phrase
 
@@ -4830,6 +4941,26 @@ SHANNON_CN6_VIZ = {
 # set (Cr3+, Fe3+) are never touched: a clean octahedron is already CN=6 and a
 # real tetrahedron's axials sit far beyond the ratio.
 JT_OCTAHEDRAL_ELEMENTS = {'Cr', 'Mn', 'Fe', 'Ni', 'Cu', 'Ag'}
+# v2.0.47: CHOSEN at 1.7.4; MEASURED since, and it sits inside the range it
+# is meant to cover. Since 2.0.3 it decides only the gap shell
+# (cn_gap_shell, bvs_gap_shell) of a Cr, Mn, Fe, Ni, Cu or Ag site that the
+# gap analysis (auto_analyze_coordination, CELL 2) cut to 4 or 5. It
+# reaches the canonical CN and sum only where the bond valence shell cannot
+# be built and the gap shell stands in (cn_method gap_fallback_*).
+#
+# Of 2,702 sites of these elements with seven or more contacts in
+# the 2.0.47 check set (CELL 7), 94 have a sixth contact at 1.05 to
+# 1.60 times the mean of their four shortest that the bond valence shell
+# counts as a bond: 4+2 octahedra. That sixth bond lies at 1.05 to 1.33
+# (Mn 1.05 to 1.19), and no site has a sixth contact between 1.33 and
+# 1.50. Six Cu(2+) sites in tetragonal spinels have it above 1.30, but
+# their largest gap comes after the sixth bond, so their gap shell is 6 and
+# this ratio is never read: no site in the set has its gap shell cut to 4
+# or 5 under a canonical shell of 6. In minerals Cu(2+)-O is bimodal at
+# 1.97 and 2.44 A, a ratio of 1.24 (Eby and Hawthorne, Acta Cryst. B49
+# (1993) 28), and tenorite, CuO, is square planar with its next two O at
+# 2.78 A, a ratio of 1.42: the gap in this set is not a property of
+# Cu(2+).
 MAX_JT_AXIAL_RATIO = 1.30  # axial/equatorial-mean ceiling for a bonding axial
 
 # Ions whose ground-state d-electron count gives a degenerate e_g or t_2g

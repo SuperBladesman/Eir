@@ -7,23 +7,23 @@ authors:
     given-names: Nik
     affiliation: University of Sheffield
     orcid: "https://orcid.org/0000-0002-1061-1230"
-version: 2.0.46
-date-released: 2026-11-11
-doi: 10.5281/zenodo.24138854
+version: 2.0.47
+date-released: 2026-11-17
+doi: 10.5281/zenodo.24138853
 identifiers:
-  - type: doi
-    value: 10.5281/zenodo.24138854
-    description: "This version, 2.0.46, archived on Zenodo"
   - type: doi
     value: 10.5281/zenodo.24138853
     description: "All versions on Zenodo; resolves to the latest release"
+  - type: doi
+    value: 10.5281/zenodo.24138854
+    description: "Version 2.0.46, archived on Zenodo"
 abstract: >-
   Eir reads CIF files and asks of each structure whether it can be
   assessed at all and, if so, how well its bond valence sums agree with the
   formal valences. It returns an integrity verdict with the code that
   decided it, the bond valence sum of every site, the global instability
-  index, and the evidence for each. This release is engine 2.0.46,
-  packaged as eir-bvs 2.1.0.
+  index, and the evidence for each. This release is engine 2.0.47,
+  packaged as eir-bvs 2.1.1.
 license: MIT
 repository-code: "https://github.com/SuperBladesman/Eir"
 keywords:

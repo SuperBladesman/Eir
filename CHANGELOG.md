@@ -4,6 +4,10 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## The eir-bvs package
 
+### eir-bvs 2.1.1 – 17 November 2026
+
+**The 2.0.47 engine.** Nothing in the package changed.
+
 ### eir-bvs 2.1.0 – 11 November 2026
 
 **A command line, a Python interface and a one-page report, on the 2.0.46 engine**
@@ -25,6 +29,22 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
   and macOS.
 
 ## Eir 2.0 series
+
+### 2.0.47 – 17 November 2026
+
+**Comments only: a name removed, and every named threshold says where its value comes from**
+
+- A personal name came back into two comments in CELL 1 during the 2.0.46
+  work. Both now describe the dataset; [docs/HISTORY.md](docs/HISTORY.md)
+  records how it came back.
+- Every named threshold now says where its value comes from: a reference,
+  a calculation, a measurement on named data, or a value set by hand with
+  what has since been checked. That covers the seven the README's claim
+  missed and seventeen more found by a sweep; the README says which
+  thresholds the claim covers.
+- No code changed. Apart from `EIR_VERSION`, every code cell parses to the
+  same syntax tree as in 2.0.46, so every result is the same; only the
+  version string differs.
 
 ### 2.0.46 – 11 November 2026
 

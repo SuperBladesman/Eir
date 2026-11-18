@@ -58,14 +58,78 @@ except ImportError:
 # as the coordination pass.
 PROPAGATE_UNCERTAINTY = True
 
+# v2.0.47: WHERE EACH SETTING BELOW CAME FROM. None was measured when it
+# came in with this cell at 1.8.1; all but NEIGHBOUR_SEARCH_MAX are written
+# to cfg_* columns.
+#
+# THE 2.0.47 CHECK SET, which comments throughout the notebook cite: 2,375
+# ICSD entries run through 2.0.47, one per collection code: 979 oxide
+# spinels, 612 rock salts (oxides and chlorides), 366 sulfide spinels, 134
+# tetragonal spinels, 115 chromium oxides, 101 borosulfates and 68 Li-Mn
+# oxides. A structure is sound when its tier is an ACCEPT tier (1,173),
+# and a site is ordered when one species fills it.
+#
+# MEASURED. cn_relative counts the contacts within 1.30 times the
+# shortest. That count sets the shell ECoN is computed over, the
+# coordination at which this cell reads the radii screen, and cn_fault,
+# which keeps M8 and M10 off a site whose cn it doubts.
+# SHELL_EXTENSION_CUTOFF (CELL 2) is set equal to it. Against the
+# canonical bond valence shell on 975 ordered sites in sound structures it
+# agrees at 86.2%, and every factor from 1.25 to 1.50 gives 85 to 87%
+# (1.35 best, 86.8%); 1.10, the relative cut of pymatgen's
+# MinimumDistanceNN (Pan et al., Inorg. Chem. 60 (2021) 1590), gives
+# 80.8%. On the 720 sites in rock salts, spinels and chromium oxides it
+# agrees at 98.9%, the first contact outside the shell is never closer
+# than 1.58 times the shortest, and the eight disagreements are six Cu(2+)
+# 4+2 sites with axials at 1.30 to 1.33, a Bi(3+) lone-pair site and one
+# Li. The other 127 are all in the borosulfates: H with its hydrogen bond
+# (82), and K, Rb, Cs, Na, Ba, Pb, U and Li, whose shells spread past any
+# single factor.
 CN_RELATIVE_CUTOFF   = 1.30
+# DERIVED and MEASURED. A polyhedron is regular (polyhedron_regular) when
+# ECoN is at least 0.95 of cn_relative. That splits both_deviate in
+# bvs_diagnosis_detail, and the summary lists the sites below it. Labels
+# and reporting only; no gate reads it. With two bond lengths, ECoN/CN
+# falls to 0.95 when the long bonds are 8 to 12% longer than the short
+# (1.087 for 4+2, 1.080 for 3+3, 1.116 for 5+1); LaMnO3's Jahn-Teller
+# octahedron (1.920, 1.966, 2.161 A) gives 0.915. Of 975 ordered sites in
+# sound structures, the 463 in rock salts and cubic spinels never fall
+# below 0.974; the 126 Cr(3+) sites have a 1st percentile of 0.977, and
+# the 21 Mn(3+) sites a median of 0.849.
 ECON_REGULAR_MIN     = 0.95
 # v2.0.37: IMPLAUSIBLE_FRACTION is gone. It was a flat 0.85 on the same
 # question radii_contact_threshold answers with a fitted slope, and the two
 # disagreed by nine points at CN 12 - the third copy of one screen under a
 # third name, which this notebook had already diagnosed twice.
+# DERIVED. A search radius, not a cut: nothing beyond it is seen by
+# cn_relative, ECoN, this cell's radii screen or the positional
+# uncertainties, so it has to exceed the longest contact any of them
+# counts, 1.30 times a site's shortest bond. The longest mean bond in
+# Gagne's oxide and nitride data, Cs(+)-O at CN 20 (3.72 A), gives 4.84 A,
+# and the longest single bond there is 4.20 A; in the check set the
+# largest 1.30 times shortest is 4.52 A. For heavier anions the data stop:
+# from Shannon radii, Cs(+) at CN 12 with I(-) gives 1.30 x 4.08 = 5.30 A,
+# beyond the radius.
 NEIGHBOUR_SEARCH_MAX = 5.0
+# CHOSEN, as ANION_CONSISTENT_TOL (CELL 3) is, with the same value and
+# basis. Read by nothing in Eir: it is written to cfg_anion_tolerance,
+# which Huginn's layered-oxide notebook reads for a figure's guide line.
 ANION_TOLERANCE      = 0.20
+# CHOSEN, now MEASURED, and not the 0.20 v.u. rule of thumb. A cation GII
+# (the gii column, over every species on every cation site) above 0.30
+# v.u. labels the observational diagnosis (cation_only_deviates,
+# both_deviate); labels only, no gate reads them. CELL 3's bvs_diagnosis
+# applies its own 0.30, written inline. The often-quoted 0.20 v.u., beyond
+# which structures are said to be rare or unstable (Brown, The Chemical
+# Bond in Inorganic Chemistry, 2002; the index is Salinas-Sanchez et al.,
+# J. Solid State Chem. 100 (1992) 201), is over every ion; Eir's own
+# gii_all_sites, which adds the anion sites, runs at a median 0.90 of gii
+# in sound structures. On 1,172 sound structures in the check set gii has
+# a median of 0.364 and 57.7% exceed 0.30, because a shared position
+# counts each species at its own valence; gii_recommended_value, which
+# averages them, has a median of 0.163 and 17.1% above 0.30. So
+# cation_only_deviates is the commonest label on sound structures (583 of
+# 1,173) and mostly reports shared positions.
 CATION_GII_TOLERANCE = 0.30
 
 SHANNON_CN6 = {

@@ -45,6 +45,10 @@ Every notebook in the history has been put through the same normalisation, and n
 
 That prefix is the only edit that touches code. From 1.8.1 to the first build of 2.0.13 it was used to shorten file names in the printed report, so the only effect is on how files carrying that prefix are labelled there. Nothing else in the code was changed.
 
+## A name that came back
+
+The rebuild removed personal names, but two comments added after it, in commits `a35368a` and `43861ac`, named a student again, and so does the message of `43861ac`. The comments stay in every later commit up to 2.0.46, so the `v2.0.46` tag and its Zenodo archive (10.5281/zenodo.24138854) carry the name. Neither can be changed, and the history is not rewritten once published, so the commits and their messages stand. 2.0.47 rewords the two comments to describe the dataset instead.
+
 ## Data
 
 `Data/` enters the history in the state each table was in when it was used, as far as the surviving copies show:

@@ -141,6 +141,19 @@ ANION_BV_CUTOFF = BV_SUM_CUTOFF
 # R0 = 2.29 reaches 0.04 v.u. at 3.48 A and 0.01 v.u. at 3.99 A, so 5.0 A
 # leaves margin for a lowered cut-off without needing to be changed with it.
 ANION_RMAX = 5.0
+# v2.0.47: CHOSEN at 1.8.0 with the anion sums; MEASURED since. An anion
+# balances (anion_balances) when its sum is within 0.20 v.u. of its formal
+# charge. That decides bvs_diagnosis and CELL 7's observational labels and
+# shows in the report; no gate reads it. CELL 7's ANION_TOLERANCE records
+# the same value in cfg_anion_tolerance. For scale: on cation polyhedra,
+# Gagne and Hawthorne (2015, Acta Cryst. B71, 562) found weighted mean RMS
+# deviations from the valence-sum rule of 0.174 v.u. over all published
+# parameters, 0.136 for the best published set and 0.128 for their own,
+# Eir's first choice; 0.20 is 10% of O(2-). On 1,118 sound structures in
+# the 2.0.47 check set (CELL 7), leaving out the borosulfates, the worst
+# anion has a median deviation of 0.085 and every anion is within 0.20 in
+# 89.8% of them. The borosulfates are left out because these sums treat
+# their S(6+) as an anion.
 ANION_CONSISTENT_TOL = 0.20   # |BVS - formal| below which the anion "balances"
 
 
