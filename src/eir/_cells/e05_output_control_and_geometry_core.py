@@ -615,8 +615,8 @@ class BatchReporter:
             if s.get('contact_above_floor') is False:
                 add('contact_above_floor', False,
                     f'{s.get("site_label")}: min_bond_length '
-                    f'{_bat_f(s.get("min_bond_length"), 3)} A  <  '
-                    f'CATION_ANION_ABSOLUTE_MIN {CATION_ANION_ABSOLUTE_MIN}'
+                    f'{_bat_f(s.get("min_bond_length"), 3)} A  <  floor '
+                    f'{contact_floor(s.get("element"), ligands=s.get("ligand_types"))}'
                     f'  - this is not a bond')
         return out
 

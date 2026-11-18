@@ -193,6 +193,11 @@ def _reason_sentence(code, reason, site):
             + ', so the checks against measured bond lengths cannot be made.',
         'no_index':
             'The recommended instability index could not be calculated.',
+        'coordination_compound':
+            'The structure holds a carbonyl, nitrosyl, cyanide or nitro '
+            'ligand bonded to a metal. Eir\u2019s model is ionic and has no '
+            'description of such a unit, so the structure is not assessed; '
+            'nothing is said about whether the entry is right.',
         'index_not_reproducible':
             'Eir could not rebuild this structure\u2019s instability index '
             'from its own table of sites, so the two describe different '

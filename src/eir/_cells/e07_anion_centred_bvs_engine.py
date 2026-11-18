@@ -425,7 +425,7 @@ def calculate_anion_bvs(cif_path, valences, rmax=ANION_RMAX, verbose=False,
             label, elem, occ = pts[idx][0], pts[idx][1], pts[idx][2]
             if _is_anion_site(label, elem):
                 continue
-            if (d[idx] < CATION_ANION_ABSOLUTE_MIN
+            if (d[idx] < CATION_ANION_ABSOLUTE_MIN      # v2.0.47: as CELL 2
                     and elem not in CATION_FLOOR_EXCLUDED_ELEMENTS
                     and site.element.name not in CATION_FLOOR_EXCLUDED_ELEMENTS
                     and _are_alternatives(site, _AltSite(label, occ), _alt_esd,

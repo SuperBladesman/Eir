@@ -4236,11 +4236,44 @@ def _occupancy_esds(cif_path):
 # bonds run shorter still where Gagne has no configuration: ICSD 210694, a
 # nitronium borosulfate (N(5+) at CN 2, N-O 1.114 A, GII 0.106), is
 # expunged on G1. G1 reads only the contact, so any nitrate with one N-O
-# bond under 1.20 A goes the same way whatever its sums. How far to lower
-# it for N-O, tested on ICSD nitrates and nitronium and nitrosyl salts, is
-# an open issue.
+# bond under 1.20 A goes the same way whatever its sums. N-O has its own
+# floor since 2.0.47, CATION_ANION_NO_MIN below. The alternatives rule
+# (_are_alternatives) keeps this one for every pair.
 
 CATION_ANION_ABSOLUTE_MIN = 1.20
+
+# v2.0.47: CHOSEN. G1's floor for N-O, just under the shortest N-O in a
+# well-refined ordered structure: nitrosonium in NOHSO4, 1.060 A as Eir
+# measures it in ICSD 254238 (Kluefers group, 2017), against 1.063 A for the
+# free ion (Huber and Herzberg, 1979).
+# Tested at 1.15, 1.05 and 1.00 A on 432 ICSD structures (nitronium,
+# nitrosonium and nitrosyl salts and ternary nitrates): every value admits
+# the same six structures to ACCEPT, ordered nitrates whose shortest N-O is
+# 1.17 to 1.19 A, and none that fails an independent test. What lies between
+# 1.05 and 1.20 A is left to M8, M10 and the other gates: nitronium salts
+# (N-O 1.07 to 1.14 A) and nitrates with a short bond come out FLAG, a KNO3
+# entry with a 1.084 A bond EXPUNGE on G2. Disorder models at 0.70 to 0.995 A
+# stay on G1. Every other pair keeps CATION_ANION_ABSOLUTE_MIN.
+CATION_ANION_NO_MIN = 1.05
+
+
+def contact_floor(a, b=None, ligands=None):
+    """G1's floor for a contact between a and b (either order).
+
+    With b unknown, `ligands` (an iterable, or a comma-separated string, of
+    the site's ligand species) decides: an N bonded to O alone takes the N-O
+    floor, an N with any other ligand the general one, which is the stricter.
+    """
+    if b is not None:
+        return (CATION_ANION_NO_MIN if {a, b} == {'N', 'O'}
+                else CATION_ANION_ABSOLUTE_MIN)
+    # A missing value (NaN from a CSV) is no ligand list: the general floor.
+    if a == 'N' and isinstance(ligands, (str, list, tuple, set, frozenset)):
+        _l = ([x.strip() for x in ligands.split(',')]
+              if isinstance(ligands, str) else list(ligands))
+        if _l and set(_l) == {'O'}:
+            return CATION_ANION_NO_MIN
+    return CATION_ANION_ABSOLUTE_MIN
 
 # v2.0.46: A HALOGEN THE CIF STATES IS POSITIVE IS A CATION.
 #

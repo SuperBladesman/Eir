@@ -1058,8 +1058,13 @@ def _index_inputs(df):
     v = pd.to_numeric(df['valence'], errors='coerce').abs()
     occ = pd.to_numeric(df['occupancy'], errors='coerce').fillna(1.0)
     mb = pd.to_numeric(df.get('min_bond_length'), errors='coerce')
+    # v2.0.47: the floor G1 used for each site (contact_floor).
+    _lig = (df['ligand_types'] if 'ligand_types' in df.columns
+            else pd.Series([None] * len(df), index=df.index))
+    _fl = pd.Series([contact_floor(e, ligands=(l if isinstance(l, str) else None))
+                     for e, l in zip(df['element'], _lig)], index=df.index)
     keep = (b.notna() & v.notna() & (v > 0) & (occ != 0.0)
-            & ~(mb < CATION_ANION_ABSOLUTE_MIN))
+            & ~(mb < _fl))
     return b, v, occ, keep
 
 
@@ -1540,6 +1545,113 @@ def _eir_anion_side(args):
         return [], f'{type(e).__name__}: {e}'
 
 
+# v2.0.47: COORDINATION COMPOUNDS ARE NOT ASSESSED (R5).
+#
+# Eir's model is ionic: every atom an ion, every contact cation to anion.
+# A carbonyl, nitrosyl or cyanide ligand is a diatomic unit held by a
+# multiple bond and bonded through C or N to a metal, and no part of the
+# model describes it: C or N is taken as a cation, so the C-O, N-O or C-N
+# bond reads as a cation-anion contact (G1 below 1.20 A) and the metal-C or
+# metal-N bond as two cations far too close (G5). Of 118 ICSD nitrosyl
+# compounds, 95 reach a verdict (the rest are set aside as molecular carbon),
+# and all 58 of those with such a unit came out EXPUNGE for a reason that is
+# not the real one. They are now NOT_ASSESSED on R5, with the unit named.
+# R5 fires on no other entry of about 7,000 tested.
+#
+# The rule: a C or N bonded to a metal (within LIGAND_METAL_MAX) and
+# multiply bonded to C, N or O of another element (within LIGAND_PAIR_MAX):
+# carbonyl, nitrosyl, cyanide, nitro, thiocyanate and the like, bonded
+# through C or N. Carbonate, nitrate and nitrite ions, nitronium and the
+# free nitrosonium cation have no metal that close to their C or N, and
+# azides (N-N, one element) are issue 3, not this.
+#
+# LIGAND_PAIR_MAX: CHOSEN, above every C-O, N-O and C-N of a coordinated
+# CO, NO or CN in the 118 nitrosyl compounds (1.09 to 1.21 A) and of a
+# thiocyanate's C-N, and below the C-S (1.6 A) that would make it triatomic.
+# LIGAND_METAL_MAX: CHOSEN. The metal-C and metal-N bonds of the ligands in
+# those compounds run 1.60 to 2.20 A; the nearest metal to the N of a
+# nitrate or a nitrosonium cation in the nitrate sets is 2.47 A or more.
+# One or two such partners (CO, NO, CN; NO2 and the like), not three: the
+# N of a nitrate or the C of a carbonate is never a ligand atom, and a metal
+# that close to one is a fault in the entry, which the G gates should keep
+# (ICSD 192253, Lu(NO3)3, has an N 2.223 A from Lu). Every atom involved
+# must be fully occupied (LIGAND_FULL_OCC, PGRM_FULL_OCC's value): in
+# disordered NaNO2 and Na2CO3 models, alternative positions put N 2.0 to
+# 2.3 A from Na and C 1.96 A from Na, and those are not bonds.
+LIGAND_PAIR_MAX = 1.30
+LIGAND_METAL_MAX = 2.30
+LIGAND_FULL_OCC = 0.98
+_LIGAND_LIGHT = ('C', 'N', 'O')
+_LIGAND_NONMETALS = frozenset({
+    'H', 'D', 'He', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Si', 'P', 'S', 'Cl',
+    'Ar', 'As', 'Se', 'Br', 'Kr', 'Te', 'I', 'Xe', 'At', 'Rn'})
+
+
+def coordinated_ligands(cif_path):
+    """The CO, NO and CN units bonded to a metal in one structure.
+
+    Returns a list of evidence strings, empty when there are none (and for a
+    structure with no C or N at all, without expanding it).
+    """
+    st = load_structure(cif_path)
+    sites = list(st.sites)
+    if not any(s.element.name in ('C', 'N') for s in sites):
+        return []
+    _r = max(LIGAND_PAIR_MAX, LIGAND_METAL_MAX)
+    _n = image_range(st.cell, _r)
+    _rng = range(-_n, _n + 1)
+    pts = []
+    for _i, s in enumerate(sites):
+        for op in st.spacegroup.operations():
+            f = wrap_into_cell(op.apply_to_xyz(
+                [s.fract.x, s.fract.y, s.fract.z]))
+            for i in _rng:
+                for j in _rng:
+                    for k in _rng:
+                        p = st.cell.orthogonalize(
+                            gemmi.Fractional(f[0]+i, f[1]+j, f[2]+k))
+                        pts.append((_i, p.x, p.y, p.z))
+    _idx = np.array([p[0] for p in pts])
+    P = np.array([[p[1], p[2], p[3]] for p in pts])
+
+    def _near(i, rmax, keep):
+        o = site_centre(st.cell, sites[i])
+        d = np.linalg.norm(P - np.array([o.x, o.y, o.z]), axis=1)
+        out, seen = [], []
+        for m in np.argsort(d):
+            if d[m] > rmax:
+                break
+            if d[m] <= 0.01 or not keep(sites[_idx[m]].element.name):
+                continue
+            if any(np.linalg.norm(P[m] - q) <= COLOCATED_IMAGE_TOL
+                   for q in seen):
+                continue
+            seen.append(P[m])
+            out.append((int(_idx[m]), float(d[m])))
+        return out
+
+    found = []
+    _full = lambda m: sites[m].occ >= LIGAND_FULL_OCC
+    for i, s in enumerate(sites):
+        el = s.element.name
+        if el not in ('C', 'N') or s.occ < LIGAND_FULL_OCC:
+            continue
+        part = _near(i, LIGAND_PAIR_MAX,
+                     lambda e, _el=el: e in _LIGAND_LIGHT and e != _el)
+        if not part or len(part) > 2 or not all(_full(j) for j, _ in part):
+            continue
+        met = [m for m in _near(i, LIGAND_METAL_MAX,
+                                lambda e: e not in _LIGAND_NONMETALS)
+               if _full(m[0])]
+        if not met:
+            continue
+        j, dij = part[0]
+        k, dik = met[0]
+        found.append(f'{s.label}-{sites[j].label} {dij:.3f} A, '
+                     f'{sites[k].label}-{s.label} {dik:.3f} A')
+    return found
+
+
 def add_coordination_quality(batch_csv_path, cif_directory,
                              output_csv_path=None, verbose=True):
     """
@@ -1626,6 +1738,23 @@ def add_coordination_quality(batch_csv_path, cif_directory,
             ucache[_p1] = (_par1, _tab1)
             _tick_pu.tick()
         _tick_pu.close()
+
+    # v2.0.47: coordinated CO, NO and CN units, per structure (R5).
+    _lig_by_path = {}
+    for _p2 in _paths:
+        try:
+            _lig_by_path[_p2] = '; '.join(coordinated_ligands(_p2))
+        except Exception as _e2:
+            print(f"  ! ligand search unavailable for "
+                  f"{os.path.basename(_p2)}: {_e2}")
+            _lig_by_path[_p2] = ''
+    df['coordinated_ligand'] = [
+        _lig_by_path.get(os.path.join(cif_directory, _f), '')
+        if isinstance(_f, str) else '' for _f in df['filename']]
+    _n_lig = sum(1 for _v in _lig_by_path.values() if _v)
+    if verbose and _n_lig:
+        print(f'  coordination compounds: {_n_lig} structure(s) with a CO, NO '
+              f'or CN ligand on a metal; NOT_ASSESSED (R5)')
 
     econ_v, ratio_v, dav_v, cnrel_v = [], [], [], []
     plaus_v, expd_v, dratio_v, regular_v = [], [], [], []

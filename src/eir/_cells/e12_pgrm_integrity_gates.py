@@ -329,11 +329,20 @@ def classify_site(row, struct):
     if row.get('element') in CATION_FLOOR_EXCLUDED_ELEMENTS:
         return ('-', '', '')
 
+    # v2.0.47: R5, asked before G. A coordinated CO, NO or CN unit is
+    # outside the ionic model, and the G gates condemn the model's reading of
+    # it (a C-O bond under the cation-anion floor, a metal-N bond as two
+    # cations too close) rather than the entry. See coordinated_ligands.
+    _lg = row.get('coordinated_ligand')
+    if _pgrm_has_value(_lg):
+        return ('R5', 'coordination_compound', str(_lg).strip())
+
     # ---- G : can the atoms be where it says? ----------------------------
     if _pgrm_is_false(row.get('contact_above_floor')):
         d = _pgrm_f(row.get('min_bond_length'))
         return ('G1', 'contact_below_physical_floor',
-                f'shortest contact {d:.3f} A, floor {CATION_ANION_ABSOLUTE_MIN} A')
+                f'shortest contact {d:.3f} A, floor '
+                f'{contact_floor(row.get("element"), ligands=row.get("ligand_types"))} A')
     # v2.0.22 (4.1): the measured impossibility. G1 above says a contact is
     # not a bond on an absolute floor that needs no parameters and no table.
     # This says a contact is shorter than anything ever OBSERVED for this exact
@@ -746,9 +755,11 @@ def classify_pgrm(df):
                   'G5': 6,      # the cation sublattice is too close somewhere
                   'G2': 7,      # the anion sublattice is too close somewhere
                   # v2.0.37: R4 ranks below R1-R3, which say WHY.
-                  # v2.0.47: R6 below R4; the M codes renumbered, not
-                  # squeezed, so every existing pair keeps its order.
-                  'R1': 8, 'R2': 9, 'R3': 10, 'R4': 11, 'R6': 12,
+                  # v2.0.47: R5 ahead of R1-R4 (it says WHY the whole
+                  # structure is not assessed), R6 below R4; R and M codes
+                  # renumbered, not squeezed, so every existing pair keeps
+                  # its order.
+                  'R5': 8, 'R1': 9, 'R2': 10, 'R3': 11, 'R4': 12, 'R6': 13,
                   # v2.0.22: M8 outranks the model codes for the same reason
                   # G1 outranks G5 - it says WHERE, and it is a measurement.
                   # v2.0.25: M2 and M3 sort LAST among the M codes. They are
@@ -762,8 +773,8 @@ def classify_pgrm(df):
                   # squeezed, so every existing pair keeps its order.
                   # v2.0.46: M11 sits below M8, above M10, for the same
                   # reason, and the rest are renumbered.
-                  'M5': 13, 'M8': 14, 'M11': 15, 'M10': 16, 'M7': 17,
-                  'M4': 18, 'M1': 19, 'M6': 20, 'M3': 21, 'M2': 22, '-': 99}
+                  'M5': 14, 'M8': 15, 'M11': 16, 'M10': 17, 'M7': 18,
+                  'M4': 19, 'M1': 20, 'M6': 21, 'M3': 22, 'M2': 23, '-': 99}
     _w = df.assign(_s=df['pgrm_tier'].map(sev),
                    _r=df['pgrm_code'].map(_code_rank).fillna(50))
     worst = (_w.sort_values(['_s', '_r'], ascending=[True, False])
@@ -843,6 +854,78 @@ def VALIDATE_GATES(verbose=True):
                              colocated_unparameterised='H1 (H)'), {})
     report('4. R1: a sum missing a co-located species is not assessed',
            _cu[0] == 'R1', f'Ho(3) with H1 (H) unparameterised: {_cu[0]} ({_cu[2]})')
+
+    # v2.0.47. R5: a cyanide on a metal is found and not assessed, a nitrate
+    # is not taken for one, and the G gates do not get there first.
+    import os as _os5, tempfile as _tf5
+    _cell5 = ("_cell_length_a {a}\n_cell_length_b {b}\n_cell_length_c {c}\n"
+              "_cell_angle_alpha 90.\n_cell_angle_beta 90.\n"
+              "_cell_angle_gamma {g}\n")
+    _loop5 = ("loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+              "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+              "_atom_site_occupancy\n")
+    # Prussian-blue type, Fm-3m, a = 10.20 A: Fe1-C 1.918, C-N 1.153 A.
+    _pb5 = ("data_eir_gate_cyanide\n" + _cell5.format(a=10.2, b=10.2, c=10.2,
+            g=90.) + "_space_group_IT_number 225\n"
+            "_symmetry_space_group_name_H-M 'F m -3 m'\n" + _loop5 +
+            "Fe1 Fe2+ 0. 0. 0. 1.\nFe2 Fe3+ 0.5 0.5 0.5 1.\n"
+            "C1 C2+ 0.188 0. 0. 1.\nN1 N3- 0.301 0. 0. 1.\n")
+    # Calcite-type NaNO3, R-3c: N 4.2 A from Na, three O at 1.23 A.
+    _nn5 = ("data_eir_gate_nitrate\n" + _cell5.format(a=5.07, b=5.07,
+            c=16.82, g=120.) + "_space_group_IT_number 167\n"
+            "_symmetry_space_group_name_H-M 'R -3 c H'\n" + _loop5 +
+            "Na1 Na1+ 0. 0. 0. 1.\nN1 N5+ 0. 0. 0.25 1.\n"
+            "O1 O2- 0.2425 0. 0.25 1.\n")
+    _d5 = _tf5.mkdtemp()
+    try:
+        _ev5 = {}
+        for _k5, _t5 in (('cyanide', _pb5), ('nitrate', _nn5)):
+            _p5 = _os5.path.join(_d5, _k5 + '.cif')
+            with open(_p5, 'w') as _f5:
+                _f5.write(_t5)
+            _ev5[_k5] = coordinated_ligands(_p5)
+    finally:
+        for _f5 in _os5.listdir(_d5):
+            _os5.unlink(_os5.path.join(_d5, _f5))
+        _os5.rmdir(_d5)
+    _r5 = classify_site({'coords': '(0.188, 0.0, 0.0)', 'element': 'C',
+                         'valence': 2, 'min_bond_length': 1.153,
+                         'contact_above_floor': False,
+                         'coordinated_ligand': '; '.join(_ev5['cyanide'])},
+                        {'cation_cation_min': 1.918})
+    report('5. R5: a cyanide on a metal is found, and not assessed',
+           bool(_ev5['cyanide']) and _r5[0] == 'R5',
+           f"found {_ev5['cyanide'][:1]}; a C row under the floor: {_r5[0]}")
+    report('6. R5 does not take a nitrate for a ligand',
+           _ev5['nitrate'] == [], f"NaNO3: {_ev5['nitrate']}")
+
+    # v2.0.47. The N-O floor, and only for N-O.
+    _fl7 = (contact_floor('N', 'O'), contact_floor('O', 'N'),
+            contact_floor('N', ligands='O'), contact_floor('N', ligands='O,F'),
+            contact_floor('C', 'O'), contact_floor('Dy', ligands='O'),
+            contact_floor('N', ligands=float('nan')))
+    _g7 = classify_site({'coords': '(0.0, 0.0, 0.0)', 'element': 'N',
+                         'valence': 5, 'min_bond_length': 0.98,
+                         'ligand_types': 'O', 'contact_above_floor': False},
+                        {})
+    report('7. G1: N-O has its own floor, every other pair 1.20 A',
+           _fl7 == (CATION_ANION_NO_MIN, CATION_ANION_NO_MIN,
+                    CATION_ANION_NO_MIN, CATION_ANION_ABSOLUTE_MIN,
+                    CATION_ANION_ABSOLUTE_MIN, CATION_ANION_ABSOLUTE_MIN,
+                    CATION_ANION_ABSOLUTE_MIN)
+           and _g7[0] == 'G1' and str(CATION_ANION_NO_MIN) in _g7[2],
+           f'floors {_fl7}; N-O at 0.98 A: {_g7[0]} ({_g7[2]})')
+
+    # v2.0.47. R6, asked after G.
+    _sound6 = dict(_row, cn=6, bvs=4.0, bvs_percent_diff=0.0, bl_tier=1.0,
+                   index_check='GII exported 0.1 against rebuilt 1.8')
+    _r6 = classify_site(_sound6, {'gii_recommended_value': 0.1})
+    _g6 = classify_site(dict(_sound6, min_bond_length=1.0,
+                             contact_above_floor=False),
+                        {'gii_recommended_value': 0.1})
+    report('8. R6: an index the table cannot rebuild is not assessed, after G',
+           _r6[0] == 'R6' and _g6[0] == 'G1',
+           f'index_check only: {_r6[0]}; with a contact under the floor: {_g6[0]}')
 
     ok = all(results)
     if verbose:
