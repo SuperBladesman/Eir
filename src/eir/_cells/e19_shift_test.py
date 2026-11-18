@@ -328,6 +328,9 @@ def test_proposed_shifts(dfq, cif_directory, output_dir=None, verbose=True):
                 'icsd_code': before.get('icsd_code'),
                 'chemical_formula': before.get('chemical_formula'),
                 'shift_applied': '; '.join(detail),
+                # v2.0.47: the vector too, which G4's evidence quotes; without
+                # it every G4 read "shift ? on ...".
+                'shift_vector': f"({_vec_str})",
                 'gii_before': round(g0, 4) if g0 is not None else None,
                 'gii_after': round(g1, 4) if g1 is not None else None,
                 'wagii_after': round(wa, 4) if wa is not None else None,
@@ -465,7 +468,7 @@ def apply_shift_verdicts(dfq, shift_results, structures_csv=None,
         _v[fn] = r.get("verdict")
         _b, _a = r.get("n_screens_failed_before"), r.get("n_screens_failed_after")
         _gb, _ga = r.get("gii_before"), r.get("gii_after")
-        _e[fn] = (f'shift {r.get("proposed_shift", "?")} on '
+        _e[fn] = (f'shift {r.get("shift_vector") or "?"} on '
                   f'{r.get("shift_applied", r.get("sites_shifted", "?"))}: '
                   f'screens {_b} -> {_a}, GII {_gb} -> {_ga} '
                   f'[{r.get("verdict")}]')

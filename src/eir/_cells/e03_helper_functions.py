@@ -2308,7 +2308,9 @@ def flag_oxidation_state_issues(cif_path, formula):
 def flag_all_error_types(cif_path, formula, site_data):
     """
     Flag all detectable error types (2-7) for a structure.
-    Based on taxonomy from Sherwood (2026) Dalton Trans.
+    Based on the taxonomy of Reeves-McLaren, Dalton Trans., 2026, 55, 2868
+    (doi:10.1039/D5DT03003J). v2.0.47: the citation corrected; it named the
+    wrong author since 1.4.
     
     Types:
         2: Missing BVS parameters
@@ -4460,6 +4462,13 @@ def polyanion_edge(centre, ligand, b1, b2, edge):
     centre is bonded to both at b1 and b2? See POLYANION_PAIRS."""
     lim = POLYANION_PAIRS.get((centre, ligand))
     if lim is None or b1 > lim[0] or b2 > lim[0]:
+        return False
+    # v2.0.47: a ligand AT the centre's position is no bond and no edge. N and
+    # O sharing one position in a disordered nitrosonium or nitrate model
+    # gave b = 0 here, and the division stopped the file ("float division by
+    # zero") before it had a verdict: ICSD 33534, 38101, 112394, 170924,
+    # 423407 and 431038.
+    if b1 <= 0.0 or b2 <= 0.0:
         return False
     import math as _m
     c = (b1 * b1 + b2 * b2 - edge * edge) / (2.0 * b1 * b2)

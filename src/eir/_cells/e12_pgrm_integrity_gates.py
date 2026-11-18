@@ -813,9 +813,26 @@ def classify_pgrm(df):
                   'M5': 15, 'M8': 16, 'M11': 17, 'M10': 18, 'M7': 19,
                   'M4': 20, 'M1': 21, 'M6': 22, 'M12': 23, 'M3': 24,
                   'M2': 25, '-': 99}
+    # v2.0.47: among sites failing the same contact gate, the headline
+    # evidence is the worst site's on the measure that gate judges, not the
+    # last row's: the shortest contact for G1, the lowest ratio to the
+    # measured minimum for G6 (bl_ratio_min) and to the bond valence
+    # distance for M8 (bvs_distance_ratio). Lu(NO3)3-type and RbNO3 entries
+    # reported 1.199 A where the shortest contact was 1.178 A. The code and
+    # tier are the same either way; only the evidence quoted moves.
+    def _num_col(c):
+        return (pd.to_numeric(df[c], errors='coerce') if c in df.columns
+                else pd.Series(np.nan, index=df.index))
+    _m = pd.Series(0.0, index=df.index)
+    for _gc, _col in (('G1', 'min_bond_length'), ('G6', 'bl_ratio_min'),
+                      ('M8', 'bvs_distance_ratio')):
+        _sel = df['pgrm_code'].eq(_gc)
+        _m[_sel] = -_num_col(_col)[_sel].fillna(np.inf)
     _w = df.assign(_s=df['pgrm_tier'].map(sev),
-                   _r=df['pgrm_code'].map(_code_rank).fillna(50))
-    worst = (_w.sort_values(['_s', '_r'], ascending=[True, False])
+                   _r=df['pgrm_code'].map(_code_rank).fillna(50),
+                   _m=_m)
+    worst = (_w.sort_values(['_s', '_r', '_m'], ascending=[True, False, True],
+                            kind='mergesort')
                .groupby('filename')
                .last()[['pgrm_code', 'pgrm_reason', 'pgrm_evidence', 'pgrm_tier']])
     worst.columns = ['structure_' + c for c in worst.columns]
