@@ -2412,7 +2412,7 @@ def flag_all_error_types(cif_path, formula, site_data):
                 year = int(match.group(1))
                 break
         
-        if year and year < 1980:
+        if year and year < LEGACY_PREMODERN_YEAR:
             flags['flag_type6'] = True
             if 'TYPE6' not in flags['error_types_detected']:
                 flags['error_types_detected'].append('TYPE6')
@@ -2426,7 +2426,7 @@ def flag_all_error_types(cif_path, formula, site_data):
     # Literature basis: <5% = accurate (ML radii papers), 7% catches errors
     # while allowing natural variation from polyhedral distortion
     # ========================================================================
-    SHANNON_DEVIATION_THRESHOLD = 7.0  # percent
+    SHANNON_DEVIATION_THRESHOLD = LEGACY_SHANNON_DEVIATION_PCT  # v2.0.47
     
     if site_data:
         type8_sites = []
@@ -4252,6 +4252,34 @@ CATION_ANION_ABSOLUTE_MIN = 1.20
 # stay on G1. Every other pair keeps CATION_ANION_ABSOLUTE_MIN.
 CATION_ANION_NO_MIN = 1.05
 
+# v2.0.47: THE MEASUREMENT-CONDITION LIMITS, NAMED (literals inside the
+# metadata reader until now; values unchanged). They decide
+# measurement_conditions, which M10 reads through BOND_SIZE_NON_AMBIENT.
+# CHOSEN: ambient means at most 350 K and 0.0002 GPa (2 bar); high means
+# above 500 K or 0.5 GPa; between the two is reported as neither.
+MEASUREMENT_AMBIENT_T_MAX = 350       # K
+MEASUREMENT_HIGH_T = 500              # K
+MEASUREMENT_AMBIENT_P_MAX = 0.0002    # GPa
+MEASUREMENT_HIGH_P = 0.5              # GPa
+
+# v2.0.47: the legacy error-type flags' two cut-offs, named. UNSOURCED, as
+# they were set at 1.x; they decide the flag_type6 and flag_type8 columns
+# and no verdict (M6 reads PGRM_PREMODERN_YEAR, measured, instead).
+LEGACY_PREMODERN_YEAR = 1980
+LEGACY_SHANNON_DEVIATION_PCT = 7.0
+
+# v2.0.47: three more literals named, values unchanged.
+# MOLECULAR_CARBON_MIN_CONTACT: UNSOURCED. The molecular-carbon screen does
+# not count a C contact shorter than 0.85 A, which is no bond.
+# CN_ADAPTIVE_FALLBACK: CHOSEN, the same 1.30 as CN_RELATIVE_CUTOFF (CELL 7),
+# for the adaptive shell when it finds no gap.
+# SHELL_REF_GAP_RATIO: UNSOURCED. Where the second-shortest contact is more
+# than 1.25 times the first, the full and provisional shells are measured
+# from the second, so one short contact does not shrink the shell.
+MOLECULAR_CARBON_MIN_CONTACT = 0.85   # A
+CN_ADAPTIVE_FALLBACK = 1.30
+SHELL_REF_GAP_RATIO = 1.25
+
 
 def contact_floor(a, b=None, ligands=None):
     """G1's floor for a contact between a and b (either order).
@@ -4786,7 +4814,7 @@ def molecular_carbon(cif_path):
     for c in cs:
         o = site_centre(st.cell, c)
         d = _np.linalg.norm(P - _np.array([o.x, o.y, o.z]), axis=1)
-        hit = _np.where((d > 0.85) & (d <= L))[0]
+        hit = _np.where((d > MOLECULAR_CARBON_MIN_CONTACT) & (d <= L))[0]
         if len(hit):
             k = hit[_np.argmin(d[hit])]
             if best is None or d[k] < best[2]:
@@ -5052,7 +5080,8 @@ def detect_coordination_adaptive(bond_distances, element=None, valence=None, min
             gaps.append((gap, i+1))
     
     if not gaps:
-        return sum(1 for d in bond_distances if d <= 1.30 * bond_distances[0])
+        return sum(1 for d in bond_distances
+                   if d <= CN_ADAPTIVE_FALLBACK * bond_distances[0])
     
     largest_gap, cn = max(gaps, key=lambda x: x[0])
     return cn
@@ -5242,10 +5271,11 @@ def extract_icsd_metadata(cif_path):
         temp_K = metadata['measurement_temperature_K']
         pressure_GPa = metadata['measurement_pressure_GPa']
         
-        TEMP_AMBIENT_MAX = 350
-        TEMP_HIGH = 500
-        PRESSURE_AMBIENT_MAX = 0.0002
-        PRESSURE_HIGH = 0.5
+        # v2.0.47: the module-level names (MEASUREMENT_*, CELL 1).
+        TEMP_AMBIENT_MAX = MEASUREMENT_AMBIENT_T_MAX
+        TEMP_HIGH = MEASUREMENT_HIGH_T
+        PRESSURE_AMBIENT_MAX = MEASUREMENT_AMBIENT_P_MAX
+        PRESSURE_HIGH = MEASUREMENT_HIGH_P
         
         if temp_K is not None or pressure_GPa is not None:
             is_high_temp = False

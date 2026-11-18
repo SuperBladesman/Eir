@@ -1085,6 +1085,26 @@ CANDIDATE_SHELL_MIN = 4.2
 CANDIDATE_SHELL_FACTOR = 1.30
 CANDIDATE_SHELL_MAX = 6.0
 
+# v2.0.47: THE GAP ANALYSIS'S TWO CUT-OFFS, NAMED (they were literals inside
+# auto_analyze_coordination). Values unchanged.
+# CN_GAP_MIN: UNSOURCED, set to keep numerical noise from splitting a shell:
+# a gap between consecutive bonds smaller than this is not a shell boundary.
+# CN_GAP_FALLBACK: CHOSEN, the same 1.30 as CN_RELATIVE_CUTOFF (CELL 7). With
+# no resolvable boundary the shell is the bonds within 1.30 times the
+# shortest, not everything inside the search radius.
+CN_GAP_MIN = 0.05             # A
+CN_GAP_FALLBACK = 1.30
+
+# v2.0.47: cn_fault's tolerances, NAMED (they were its default arguments and
+# a literal). Values unchanged. CHOSEN, with the reasons cn_fault's
+# docstring gives: a shell over its independent count by more than half a
+# bond is over; short by one bond is normal ambiguity between shell
+# definitions, so under means short by more than 1.5; short by three or more
+# is severe.
+CN_FAULT_OVER_TOL = 0.5
+CN_FAULT_UNDER_TOL = 1.5
+CN_FAULT_SEVERE_SHORT = 3
+
 
 def calculate_bonds_from_positions(cif_file_path, max_bond_distance=CANDIDATE_SHELL_MIN):
     """
@@ -1384,7 +1404,9 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=CANDIDATE_SH
             # snapping was not. The comparison below is unchanged, including
             # the <=: it is performed on the same floats in the same order,
             # against fewer candidates.
-            DEDUP_TOL = 0.05
+            # v2.0.47: named. The neighbour dedup's tolerance is COLOCATED_TOL
+            # (CELL 2), which says it is; this was a second literal 0.05.
+            DEDUP_TOL = COLOCATED_TOL
             unique_neighbors = []
             _seen_pos = PointDedup(DEDUP_TOL)
             for neighbor in sorted(neighbors_for_site, key=lambda n: n['distance']):
@@ -2151,7 +2173,7 @@ def full_shell_cn(distances, factor=1.35, max_cut=3.5):
     d = sorted(float(x) for x in distances if x and x > 0)
     if len(d) < 2:
         return len(d)
-    d_ref = d[1] if d[1] / d[0] > 1.25 else d[0]
+    d_ref = d[1] if d[1] / d[0] > SHELL_REF_GAP_RATIO else d[0]
     cut = min(factor * d_ref, max_cut)
     return max(sum(1 for x in d if x <= cut), 2)
 
@@ -2187,7 +2209,7 @@ def group_bond_counts(sorted_cn_bonds, cn):
 DUPLICATE_SPREAD_MAX = 0.05   # A. See cn_fault.
 
 
-def cn_fault(cn, cn_rel, geo_cn=None, tol=0.5, under_tol=1.5,
+def cn_fault(cn, cn_rel, geo_cn=None, tol=None, under_tol=None,
              spread=None):
     """
     Symmetric coordination fault detection.
@@ -2214,6 +2236,9 @@ def cn_fault(cn, cn_rel, geo_cn=None, tol=0.5, under_tol=1.5,
                               df['geo_cn'] if 'geo_cn' in df.columns
                               else [None] * len(df))]
     """
+    # v2.0.47: the named defaults (CN_FAULT_OVER_TOL and the rest, CELL 2).
+    tol = CN_FAULT_OVER_TOL if tol is None else tol
+    under_tol = CN_FAULT_UNDER_TOL if under_tol is None else under_tol
     if cn is None or cn != cn:
         return None
     refs = [r for r in (cn_rel, geo_cn) if r is not None and r == r and r]
@@ -2251,7 +2276,7 @@ def cn_fault(cn, cn_rel, geo_cn=None, tol=0.5, under_tol=1.5,
     # relative to its true size, not relative to the smallest estimate.
     ref = max(refs)
     if cn < ref - under_tol:
-        return ('cn_below_shell_severe' if (ref - cn) >= 3
+        return ('cn_below_shell_severe' if (ref - cn) >= CN_FAULT_SEVERE_SHORT
                 else 'cn_below_shell_mild')
     return None
 
@@ -2612,6 +2637,10 @@ def coordination_plausible(element, valence, cn,
 # This and the three settings below decide which shifts are proposed
 # (proposed_shift), and so what G4 can test.
 SHIFT_SPREAD_SUSPECT = 1.50
+# v2.0.47: NAMED, value unchanged (a literal in propose_half_lattice_shift).
+# UNSOURCED, set at 2.0.2: a shift is not proposed if the shortest contact
+# at the new position would be under 0.85 of the expected distance.
+SHIFT_CONTACT_MIN_RATIO = 0.85
 
 # How much better the alternative must be before it is worth proposing.
 # Deliberately demanding: the cost of a false proposal on a sound structure is
@@ -2841,7 +2870,7 @@ def propose_half_lattice_shift(cell, anion_pts, frac, r_expected=None,
         if s1 is None or not d1:
             continue
         # Never propose a move into an impossible contact.
-        if r_expected and d1[0] < 0.85 * r_expected:
+        if r_expected and d1[0] < SHIFT_CONTACT_MIN_RATIO * r_expected:
             continue
         if s1 > spread_suspect:
             continue
@@ -3134,7 +3163,7 @@ def auto_analyze_coordination(processed_data):
 
                 # STEP 3: Gap analysis to find primary coordination sphere
                 # Add minimum gap threshold to avoid splitting coordination due to numerical precision
-                MIN_GAP_THRESHOLD = 0.05  # Å - ignore gaps smaller than this
+                MIN_GAP_THRESHOLD = CN_GAP_MIN  # v2.0.47: named, CELL 2
                 initial_cn = 0
                 primary_sphere_cutoff_dist = 0.0
 
@@ -3154,7 +3183,7 @@ def auto_analyze_coordination(processed_data):
                         # shell rather than by the search radius
                         d0 = sorted_cn_bonds[0][0]
                         cutoff_index = sum(1 for b in sorted_cn_bonds
-                                           if b[0] <= 1.30 * d0)
+                                           if b[0] <= CN_GAP_FALLBACK * d0)
 
                     initial_cn = cutoff_index
 

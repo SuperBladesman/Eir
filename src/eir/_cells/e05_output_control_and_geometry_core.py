@@ -818,7 +818,7 @@ def provisional_shell_cn(distances, factor=1.35, max_cut=3.5):
     """
     d = np.sort(np.asarray([x for x in distances if x > 0], float))
     if len(d) < 2: return len(d)
-    d_ref = d[1] if d[1]/d[0] > 1.25 else d[0]
+    d_ref = d[1] if d[1]/d[0] > SHELL_REF_GAP_RATIO else d[0]
     cut = min(factor*d_ref, max_cut)
     return max(int((d <= cut).sum()), 2)
 

@@ -138,6 +138,9 @@ ANION_TOLERANCE      = 0.20
 # 1,173) and mostly reports shared positions. Since 2.0.47 bvs_diagnosis
 # reads gii_recommended_value, and 114 of 1,187 read it.
 CATION_GII_TOLERANCE = 0.30
+# v2.0.47: CELL 3's copy, for the summary it writes before this cell runs.
+assert ANION_SUMMARY_GII_TOL == CATION_GII_TOLERANCE, (
+    'CELL 3 and CELL 7 disagree on the cation GII tolerance')
 
 SHANNON_CN6 = {
     'Li': 0.76, 'Na': 1.02, 'K': 1.38, 'Mg': 0.72, 'Ca': 1.00,

@@ -153,6 +153,12 @@ PGRM_PREMODERN_YEAR = 1950
 # states the same rule.
 PGRM_HETEROVALENT_DV = 2
 
+# v2.0.47: NAMED, value unchanged (it was a literal in classify_site).
+# CHOSEN: a valence more than 0.05 from an integer is a fractional valence
+# (M4). Stated valences are integers or thirds and halves (2.67, 3.5), far
+# outside it; 0.05 only absorbs rounding in a valence typed to two places.
+PGRM_MIXED_VALENCE_TOL = 0.05
+
 # v2.0.46. G7: A SITE WHOSE SHELL IS TOO SMALL AND WHOSE SUM SAYS WHY.
 #
 # The coordination screen (cn_plausible) has been computed since v2.0.2 and
@@ -650,7 +656,7 @@ def classify_site(row, struct):
     # valence are properties of the entry that a shared position says nothing
     # about.
     v = _pgrm_f(row.get('valence'))
-    if v == v and abs(v - round(v)) > 0.05:
+    if v == v and abs(v - round(v)) > PGRM_MIXED_VALENCE_TOL:
         return 'M4', 'mixed_valence', f'valence {v:.2f}'
     yr = _pgrm_f(struct.get('year'))
     if yr == yr and yr < PGRM_PREMODERN_YEAR:
