@@ -952,6 +952,39 @@ I1 I1- 3 d 0.5 0. 0. 0.5 1.
         _ok31, _det31 = False, f'{type(_e31).__name__}: {_e31}'
     report('31. a 12-coordinate Cs keeps its whole shell', _ok31, _det31)
 
+    # 32. v2.0.47: a site the cation table reports at a positive valence is
+    #     never summed as an anion. The rock salt with S(6+) on the cation
+    #     site is not chemistry; it is the smallest structure in which S is a
+    #     cation, as it is in every sulfate.
+    _d32 = tempfile.mkdtemp()
+    _p32 = os.path.join(_d32, 'eir_validation_s6.cif')
+    try:
+        with open(_p32, 'w', encoding='utf-8') as _f32:
+            _f32.write(_ROCKSALT_CIF.format(a=3.0, cat='S', cv=6, oocc=1.0))
+        _viz_was = globals().get('PY3DMOL_AVAILABLE', False)
+        try:
+            PY3DMOL_AVAILABLE = False
+            with contextlib.redirect_stdout(io.StringIO()):
+                _r32 = process_single_cif(_p32)
+                _a32 = (anion_bvs_for_structure(_p32, _r32.get('sites', []))
+                        if _r32.get('success') else None)
+        finally:
+            PY3DMOL_AVAILABLE = _viz_was
+        _res32 = (_a32[0] if isinstance(_a32, tuple) else _a32) or []
+        _labs32 = sorted({str(x.get('anion_label')) for x in _res32})
+        _ok32 = (_r32.get('success') and _a32 is not None
+                 and 'S1' not in _labs32 and 'O1' in _labs32)
+        _det32 = f'anion sums for {_labs32}: want O1 alone, never S1'
+    except Exception as _e32:
+        _ok32, _det32 = False, f'{type(_e32).__name__}: {_e32}'
+    finally:
+        try:
+            os.unlink(_p32)
+            os.rmdir(_d32)
+        except OSError:
+            pass
+    report('32. a cation is never summed as an anion', _ok32, _det32)
+
     if verbose:
         print()
         print("=" * 70)
