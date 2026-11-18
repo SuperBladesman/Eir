@@ -190,7 +190,8 @@ def compare_shell_rules(quality_csv=None, cif_directory=None):
             except Exception as e:
                 print(f'  ! {fn}: {type(e).__name__}: {e}')
                 cache[path] = {}
-        per_anion = _distances_for_row(cache[path], r.get('coords'), r.get('element'))
+        per_anion = _species_distances(
+            _distances_for_row(cache[path], r.get('coords'), r.get('element')))
         if not per_anion:
             continue
         el, v = r.get('element'), r.get('valence')

@@ -311,6 +311,13 @@ def classify_site(row, struct):
     a structure whose atoms cannot be where the file says has nothing to say
     about its chemistry.
     """
+    # v2.0.47: R7, asked first. The file states its symmetry operations and
+    # Eir has read it with another group (symmetry_setting_check, CELL 7):
+    # every number below would describe a structure the file does not.
+    _snr = row.get('symmetry_not_read')
+    if _pgrm_has_value(_snr):
+        return ('R7', 'symmetry_not_read', str(_snr).strip())
+
     # ---- P : can the file be read? -------------------------------------
     # Most P failures never reach this table; a file that cannot be parsed
     # appears in the failed-files CSV instead. What survives to here is a
@@ -321,6 +328,12 @@ def classify_site(row, struct):
     # position, so nothing below can be computed for it.
     if _coords is None or isinstance(_coords, float) or _coords == '':
         return 'P1', 'no_position', 'site parsed without coordinates'
+
+    # v2.0.47: P2. A site whose orbit is not the multiplicity the file states
+    # (site_orbit_check, CELL 7): the file does not describe one structure.
+    _mm2 = row.get('multiplicity_mismatch')
+    if _pgrm_has_value(_mm2):
+        return ('P2', 'multiplicity_mismatch', str(_mm2).strip())
 
     # v2.0.46: a hydrogen site is summed and reported, and gates nothing.
     # X-ray H positions sit 0.1-0.2 A short of the nucleus, so no floor or
@@ -642,6 +655,13 @@ def classify_site(row, struct):
     yr = _pgrm_f(struct.get('year'))
     if yr == yr and yr < PGRM_PREMODERN_YEAR:
         return 'M6', 'pre_modern_determination', f'published {int(yr)}'
+    # v2.0.47: M12, a coordinate that departs from the special position its
+    # multiplicity names (site_orbit_check, CELL 7). Asked before M2/M3 so a
+    # shared-site caveat does not hide it: as written the file holds more
+    # atoms than it means.
+    _osp = row.get('off_special_position')
+    if _pgrm_has_value(_osp):
+        return ('M12', 'off_special_position', str(_osp).strip())
 
     # M2/M3 mean TWO OR MORE SPECIES SHARE A POSITION, which is an ambiguity in
     # the depositor's model. They do NOT mean partial occupancy: in a spinel
@@ -769,7 +789,8 @@ def classify_pgrm(df):
                   # structure is not assessed), R6 below R4; R and M codes
                   # renumbered, not squeezed, so every existing pair keeps
                   # its order.
-                  'R5': 8, 'R1': 9, 'R2': 10, 'R3': 11, 'R4': 12, 'R6': 13,
+                  'R7': 8, 'R5': 9, 'R1': 10, 'R2': 11, 'R3': 12, 'R4': 13,
+                  'R6': 14,
                   # v2.0.22: M8 outranks the model codes for the same reason
                   # G1 outranks G5 - it says WHERE, and it is a measurement.
                   # v2.0.25: M2 and M3 sort LAST among the M codes. They are
@@ -783,8 +804,9 @@ def classify_pgrm(df):
                   # squeezed, so every existing pair keeps its order.
                   # v2.0.46: M11 sits below M8, above M10, for the same
                   # reason, and the rest are renumbered.
-                  'M5': 14, 'M8': 15, 'M11': 16, 'M10': 17, 'M7': 18,
-                  'M4': 19, 'M1': 20, 'M6': 21, 'M3': 22, 'M2': 23, '-': 99}
+                  'M5': 15, 'M8': 16, 'M11': 17, 'M10': 18, 'M7': 19,
+                  'M4': 20, 'M1': 21, 'M6': 22, 'M12': 23, 'M3': 24,
+                  'M2': 25, '-': 99}
     _w = df.assign(_s=df['pgrm_tier'].map(sev),
                    _r=df['pgrm_code'].map(_code_rank).fillna(50))
     worst = (_w.sort_values(['_s', '_r'], ascending=[True, False])
@@ -945,6 +967,82 @@ def VALIDATE_GATES(verbose=True):
     report('9. G4 rests on no shift screen built on a doubted cn',
            _g9a[0] == 'G4' and _g9b[0] != 'G4',
            f'supported shift: {_g9a[0]}; the same with cn_fault set: {_g9b[0]}')
+
+    # v2.0.47. A shared anion position is described the same way whichever
+    # species the CIF lists first.
+    _of10 = ("data_eir_gate_oxyfluoride\n" + _cell5.format(a=4.2, b=4.2,
+             c=4.2, g=90.) + "_space_group_IT_number 225\n"
+             "_symmetry_space_group_name_H-M 'F m -3 m'\n" + _loop5 +
+             "Mg1 Mg2+ 0. 0. 0. 1.\n{a}\n{b}\n")
+    _oa, _fa = 'O1 O2- 0.5 0.5 0.5 0.5', 'F1 F1- 0.5 0.5 0.5 0.5'
+    _d10 = _tf5.mkdtemp()
+    try:
+        _t10 = []
+        for _k10, (_x, _y) in enumerate(((_oa, _fa), (_fa, _oa))):
+            _p10 = _os5.path.join(_d10, f'of{_k10}.cif')
+            with open(_p10, 'w') as _f10:
+                _f10.write(_of10.format(a=_x, b=_y))
+            _nd10 = list(neighbour_distances(_p10).values())[0]
+            _t10.append((sorted(_counted_distances(_nd10)),
+                         _species_distances(_nd10)))
+    finally:
+        for _f10 in _os5.listdir(_d10):
+            _os5.unlink(_os5.path.join(_d10, _f10))
+        _os5.rmdir(_d10)
+    report('10. a shared anion position does not depend on the listing order',
+           _t10[0] == _t10[1] and sorted(_t10[0][1]) == ['F', 'O']
+           and all(abs(x - 2.1) < 1e-6 for x in _t10[0][0][:6])
+           and _t10[0][0][6] > 2.1 + 1e-6
+           and _t10[0][1]['O'][:6] == _t10[0][1]['F'][:6],
+           f'O first: {len(_t10[0][0])} contacts to 5 A, the first six at '
+           f'{_t10[0][0][:6][-1]:.3f} A, species {sorted(_t10[0][1])}; the '
+           f'same with F first: {_t10[0] == _t10[1]}')
+
+    # v2.0.47. The orbit against the stated multiplicity (P2, M12), and the
+    # symmetry the file states against the group read (R7).
+    _rs11 = ("data_eir_gate_orbit\n" + _cell5.format(a=4.2, b=4.2, c=4.2,
+             g=90.) + "_space_group_IT_number 225\n"
+             "_symmetry_space_group_name_H-M 'F m -3 m'\n"
+             "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+             "_atom_site_symmetry_multiplicity\n_atom_site_fract_x\n"
+             "_atom_site_fract_y\n_atom_site_fract_z\n_atom_site_occupancy\n"
+             "Mg1 Mg2+ {m} {x} 0. 0. 1.\nO1 O2- 4 0.5 0.5 0.5 1.\n")
+    # An invented monoclinic cell in the unique-axis-c setting; the
+    # operations are the setting's own.
+    _c13 = ("data_eir_gate_setting\n" + _cell5.format(a=10.0, b=10.4,
+            c=8.0, g=90.) + "_space_group_IT_number 11\n"
+            "_space_group_name_H-M_alt 'C 1 1 21/m'\n"
+            "loop_\n_space_group_symop_operation_xyz\n"
+            "'x, y, z'\n'-x, -y, z+1/2'\n'x, y, -z+1/2'\n'-x, -y, -z'\n"
+            "'x+1/2, y+1/2, z'\n'-x+1/2, -y+1/2, z+1/2'\n"
+            "'x+1/2, y+1/2, -z+1/2'\n'-x+1/2, -y+1/2, -z'\n" + _loop5 +
+            "Dy1 Dy3+ 0.20 0.10 0.60 1.\n"
+            "S1 S2- 0.20 0.35 0.60 1.\n")
+    _d11 = _tf5.mkdtemp()
+    try:
+        _o11 = {}
+        for _k11, _t11 in (('ok', _rs11.format(m=4, x='0.')),
+                           ('p2', _rs11.format(m=8, x='0.')),
+                           ('m12', _rs11.format(m=4, x='0.0004')),
+                           ('r7', _c13)):
+            _p11 = _os5.path.join(_d11, _k11 + '.cif')
+            with open(_p11, 'w') as _f11:
+                _f11.write(_t11)
+            _o11[_k11] = (site_orbit_check(_p11),
+                          symmetry_setting_check(_p11))
+    finally:
+        for _f11 in _os5.listdir(_d11):
+            _os5.unlink(_os5.path.join(_d11, _f11))
+        _os5.rmdir(_d11)
+    report('11. P2: an orbit that is not the stated multiplicity',
+           _o11['p2'][0][0] and not _o11['ok'][0][0] and not _o11['ok'][0][1],
+           f"stated 8 on 4a: {_o11['p2'][0][0]}; stated 4: {_o11['ok'][0]}")
+    report('12. M12: a coordinate off the special position it names',
+           _o11['m12'][0][1] and not _o11['m12'][0][0],
+           f"Mg at x = 0.0004 on 4a: {_o11['m12'][0][1]}")
+    report('13. R7: a setting Eir cannot read is caught',
+           bool(_o11['r7'][1]) and not _o11['ok'][1],
+           f"'C 1 1 21/m': {_o11['r7'][1]!r}; rock salt: {_o11['ok'][1]!r}")
 
     report('8. R6: an index the table cannot rebuild is not assessed, after G',
            _r6[0] == 'R6' and _g6[0] == 'G1',
