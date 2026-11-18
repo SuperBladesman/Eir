@@ -1005,12 +1005,17 @@ _ANION_SET = PROVISIONAL_ANIONS
 # (This note used to name ECON_REGULAR_MIN as measured; it was not then,
 # see CELL 7.) Where they sit is MEASURED at 2.0.47, on ordered sites in
 # sound structures in the 2.0.47 check set (CELL 7): the bond angle
-# variance exceeds 25 deg^2 at 57% of 386 six-coordinate sites (median
-# 29.9) and 10% of 413 four-coordinate ones; the Baur index exceeds 0.02
-# at 15% and 4%. So is_distorted marks most octahedra in sound structures
-# (64%): read it as 'not regular', not as a fault. No gate reads it.
-DISTORTED_BAV_MIN = 25.0      # bond angle variance, deg^2
-DISTORTED_BAUR_MIN = 0.02     # Baur index
+# variance exceeds 25 deg^2 at 57% of 389 six-coordinate sites (median
+# 29.9) and 10% of 416 four-coordinate ones; the Baur index exceeds 0.02
+# at 15% and 4%. So is_distorted marked most octahedra in sound structures
+# (64%), which is 'not regular', not 'distorted'. No gate reads it.
+# v2.0.47: MEASURED, set on that data: the 95th percentiles over those 389
+# ordered six-coordinate sites (ACCEPT tiers on 2.0.46, one species on the
+# site), 58.3 deg^2 and 0.084. is_distorted now marks an octahedron more
+# distorted, on either measure, than 95% of those; on 2.0.47's own run of
+# the check set it marks 9.7% of 404.
+DISTORTED_BAV_MIN = 58.3      # bond angle variance, deg^2
+DISTORTED_BAUR_MIN = 0.084    # Baur index
 _EIR_GEOMETRY = {}
 
 def assess_site_geometry(centre, anion_neighbors, element, cn=None,
