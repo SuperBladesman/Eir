@@ -109,16 +109,22 @@ ECON_REGULAR_MIN     = 0.95
 # and the longest single bond there is 4.20 A; in the check set the
 # largest 1.30 times shortest is 4.52 A. For heavier anions the data stop:
 # from Shannon radii, Cs(+) at CN 12 with I(-) gives 1.30 x 4.08 = 5.30 A,
-# beyond the radius.
+# beyond the radius. v2.0.47: kept. In 400 ICSD caesium and rubidium
+# iodides and caesium tellurides 1.30 times the shortest contact passes
+# 5.0 A on 234 of 1,024 cation sites, and 6.5 A changes cn_relative on 12
+# and cn_fault on 7, every one in a structure NOT_ASSESSED for want of
+# measured bond lengths (R3), so no verdict moves. Test it again when R3 is
+# lifted for those anions.
 NEIGHBOUR_SEARCH_MAX = 5.0
 # CHOSEN, as ANION_CONSISTENT_TOL (CELL 3) is, with the same value and
 # basis. Read by nothing in Eir: it is written to cfg_anion_tolerance,
 # which Huginn's layered-oxide notebook reads for a figure's guide line.
 ANION_TOLERANCE      = 0.20
 # CHOSEN, now MEASURED, and not the 0.20 v.u. rule of thumb. A cation GII
-# (the gii column, over every species on every cation site) above 0.30
-# v.u. labels the observational diagnosis (cation_only_deviates,
-# both_deviate); labels only, no gate reads them. CELL 3's bvs_diagnosis
+# above 0.30 v.u. labels the observational diagnosis (cation_only_deviates,
+# both_deviate); labels only, no gate reads them. Since 2.0.47 the index
+# is gii_recommended_value where it exists, gii otherwise; the figures
+# below are why. CELL 3's bvs_diagnosis
 # applies its own 0.30, written inline. The often-quoted 0.20 v.u., beyond
 # which structures are said to be rare or unstable (Brown, The Chemical
 # Bond in Inorganic Chemistry, 2002; the index is Salinas-Sanchez et al.,
@@ -129,7 +135,8 @@ ANION_TOLERANCE      = 0.20
 # counts each species at its own valence; gii_recommended_value, which
 # averages them, has a median of 0.163 and 17.1% above 0.30. So
 # cation_only_deviates is the commonest label on sound structures (583 of
-# 1,173) and mostly reports shared positions.
+# 1,173) and mostly reports shared positions. Since 2.0.47 bvs_diagnosis
+# reads gii_recommended_value, and 114 of 1,187 read it.
 CATION_GII_TOLERANCE = 0.30
 
 SHANNON_CN6 = {
@@ -2379,9 +2386,17 @@ def add_coordination_quality(batch_csv_path, cif_directory,
             df['structure_core_geometry_plausible'] = None
 
     if 'gii' in df.columns and 'anion_balances' in df.columns:
+        # v2.0.47: on the index the tiers tell a reader to quote,
+        # gii_recommended_value, where it exists. The per-species gii counts
+        # each species on a shared position at its own valence, so on it
+        # 583 of 1,173 sound structures in the check set read
+        # cation_only_deviates; on gii_recommended_value, 114 of 1,187.
+        _gdiag = (pd.to_numeric(df['gii_recommended_value'], errors='coerce')
+                  .fillna(pd.to_numeric(df['gii'], errors='coerce'))
+                  if 'gii_recommended_value' in df.columns else df['gii'])
         df['bvs_diagnosis'] = [
             observational_diagnosis_from_flags(g, b)
-            for g, b in zip(df['gii'], df['anion_balances'])
+            for g, b in zip(_gdiag, df['anion_balances'])
         ]
 
     # refined diagnosis: split both_deviate on polyhedron regularity

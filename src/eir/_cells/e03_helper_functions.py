@@ -4076,18 +4076,14 @@ def mobile_pair(el1, v1, p1, el2, v2, p2):
 # The cost is stated: a genuinely impossible H position is now invisible to
 # G5. It was never visible to a floor measured without hydrogen in it.
 CATION_FLOOR_EXCLUDED_ELEMENTS = frozenset({'H', 'D'})
-# v2.0.47: UNSOURCED, and it DECIDES NOTHING since 2.0.46. The
-# alternatives rule now runs to the packing floor, and max(SPLIT_SITE_MAX,
-# floor) is the floor (2.35 or 2.40 A). Set at 1.8.8 and never measured.
-# For scale, 1.20 A is 0.31 A below the shortest metal-oxygen bond in
-# Gagne's bond-length data (Be(2+), 1.506 A) and above the shortest C-N,
-# N-O and N-N bonds there (1.137 to 1.194 A).
-SPLIT_SITE_MAX = 1.20         # A, closer than this with occupancies summing to
-                              # <= 1 means one atom written as two positions
+# v2.0.47: SPLIT_SITE_MAX (1.20 A, set at 1.8.8 and never measured) is
+# gone. Since 2.0.46 the alternatives rule below runs to the packing floor,
+# and max(SPLIT_SITE_MAX, floor) was the floor (2.35 or 2.40 A), so it
+# decided nothing; removing it changes no result.
 
 # v2.0.46: ALTERNATIVE POSITIONS, AT ANY DISTANCE BELOW THE FLOOR.
 #
-# The rule above stopped at SPLIT_SITE_MAX, so two partly occupied positions
+# The rule used to stop at 1.20 A, so two partly occupied positions
 # further apart were counted as a contact even where the model never fills
 # both. The two sodium positions of a P2-type layered oxide (2b and 2d) sit
 # a/sqrt(3), about 1.70 A, apart at occupancies near 0.2 and 0.45: ICSD
@@ -4496,8 +4492,9 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
 
     Split sites are excluded. A refinement that models one oxygen as two
     partly-occupied positions 0.18 A apart is not reporting a 0.18 A contact,
-    and ICSD 194733 does exactly that. Pairs closer than SPLIT_SITE_MAX whose
-    occupancies sum to no more than unity are therefore skipped.
+    and ICSD 194733 does exactly that. Pairs closer than the packing floor
+    whose occupancies sum to no more than unity are therefore skipped
+    (v2.0.46; the 1.20 A SPLIT_SITE_MAX it began with was removed at 2.0.47).
 
     v2.0.46: and so are such pairs anywhere below the packing floor, which
     the model can always fill one at a time, and positions refined to zero
@@ -4627,13 +4624,13 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                         and els[idx] in CATION_FLOOR_EXCLUDED_ELEMENTS):
                     continue                      # v2.0.15: not a packing sphere
                 dist = float(d[idx])
-                # v2.0.46: alternatives to the floor, not to SPLIT_SITE_MAX,
-                # and over-full only within the stated uncertainties
+                # v2.0.46: alternatives to the floor, not to 1.20 A, and
+                # over-full only within the stated uncertainties
                 _floor = ANION_ANION_MIN if el_is_anion else CATION_CATION_MIN
                 _sig = (2.0 * psig0 if labs[idx] == s.label
                         else _math.hypot(psig0, float(psigs[idx])))
                 _allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * _sig)
-                if (dist < max(SPLIT_SITE_MAX, _floor)
+                if (dist < _floor
                         and (pocc0 + poccs[idx] - 1.0) <= _allow + 1e-9):
                     continue                      # never both filled
                 # v2.0.46: an edge of this anion's own polyanion, held short
@@ -4994,7 +4991,11 @@ JT_OCTAHEDRAL_ELEMENTS = {'Cr', 'Mn', 'Fe', 'Ni', 'Cu', 'Ag'}
 # (1993) 28), and tenorite, CuO, is square planar with its next two O at
 # 2.78 A, a ratio of 1.42: the gap in this set is not a property of
 # Cu(2+).
-MAX_JT_AXIAL_RATIO = 1.30  # axial/equatorial-mean ceiling for a bonding axial
+# v2.0.47: 1.40, inside that gap. At 1.30 the ceiling sat inside the range
+# it is meant to cover (the six Cu(2+) sites at 1.30 to 1.33), so a sixth
+# bond there would have been cut; 1.40 keeps every bonded axial in the set
+# and is still below the 1.42 of tenorite's next two O.
+MAX_JT_AXIAL_RATIO = 1.40  # axial/equatorial-mean ceiling for a bonding axial
 
 # Ions whose ground-state d-electron count gives a degenerate e_g or t_2g
 # occupation and therefore a first-order Jahn-Teller distortion. High-spin d4
