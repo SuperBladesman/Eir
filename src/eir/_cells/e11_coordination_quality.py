@@ -1825,7 +1825,10 @@ def site_orbit_check(cif_path):
             p2.append(f'{s.label}: multiplicity {stated} stated, the '
                       f'coordinates give {len(merged)}')
             continue
-        if len(merged) != stated or len(_count(f0, ORBIT_SPLIT_MIN)) <= stated:
+        if len(merged) != stated:
+            continue
+        lit = _count(f0, ORBIT_SPLIT_MIN)
+        if len(lit) <= stated:
             continue
         # The special position: the mean of this atom's images within the
         # merge tolerance of it.
@@ -1849,8 +1852,16 @@ def site_orbit_check(cif_path):
                 _hits.append((dev, _a, _xyz[_k][_i]))
         if _hits:
             dev, _a, _v = max(_hits)
+            # v2.0.48: the evidence also says what the file holds as written,
+            # the count of images and how far apart, since the verdict reads
+            # the structure meant and any other program reads the file.
+            sep = min(np.linalg.norm(M @ ((a - b) - np.round(a - b)))
+                      for _j, a in enumerate(lit) for b in lit[_j + 1:])
             m12.append(f'{s.label} {_a} = {_v}, {dev:.4f} from the special '
-                       f'position its multiplicity ({stated}) names')
+                       f'position its multiplicity ({stated}) names; as '
+                       f'written, {len(lit)} images, the closest two {sep:.3f} A '
+                       f'apart, and '
+                       f'Eir used the special position')
     return p2, m12
 
 
