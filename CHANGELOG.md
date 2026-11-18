@@ -4,7 +4,7 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## The eir-bvs package
 
-### eir-bvs 2.1.1 – unreleased
+### eir-bvs 2.1.1 – 18 November 2026
 
 **The 2.0.47 engine.** The one-page report explains the five new codes (R5, R6, R7, P2, M12). Nothing else in the package changed.
 
@@ -30,7 +30,7 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
-### 2.0.47 – unreleased
+### 2.0.47 – 18 November 2026
 
 **Every fault the 2.0.47 checks found, fixed; five new codes; a name removed, and every threshold says where its value comes from**
 
