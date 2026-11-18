@@ -403,17 +403,31 @@ def neighbour_distances(cif_path, rmax=NEIGHBOUR_SEARCH_MAX, dedup_tol=0.02):
         m = np.where((d > 0.01) & (d <= rmax))[0]
         m = m[np.argsort(d[m])]
 
+        # v2.0.47: a position two anion species share (O/F, O/N, O/S) is
+        # still ONE contact, counted once, under the alphabetically first
+        # species, so the count is what it was and no longer depends on which
+        # species the CIF lists first. Every other species at the position
+        # is kept under '+' and its element ('+F'), which the per-species
+        # screen reads and the counts skip (_counted_distances). The screen
+        # used to see only the species listed first.
         per_anion = {}
-        kept_pos = []
+        kept = []
         for idx in m:
             ael = els[idx]
             if ael not in ANION_RADIUS:
                 continue
             pos = P[idx]
-            if any(np.linalg.norm(pos - kp) <= dedup_tol for kp in kept_pos):
-                continue
-            kept_pos.append(pos)
-            per_anion.setdefault(ael, []).append(float(d[idx]))
+            hit = next((k for k in kept
+                        if np.linalg.norm(pos - k[0]) <= dedup_tol), None)
+            if hit is None:
+                kept.append((pos, {ael}, float(d[idx])))
+            else:
+                hit[1].add(ael)
+        for _pos, _sp, _dd in kept:
+            _sp = sorted(_sp)
+            per_anion.setdefault(_sp[0], []).append(_dd)
+            for _o in _sp[1:]:
+                per_anion.setdefault('+' + _o, []).append(_dd)
         for a in per_anion:
             per_anion[a].sort()
 
@@ -807,7 +821,11 @@ def positional_uncertainty(cif_path, rmax=NEIGHBOUR_SEARCH_MAX,
             R = float(np.linalg.norm(X))
             if 0.01 < R <= rmax:
                 cand.append((R, X, lab2, W2, pos, fim))
-        cand.sort(key=lambda t: t[0])
+        # v2.0.47: at a position two species share, the alphabetically first
+        # is kept, as neighbour_distances keeps it, rather than whichever
+        # the CIF happens to list first.
+        _lab_el = {x.label: x.element.name for x in st.sites}
+        cand.sort(key=lambda t: (round(t[0], 6), _lab_el.get(t[2], '')))
 
         per_anion, kept = {}, []
         for R, X, lab2, W2, pos, fim2 in cand:
@@ -905,6 +923,21 @@ def _parse_coords(s):
         return tuple(round(v, 4) for v in t)
     except (TypeError, ValueError, AttributeError):
         return None
+
+
+def _counted_distances(per_anion):
+    """v2.0.47: every contact once, leaving out the second species of a
+    shared anion position (the '+' keys of neighbour_distances)."""
+    return [d for k, dl in per_anion.items()
+            if not str(k).startswith('+') for d in dl]
+
+
+def _species_distances(per_anion):
+    """v2.0.47: per anion species, every contact to it, shared or not."""
+    out = {}
+    for k, dl in per_anion.items():
+        out.setdefault(str(k).lstrip('+'), []).extend(dl)
+    return {k: sorted(v) for k, v in out.items()}
 
 
 def _distances_for_row(table, coords_str, element, tol=0.02):
@@ -1652,6 +1685,165 @@ def coordinated_ligands(cif_path):
     return found
 
 
+# v2.0.47: DOES EACH SITE'S ORBIT MATCH WHAT THE FILE SAYS IT IS?
+#
+# Every image of a site under the space group, wrapped into the cell, is
+# merged with any other closer than COLOCATED_IMAGE_TOL, as the bond finder
+# merges them. Two ways the result can contradict the deposited
+# multiplicity, and they are different faults:
+#
+#   P2, multiplicity_mismatch: for a fully occupied site, the merged orbit
+#     is not the multiplicity the file states. Fewer means images of one
+#     atom coincide (an origin-choice slip: the O of ICSD 38769 lies 0.011 A
+#     from its own images); more means the coordinates generate atoms the
+#     file does not count. Of about 7,000 entries tested it fires on two,
+#     both EXPUNGE before on G2 or passed: 38769 (CoFe2O4, O stated 32 and
+#     giving 8) and 213536 (CsIO3, O stated 9 and giving 18, images 0.041 A
+#     apart). ICSD 31299 and 31300 (NiCr2O4) gave 4 for 16 because their
+#     setting was misread; R7, asked first, says so (below).
+#   M12, off_special_position: the orbit matches only once images 0.002 to
+#     0.02 A apart are merged, and a coordinate departs from the special
+#     position by more than half its last stated digit and more than three
+#     times its stated uncertainty. Not rounding, then: ICSD 213392
+#     (CoFe2O4) states O on 32e at 0.2401, 0.2409, 0.2412, which as written is
+#     192 O per cell. Eir reads the 32 meant; the flag says the file does not.
+#     Off-special refinements within their own uncertainty (0.5009(11)) and
+#     rounded thirds (0.6667) are left alone.
+# v2.0.47: AND IS THE SYMMETRY EIR READS THE SYMMETRY THE FILE STATES?
+#
+# Where gemmi does not know a space-group setting by its symbol, every
+# reader in Eir falls back to the group of the same number in its standard
+# setting, and expands coordinates given in the file's own setting with the
+# standard one's operations. ICSD 31299 and 31300 (NiCr2O4) are deposited in
+# 'F 41/d d m Z', 64 operations, and were read as I 41/a m d, 32: Cr came out
+# at 4 positions instead of 16 and the entry EXPUNGE on G2 for a structure it
+# does not describe. ICSD 39782 ('C 1 1 21/m') was read as P 1 21/m 1. Where
+# the file lists its operations and they are not the group Eir reads, the
+# structure is NOT_ASSESSED on R7: Eir cannot read it, which says nothing
+# about the entry. Three entries of about 7,000 tested.
+
+
+def symmetry_setting_check(cif_path):
+    """Evidence string when the CIF's own symmetry operations are not the
+    group Eir reads it with; '' when they agree or the file lists none."""
+    txt = clean_cif_for_gemmi(cif_path)
+    if txt is None:
+        return ''
+    try:
+        _b = gemmi.cif.read_string(txt).sole_block()
+    except Exception:
+        return ''
+    ops = (list(_b.find_loop('_space_group_symop_operation_xyz'))
+           or list(_b.find_loop('_symmetry_equiv_pos_as_xyz')))
+    if not ops:
+        return ''
+    try:
+        g = gemmi.GroupOps([gemmi.Op(str(o).strip('\'" ')) for o in ops])
+    except Exception:
+        return ''
+    st = load_structure(cif_path)
+    if st.spacegroup is None:
+        return f'the file lists {len(ops)} operations; Eir reads no group'
+    mine = {o.triplet() for o in g}
+    eirs = {o.triplet() for o in st.spacegroup.operations()}
+    if mine == eirs:
+        return ''
+    hm = (_b.find_value('_space_group_name_H-M_alt')
+          or _b.find_value('_symmetry_space_group_name_H-M') or '?')
+    hm = str(hm).strip().strip('\'"')
+    return (f'the file lists {len(mine)} operations ({hm}); '
+            f'Eir reads {st.spacegroup.hm}, {len(eirs)}')
+
+
+# OFF_SPECIAL_SU_FACTOR: CHOSEN, three standard uncertainties, as G5 allows an
+# over-full pair three times the occupancies' (2.0.46). 0.5009(11) is 0.8 su
+# from 1/2 and is left alone; 213392's 0.2401 states no su and departs by more
+# than its own rounding. The 1.01 beside it is a margin for floating point.
+OFF_SPECIAL_SU_FACTOR = 3
+ORBIT_SPLIT_MIN = 0.002   # A, CHOSEN: below the 0.004 A split of ICSD 213392,
+                          # above the 0.0007 A a four-decimal third makes in
+                          # a 7 A cell
+
+
+def site_orbit_check(cif_path):
+    """Return (p2, m12): evidence strings for the two faults above."""
+    st = load_structure(cif_path)
+    try:
+        _b = gemmi.cif.read(str(cif_path)).sole_block()
+        _labs = list(_b.find_loop('_atom_site_label'))
+        _mult = list(_b.find_loop('_atom_site_symmetry_multiplicity'))
+        _xyz = [list(_b.find_loop('_atom_site_fract_' + a)) for a in 'xyz']
+    except Exception:
+        return [], []
+    if not _labs or len(_mult) != len(_labs):
+        return [], []
+    M = np.array(st.cell.orth.mat.tolist())
+
+    def _count(f0, tol):
+        kept = []
+        for op in st.spacegroup.operations():
+            g = np.array(wrap_into_cell(op.apply_to_xyz(list(f0))))
+            if not any(np.linalg.norm(M @ ((g - k) - np.round(g - k))) <= tol
+                       for k in kept):
+                kept.append(g)
+        return kept
+
+    def _num(s):
+        s = str(s)
+        v = s.split('(')[0]
+        dec = len(v.split('.')[1]) if '.' in v else 0
+        su = None
+        if '(' in s:
+            try:
+                su = int(s.split('(')[1].rstrip(')')) * 10 ** -dec
+            except ValueError:
+                su = None
+        return dec, su
+
+    p2, m12 = [], []
+    for s in st.sites:
+        if s.label not in _labs:
+            continue
+        _i = _labs.index(s.label)
+        try:
+            stated = int(_mult[_i])
+        except (TypeError, ValueError):
+            continue
+        f0 = np.array([s.fract.x, s.fract.y, s.fract.z])
+        merged = _count(f0, COLOCATED_IMAGE_TOL)
+        if s.occ >= LIGAND_FULL_OCC and len(merged) != stated:
+            p2.append(f'{s.label}: multiplicity {stated} stated, the '
+                      f'coordinates give {len(merged)}')
+            continue
+        if len(merged) != stated or len(_count(f0, ORBIT_SPLIT_MIN)) <= stated:
+            continue
+        # The special position: the mean of this atom's images within the
+        # merge tolerance of it.
+        cl = [f0]
+        for op in st.spacegroup.operations():
+            g = np.array(op.apply_to_xyz(list(f0)))
+            d = (g - f0) - np.round(g - f0)
+            if (1e-9 < np.linalg.norm(M @ d) <= COLOCATED_IMAGE_TOL
+                    and not any(np.linalg.norm(M @ (f0 + d - c)) < 1e-6
+                                for c in cl)):
+                cl.append(f0 + d)
+        spec = np.mean(cl, axis=0)
+        # Every coordinate is tested; the evidence names the one furthest
+        # from the special position, not the first to pass.
+        _hits = []
+        for _k, _a in enumerate('xyz'):
+            dec, su = _num(_xyz[_k][_i])
+            dev = abs(f0[_k] - spec[_k])
+            if (dev > 0.5 * 10 ** -dec * 1.01
+                    and (su is None or dev > OFF_SPECIAL_SU_FACTOR * su)):
+                _hits.append((dev, _a, _xyz[_k][_i]))
+        if _hits:
+            dev, _a, _v = max(_hits)
+            m12.append(f'{s.label} {_a} = {_v}, {dev:.4f} from the special '
+                       f'position its multiplicity ({stated}) names')
+    return p2, m12
+
+
 def add_coordination_quality(batch_csv_path, cif_directory,
                              output_csv_path=None, verbose=True):
     """
@@ -1739,18 +1931,51 @@ def add_coordination_quality(batch_csv_path, cif_directory,
             _tick_pu.tick()
         _tick_pu.close()
 
-    # v2.0.47: coordinated CO, NO and CN units, per structure (R5).
+    # v2.0.47: coordinated CO, NO and CN units, per structure (R5). These
+    # three checks read each file as the bond finder read it (cif_path_for:
+    # its outputs/as_read copy where the reading stage rewrote it), keyed by
+    # file name. Read from the file as deposited, a CIF whose operations the
+    # reading stage had to restore came out R7 (symmetry_not_read) although
+    # Eir reads it correctly.
+    _read_paths = {}
+    for _fn0 in df['filename']:
+        if isinstance(_fn0, str) and _fn0 not in _read_paths:
+            _read_paths[_fn0] = cif_path_for(cif_directory, _fn0)
     _lig_by_path = {}
-    for _p2 in _paths:
+    for _f2, _p2 in _read_paths.items():
         try:
-            _lig_by_path[_p2] = '; '.join(coordinated_ligands(_p2))
+            _lig_by_path[_f2] = '; '.join(coordinated_ligands(_p2))
         except Exception as _e2:
-            print(f"  ! ligand search unavailable for "
-                  f"{os.path.basename(_p2)}: {_e2}")
-            _lig_by_path[_p2] = ''
+            print(f"  ! ligand search unavailable for {_f2}: {_e2}")
+            _lig_by_path[_f2] = ''
     df['coordinated_ligand'] = [
-        _lig_by_path.get(os.path.join(cif_directory, _f), '')
-        if isinstance(_f, str) else '' for _f in df['filename']]
+        _lig_by_path.get(_f, '') if isinstance(_f, str) else ''
+        for _f in df['filename']]
+    # v2.0.47: orbit against stated multiplicity, per structure (P2, M12).
+    _orb_by_path = {}
+    for _f3, _p3 in _read_paths.items():
+        try:
+            _pp, _mm = site_orbit_check(_p3)
+        except Exception as _e3:
+            print(f"  ! orbit check unavailable for {_f3}: {_e3}")
+            _pp, _mm = [], []
+        _orb_by_path[_f3] = ('; '.join(_pp), '; '.join(_mm))
+    _sym_by_path = {}
+    for _f4, _p4 in _read_paths.items():
+        try:
+            _sym_by_path[_f4] = symmetry_setting_check(_p4)
+        except Exception as _e4:
+            print(f"  ! symmetry check unavailable for {_f4}: {_e4}")
+            _sym_by_path[_f4] = ''
+    df['symmetry_not_read'] = [
+        _sym_by_path.get(_f, '') if isinstance(_f, str) else ''
+        for _f in df['filename']]
+    df['multiplicity_mismatch'] = [
+        _orb_by_path.get(_f, ('', ''))[0] if isinstance(_f, str) else ''
+        for _f in df['filename']]
+    df['off_special_position'] = [
+        _orb_by_path.get(_f, ('', ''))[1] if isinstance(_f, str) else ''
+        for _f in df['filename']]
     _n_lig = sum(1 for _v in _lig_by_path.values() if _v)
     if verbose and _n_lig:
         print(f'  coordination compounds: {_n_lig} structure(s) with a CO, NO '
@@ -1781,7 +2006,7 @@ def add_coordination_quality(batch_csv_path, cif_directory,
 
         table = cache.get(path, {})
         per_anion = _distances_for_row(table, row.get('coords'), el)
-        ds = [d for dl in per_anion.values() for d in dl]
+        ds = _counted_distances(per_anion)
 
         if not ds:
             econ_v.append(np.nan); ratio_v.append(np.nan)
@@ -1801,7 +2026,7 @@ def add_coordination_quality(batch_csv_path, cif_directory,
         # worst contact. Assuming oxygen made the screen inoperative for
         # sulfides, where a normal M-S bond looks long against r(O).
         plaus, expd, dr, contact_anion = None, np.nan, np.nan, None
-        for _ael, _dl in per_anion.items():
+        for _ael, _dl in sorted(_species_distances(per_anion).items()):
             _p, _ex, _r = geometry_plausible(el, _ael, min(_dl),
                                              valence=row.get('valence'), cn=cn_r)
             if _r == _r and (dr != dr or _r < dr):
@@ -1829,7 +2054,11 @@ def add_coordination_quality(batch_csv_path, cif_directory,
             _upar, _utab = ucache[path]
             _nfree = len(_upar)
             _uent = _distances_for_row(_utab, row.get('coords'), el)
-            _lig = contact_anion or (sorted(_uent)[0] if _uent else None)
+            # v2.0.47: the species of the worst contact where it has an
+            # entry; at a shared position it may be the second species,
+            # whose contacts the uncertainty table files under the first.
+            _lig = (contact_anion if contact_anion in (_uent or {})
+                    else (sorted(_uent)[0] if _uent else None))
             if _uent and _lig in _uent:
                 _r0u, _bu = get_bv_parameters_fractional(
                     el, row.get('valence'), _lig)

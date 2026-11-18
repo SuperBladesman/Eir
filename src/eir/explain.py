@@ -193,6 +193,19 @@ def _reason_sentence(code, reason, site):
             + ', so the checks against measured bond lengths cannot be made.',
         'no_index':
             'The recommended instability index could not be calculated.',
+        'symmetry_not_read':
+            'The file lists its symmetry operations, and they are not the '
+            'space group Eir read it with: its setting is one Eir cannot read. '
+            'Nothing is said about whether the entry is right.',
+        'multiplicity_mismatch':
+            'A site\u2019s symmetry images do not number what the file says '
+            'its multiplicity is: the coordinates and the stated multiplicity '
+            'describe different structures, as an origin-choice slip does.',
+        'off_special_position':
+            'A coordinate departs from the special position the site\u2019s '
+            'multiplicity names, by more than its own rounding and '
+            'uncertainty. Eir reads the structure meant; the file as written '
+            'holds more atoms than that.',
         'coordination_compound':
             'The structure holds a carbonyl, nitrosyl, cyanide or nitro '
             'ligand bonded to a metal. Eir\u2019s model is ionic and has no '
