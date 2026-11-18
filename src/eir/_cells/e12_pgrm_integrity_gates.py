@@ -1094,7 +1094,7 @@ def VALIDATE_GATES(verbose=True):
            f"stated 8 on 4a: {_o11['p2'][0][0]}; stated 4: {_o11['ok'][0]}")
     report('12. M12: a coordinate off the special position it names',
            (bool(_o11['m12'][0][1]) and not _o11['m12'][0][0]
-            and '24 images, the closest two 0.002 A apart' in _o11['m12'][0][1][0]),
+            and '24 images, the closest two 0.0024 A apart' in _o11['m12'][0][1][0]),
            f"Mg at x = 0.0004 on 4a: {_o11['m12'][0][1]}")
     report('13. R7: a setting Eir cannot read is caught',
            bool(_o11['r7'][1]) and not _o11['ok'][1],

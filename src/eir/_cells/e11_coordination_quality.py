@@ -1856,15 +1856,19 @@ def site_orbit_check(cif_path):
         if _hits:
             dev, _a, _v = max(_hits)
             # v2.0.48: the evidence also says what the file holds as written,
-            # the count of images and how far apart, since the verdict reads
-            # the structure meant and any other program reads the file.
+            # the count of images and how close the nearest two are, since
+            # the verdict reads the structure meant and any other program
+            # reads the file. Counted at a numerical tolerance, not at
+            # ORBIT_SPLIT_MIN, which merges images closer than 0.002 A and
+            # would undercount (ICSD 135344's 192 images, 0.0002 A apart, as
+            # 96).
+            raw = _count(f0, 1e-4)
             sep = min(np.linalg.norm(M @ ((a - b) - np.round(a - b)))
-                      for _j, a in enumerate(lit) for b in lit[_j + 1:])
+                      for _j, a in enumerate(raw) for b in raw[_j + 1:])
             m12.append(f'{s.label} {_a} = {_v}, {dev:.4f} from the special '
                        f'position its multiplicity ({stated}) names; as '
-                       f'written, {len(lit)} images, the closest two {sep:.3f} A '
-                       f'apart, and '
-                       f'Eir used the special position')
+                       f'written, {len(raw)} images, the closest two '
+                       f'{sep:.4f} A apart, and Eir used the special position')
     return p2, m12
 
 
