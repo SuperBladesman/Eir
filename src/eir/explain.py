@@ -208,8 +208,8 @@ def _reason_sentence(code, reason, site):
             'holds more atoms than that.',
         'homopolar_unit':
             'The structure holds anions bonded to each other: a peroxide '
-            'or superoxide O\u2013O, a disulfide or polysulfide S\u2013S, an '
-            'azide or another N\u2013N unit. Eir\u2019s bond valence '
+            'or superoxide O\u2013O, a disulfide or polysulfide S\u2013S, '
+            'Se\u2013Se, Te\u2013Te, an azide or another N\u2013N unit. Eir\u2019s bond valence '
             'parameters describe the single ion (O\u00b2\u207b, '
             'S\u00b2\u207b, N\u00b3\u207b), not the unit, so the sums of '
             'the ions bonded to it are not assessed; nothing is said about '

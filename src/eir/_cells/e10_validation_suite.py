@@ -1049,7 +1049,7 @@ H1 H1+ 0.1 0.1 0.26667 1.
         _ok34, _det34 = False, f'{type(_x34).__name__}: {_x34}'
     report('34. a ligand on its centre is no polyanion edge', _ok34, _det34)
 
-    # 35 to 39. v2.0.48: homopolar anion units (#10), on invented cells. A
+    # 35 to 40. v2.0.48: homopolar anion units (#10), on invented cells. A
     #     tetragonal I4/mmm cell (a 3.8, c 6.8 A) puts a cation on 2b and an
     #     X2 dimer on 4e, its bond along c; only the cation and the
     #     occupancy change from test to test.
@@ -1182,6 +1182,59 @@ _atom_site_occupancy
         _ok40, _det40 = False, f'{type(_x40).__name__}: {_x40}'
     report('40. a unit reached only by H bonds still flags its cation',
            _ok40, _det40)
+
+    # 41 to 43. v2.0.48, after the independent check of #44: what the unit
+    #     rule must not hide. Na2O2 by charge alone on the P1 cell, O1-O2
+    #     1.47 A.
+    _na2o2 = (_p1 + "O1 O2- 0. 0. 0. 1.\n" "O2 O2- 0.245 0. 0. 1.\n"
+              "Na1 Na1+ 0.5 0.5 0.5 1.\n" "Na2 Na1+ 0.5 0.5 0. 1.\n")
+
+    # 41. An O 0.40 A from one unit atom and 1.52 A from the other: the
+    #     0.40 A contact is shorter than any bond and stays a G2 contact,
+    #     though both atoms are in a unit with O1.
+    try:
+        _u41 = _unit_case(_na2o2 + "O3 O2- 0.245 0.0667 0. 1.\n")
+        _ok41 = (_u41[0] and bool(_u41[1]) and _u41[2] is not None
+                 and abs(_u41[2] - 0.40) < 0.01)
+        _det41 = f'unit {_u41[1]!r}; anion_anion_min {_u41[2]} (want 0.40)'
+    except Exception as _x41:
+        _ok41, _det41 = False, f'{type(_x41).__name__}: {_x41}'
+    report('41. a contact shorter than a bond is never skipped', _ok41,
+           _det41)
+
+    # 42. The stated charge is judged per pair: an O(1-) peroxide does not
+    #     make an O(2-)-O(2-) contact of 1.50 A a unit, in a formula only
+    #     33% short (Ba3O4).
+    try:
+        _u42 = _unit_case(_p1 + "O1 O1- 0. 0. 0. 1.\n"
+                                "O2 O1- 0.245 0. 0. 1.\n"
+                                "O3 O2- 0. 0.5 0.5 1.\n"
+                                "O4 O2- 0.25 0.5 0.5 1.\n"
+                                "Ba1 Ba2+ 0.5 0.25 0.25 1.\n"
+                                "Ba2 Ba2+ 0.5 0.75 0.75 1.\n"
+                                "Ba3 Ba2+ 0.6 0.0 0.75 1.\n")
+        _ok42 = (_u42[0] and bool(_u42[1]) and 'O stated -1' in _u42[1]
+                 and _u42[2] is not None and abs(_u42[2] - 1.50) < 0.01)
+        _det42 = (f'unit {_u42[1]!r}; anion_anion_min {_u42[2]} (want '
+                  f'1.50, the O(2-) pair)')
+    except Exception as _x42:
+        _ok42, _det42 = False, f'{type(_x42).__name__}: {_x42}'
+    report('42. a stated charge makes only its own pair a unit', _ok42,
+           _det42)
+
+    # 43. A formula naming an element the model lacks (H not located): the
+    #     charge test is off, and Na2O2 typed O(2-) keeps its G2 contact.
+    try:
+        _u43 = _unit_case(_na2o2.replace(
+            'loop_', "_chemical_formula_sum 'H4 Na2 O2'\nloop_", 1))
+        _ok43 = (_u43[0] and not _u43[1] and _u43[2] is not None
+                 and abs(_u43[2] - 1.47) < 0.01)
+        _det43 = (f'unit {_u43[1]!r} (want none); anion_anion_min '
+                  f'{_u43[2]} (want 1.47)')
+    except Exception as _x43:
+        _ok43, _det43 = False, f'{type(_x43).__name__}: {_x43}'
+    report('43. the charge test needs every element of the formula', _ok43,
+           _det43)
 
     if verbose:
         print()
