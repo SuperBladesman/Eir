@@ -4340,7 +4340,18 @@ def calculate_global_instability_index(calculated_results, cif_path=None, site_o
                     formal_valence = abs(element_data.get('valence', 0))
                     if per_atom_valences and label in per_atom_valences:
                         pav = per_atom_valences[label]
-                        if pav.get('explicit_valence') is not None:
+                        # v2.0.47: the same test the site table applies
+                        # (_cif_valence_is_usable). A CIF valence of zero, or
+                        # a negative one on an element that forms no anions,
+                        # is ignored there and the assigned valence reported;
+                        # here it was taken as given, so the index skipped a
+                        # site its own table counted. ICSD 10311 declares
+                        # Ru0+: the table said Ru(4), the index left the three
+                        # Ru out (0.091 v.u. from the C sites alone), and the
+                        # rebuild in apply_shell_correction (1.839) stopped the
+                        # whole batch.
+                        if _cif_valence_is_usable(element,
+                                                  pav.get('explicit_valence')):
                             formal_valence = abs(pav['explicit_valence'])
 
                     # v2.0.44: one element at two valences on this position
@@ -4821,10 +4832,15 @@ def process_single_cif(file_path, user_oxidation_states=None):
                     elif explicit_valence is not None:
                         elem_data['valence_source'] = 'cif_valence_ignored'
 
-                        # Recalculate BVS percent diff with correct valence
+                        # v2.0.47: against the valence reported, which is the
+                        # assigned one. This recalculated the percentage
+                        # against the CIF value just rejected, so a site
+                        # declared Fe1- was reported as Fe(3) with a
+                        # deviation measured from 1.
                         bvs_val = elem_data.get('bvs')
-                        if bvs_val is not None and explicit_valence != 0:
-                            elem_data['bvs_percent_diff'] = (bvs_val - abs(explicit_valence)) / abs(explicit_valence) * 100
+                        _vr = elem_data.get('valence')
+                        if bvs_val is not None and _vr not in (None, 0):
+                            elem_data['bvs_percent_diff'] = (bvs_val - abs(_vr)) / abs(_vr) * 100
                     else:
                         elem_data['valence_source'] = valence_source
 

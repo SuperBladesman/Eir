@@ -474,6 +474,15 @@ def classify_site(row, struct):
                 str(struct.get('gii_recommended') or 'the recommended index')
                 + ' has no value for this structure')
 
+    # v2.0.47: R6. CELL 7 could not rebuild this structure's index from its
+    # own site table (_index_check_failed), so the exported index and the
+    # table describe different things and neither can carry a verdict.
+    # Asked after G, which needs no index: an impossible contact is still
+    # impossible.
+    _ic = row.get('index_check')
+    if _pgrm_has_value(_ic):
+        return ('R6', 'index_not_reproducible', str(_ic).strip())
+
     # ---- M : is the depositor's model unambiguous? ----------------------
     occ = _pgrm_f(row.get('occupancy'), 1.0)
     if occ == 0.0:
@@ -737,7 +746,9 @@ def classify_pgrm(df):
                   'G5': 6,      # the cation sublattice is too close somewhere
                   'G2': 7,      # the anion sublattice is too close somewhere
                   # v2.0.37: R4 ranks below R1-R3, which say WHY.
-                  'R1': 8, 'R2': 9, 'R3': 10, 'R4': 11,
+                  # v2.0.47: R6 below R4; the M codes renumbered, not
+                  # squeezed, so every existing pair keeps its order.
+                  'R1': 8, 'R2': 9, 'R3': 10, 'R4': 11, 'R6': 12,
                   # v2.0.22: M8 outranks the model codes for the same reason
                   # G1 outranks G5 - it says WHERE, and it is a measurement.
                   # v2.0.25: M2 and M3 sort LAST among the M codes. They are
@@ -751,8 +762,8 @@ def classify_pgrm(df):
                   # squeezed, so every existing pair keeps its order.
                   # v2.0.46: M11 sits below M8, above M10, for the same
                   # reason, and the rest are renumbered.
-                  'M5': 12, 'M8': 13, 'M11': 14, 'M10': 15, 'M7': 16,
-                  'M4': 17, 'M1': 18, 'M6': 19, 'M3': 20, 'M2': 21, '-': 99}
+                  'M5': 13, 'M8': 14, 'M11': 15, 'M10': 16, 'M7': 17,
+                  'M4': 18, 'M1': 19, 'M6': 20, 'M3': 21, 'M2': 22, '-': 99}
     _w = df.assign(_s=df['pgrm_tier'].map(sev),
                    _r=df['pgrm_code'].map(_code_rank).fillna(50))
     worst = (_w.sort_values(['_s', '_r'], ascending=[True, False])

@@ -974,6 +974,11 @@ def gii_all_sites(cation_deviations, anion_deviations):
 
 SHELL_CORRECTION = True
 SHELL_CORRECTION_TOL = 0.002      # v.u., the GII reconstruction check
+# v2.0.47: the same check for bvs_distance_ratio, named; it was 0.005 inline.
+# DERIVED: the ratio is exported to four decimals, so rounding contributes at
+# most 5e-5, and a cn off by one moves a ratio by about 0.01 or more up to
+# CN 12. Nothing in about 7,000 ICSD structures comes near it.
+RATIO_CHECK_TOL = 0.005
 
 
 def _rms_index(dev, weights, keys):
@@ -1058,6 +1063,40 @@ def _index_inputs(df):
     return b, v, occ, keep
 
 
+def _index_check_failed(df, bad, what):
+    """v2.0.47: mark the structures whose exported index this cell cannot
+    rebuild from its own table, rather than stop the batch.
+
+    The four guards in apply_shell_correction exist because two places
+    forming one quantity from different inputs is how this project's worst
+    drifts happened, and they still say so, loudly. But they raised on the
+    first disagreement anywhere, so one structure took every other structure
+    in the batch with it: four carbonyl and nitrosyl clusters stopped a
+    118-entry batch with no output at all. A structure that fails a guard is
+    now left uncorrected, carries the disagreement in index_check, and is
+    NOT_ASSESSED on R6 in CELL 7b; the rest of the batch is unaffected.
+
+    bad: {filename: 'exported x against rebuilt y'}.
+    """
+    if not bad:
+        return
+    # Strings throughout, whatever the column arrived as: read back from a
+    # CSV it is all missing and float, and pandas 3 will not put text in a
+    # float column (or turn a missing value into 'nan' with astype(str)).
+    df['index_check'] = ([v if isinstance(v, str) else ''
+                          for v in df['index_check']]
+                         if 'index_check' in df.columns else '')
+    for _fn, _txt in bad.items():
+        _m = df['filename'].eq(_fn)
+        _prev = df.loc[_m, 'index_check'].iloc[0] if _m.any() else ''
+        _prev = '' if _prev in ('', 'nan') else _prev + '; '
+        df.loc[_m, 'index_check'] = _prev + f'{what} {_txt}'
+    _names = sorted(bad)
+    print(f'  ! {len(_names)} structure(s) whose {what} cannot be rebuilt '
+          f'from the site table; NOT_ASSESSED (R6): '
+          + ', '.join(_names[:10]) + (' ...' if len(_names) > 10 else ''))
+
+
 def apply_shell_correction(df):
     """Item 4.2. Replace a shell that has reached into the second sphere.
 
@@ -1081,6 +1120,8 @@ def apply_shell_correction(df):
     if not need <= set(df.columns):
         return df
     df = df.copy()
+    if 'index_check' not in df.columns:
+        df['index_check'] = ''
 
     trig = (df['cn_fault'].astype(str).eq('shell_reaches_outer_sphere')
             & df['bv_boundary_source'].astype(str).str.startswith('measured_n')
@@ -1100,15 +1141,20 @@ def apply_shell_correction(df):
     check = pd.concat([exported.rename('a'), gii_rebuilt.rename('b')],
                       axis=1).dropna()
     if len(check):
+        # v2.0.47: per structure. It raised on the first disagreement; a
+        # structure that fails is now marked and left alone
+        # (_index_check_failed), and the others carry on. Still only on the
+        # structures the correction will not touch, as before.
         untouched = ~check.index.isin(df.loc[trig, 'filename'].unique())
-        worst = (check['a'] - check['b']).abs()[untouched].max()
-        if worst == worst and worst > SHELL_CORRECTION_TOL:
-            raise AssertionError(
-                f'apply_shell_correction cannot reproduce the exported GII '
-                f'from the per-site table (worst disagreement {worst:.4f} '
-                f'v.u. on a structure it does not touch). The rebuilt index '
-                f'is not the same quantity as the exported one; fix that '
-                f'before correcting any shell.')
+        _off = (check['a'] - check['b']).abs()[untouched]
+        _bad = _off[_off > SHELL_CORRECTION_TOL]
+        _index_check_failed(
+            df, {_f: f"exported {check.at[_f, 'a']:.4f} against rebuilt "
+                     f"{check.at[_f, 'b']:.4f}" for _f in _bad.index},
+            'GII')
+        if len(_bad):
+            trig = trig & ~df['filename'].isin(_bad.index)
+            df['shell_corrected'] = trig
 
     n = int(trig.sum())
     if not n:
@@ -1210,7 +1256,11 @@ def apply_shell_correction(df):
         # rewritten: re-checking only the corrected rows would be checking
         # this function's own arithmetic. Every ratio in the table must be the
         # one its own exported cn implies.
+        #
+        # v2.0.47: per structure, as the other guards are (_index_check_failed);
+        # it raised on the first disagreement and stopped the batch.
         _worst_r, _worst_at = 0.0, None
+        _bad_ratio = {}
         for _i in df.index:
             _r = pd.to_numeric(df.at[_i, 'bvs_distance_ratio'],
                                errors='coerce')
@@ -1225,19 +1275,22 @@ def apply_shell_correction(df):
             if _di != _di:
                 continue
             _e = abs(_r - _d2 / _di)
+            if _e > RATIO_CHECK_TOL:
+                _fn = df.at[_i, 'filename']
+                if _e > _bad_ratio.get(_fn, (0.0, ''))[0]:
+                    _bad_ratio[_fn] = (_e, f'{df.at[_i, "element"]} off by '
+                                           f'{_e:.4f}')
+                continue
             if _e > _worst_r:
                 _worst_r, _worst_at = _e, _i
-        if _worst_r > 0.005:
-            raise AssertionError(
-                f'bvs_distance_ratio does not match the cn it is exported '
-                f'beside (worst {_worst_r:.4f} at row {_worst_at}, '
-                f'{df.at[_worst_at, "element"]} in '
-                f'{df.at[_worst_at, "filename"]}). The ratio is '
-                f'min_bond_length / (R0 - b ln(|v|/cn)); if cn is rewritten '
-                f'anywhere, the ratio must be rewritten with it.')
+        # The ratio is min_bond_length / (R0 - b ln(|v|/cn)); if cn is
+        # rewritten anywhere, the ratio must be rewritten with it.
+        _index_check_failed(df, {_f: _t for _f, (_e, _t) in _bad_ratio.items()},
+                            'bvs_distance_ratio against its own cn')
         print(f'    bvs_distance_ratio recomputed on {_redone} corrected '
-              f'site(s); every site now agrees with its own cn to '
-              f'{_worst_r:.4f}.')
+              f'site(s); every site'
+              f'{" not marked R6" if _bad_ratio else ""} now agrees with its '
+              f'own cn to {_worst_r:.4f}.')
 
     b, v, occ, keep = _index_inputs(df)
     keys = df.loc[keep, 'filename']
@@ -1284,14 +1337,14 @@ def apply_shell_correction(df):
                                 .first(), errors='coerce')
             _rb = _sa.reindex(_ex.index)
             _off = (_ex - _rb).abs().dropna()
-            if len(_off) and float(_off.max()) > SHELL_CORRECTION_TOL:
-                _bad = _off.idxmax()
-                raise AssertionError(
-                    f'_site_averaged does not reproduce CELL 2 on a structure '
-                    f'the shell correction never touched: {_bad}, exported '
-                    f'{_ex[_bad]:.4f} against {_rb[_bad]:.4f}. The two '
-                    f'definitions have drifted and neither number can be '
-                    f'trusted until they agree.')
+            # v2.0.47: marked per structure rather than raised; see
+            # _index_check_failed.
+            _badsa = _off[_off > SHELL_CORRECTION_TOL]
+            _index_check_failed(
+                df, {_f: f'exported {_ex[_f]:.4f} against rebuilt '
+                         f'{_rb[_f]:.4f}' for _f in _badsa.index},
+                'gii_site_averaged')
+            _off = _off[_off <= SHELL_CORRECTION_TOL]
             _wr = float(_off.max()) if len(_off) else 0.0
         else:
             _wr = 0.0
@@ -1341,13 +1394,16 @@ def apply_shell_correction(df):
         # If it does not, the two have drifted for a reason that is not the
         # shell correction and neither can be trusted.
         _chk = (_look - _had).abs()[~_m].dropna()
-        if len(_chk) and float(_chk.max()) > SHELL_CORRECTION_TOL:
-            _at = _chk.idxmax()
-            raise AssertionError(
-                'gii_recommended_value disagrees with the index it names on '
-                + str(df.at[_at, 'filename']) + ', which the shell correction '
-                'never touched: ' + format(_had[_at], '.4f') + ' against '
-                + format(_look[_at], '.4f') + ' for ' + str(_rec[_at]) + '.')
+        # v2.0.47: marked per structure rather than raised; see
+        # _index_check_failed.
+        _badrv = _chk[_chk > SHELL_CORRECTION_TOL]
+        _index_check_failed(
+            df, {str(df.at[_at, 'filename']):
+                 'exported ' + format(_had[_at], '.4f') + ' against '
+                 + format(_look[_at], '.4f') + ' for ' + str(_rec[_at])
+                 for _at in _badrv.index},
+            'gii_recommended_value')
+        _chk = _chk[_chk <= SHELL_CORRECTION_TOL]
         _rv_worst = float(_chk.max()) if len(_chk) else 0.0
         _rv_moved = int((_look - _had).abs()[_m].gt(0.0005)
                         .groupby(df.loc[_m, 'filename']).any().sum())
