@@ -1350,6 +1350,12 @@ def calculate_bonds_from_positions(cif_file_path, max_bond_distance=CANDIDATE_SH
                 # a number is rejected here instead of silently admitted.
                 if not (0.01 <= distance <= _reach_max):
                     continue
+                # v2.0.47: the general floor, not contact_floor: whether two
+                # partial positions are alternatives is a question about the
+                # model, not about N-O. With the N-O floor here, contacts of
+                # 1.05 to 1.20 A between orientations of a disordered nitrate
+                # (RbNO3, occupancies 0.08 to 0.5) became bonds and moved
+                # verdicts.
                 if (distance < CATION_ANION_ABSOLUTE_MIN
                         and elem1_type not in CATION_FLOOR_EXCLUDED_ELEMENTS
                         and atom_dict['element'] not in CATION_FLOOR_EXCLUDED_ELEMENTS
@@ -4476,7 +4482,9 @@ def calculate_global_instability_index(calculated_results, cif_path=None, site_o
                             _od = _s.get('observed_distance')
                             if _od is not None and (_dmin is None or _od < _dmin):
                                 _dmin = _od
-                        if _dmin is not None and _dmin < CATION_ANION_ABSOLUTE_MIN:
+                        if _dmin is not None and _dmin < contact_floor(
+                                element,
+                                ligands=element_data.get('ligand_types')):
                             n_sites_below_floor += 1
                             # Kept, so the index Eir used to report is still
                             # recoverable from the CSV and this change can be
@@ -5597,7 +5605,8 @@ def process_single_cif(file_path, user_oxidation_states=None):
             _s['contact_above_floor'] = (
                 None if (_d is None or _s.get('element')
                          in CATION_FLOOR_EXCLUDED_ELEMENTS)
-                else bool(_d >= CATION_ANION_ABSOLUTE_MIN))
+                else bool(_d >= contact_floor(
+                    _s.get('element'), ligands=_s.get('ligand_types'))))
             if _s['contact_above_floor'] is False:
                 _s['cn_plausible'] = False
                 _s['bonding_state'] = 'not_a_coordination_environment'
