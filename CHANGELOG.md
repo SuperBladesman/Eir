@@ -4,6 +4,10 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## The eir-bvs package
 
+### eir-bvs 2.1.2 – 19 November 2026
+
+**The 2.0.48 engine.** The one-page report explains R8. Nothing else in the package changed.
+
 ### eir-bvs 2.1.1 – 18 November 2026
 
 **The 2.0.47 engine.** The one-page report explains the five new codes (R5, R6, R7, P2, M12). Nothing else in the package changed.
@@ -30,7 +34,9 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
-### 2.0.48 – unreleased
+### 2.0.48 – 19 November 2026
+
+**Homopolar anion units are not assessed rather than expunged (R8); M12 says what the file holds as written**
 
 - **R8 `homopolar_unit`** (NOT_ASSESSED, first in R, after G): a cation, H included, bonded to an anion unit, and the nearest cation to each unit atom, which catches a unit reached only through hydrogen bonds (the H of ammonium in an azide): the O–O of a peroxide or superoxide, the S–S of a disulfide or polysulfide, Se–Se, Te–Te, or the N–N of an azide or diazenide (#10). A unit is two atoms of one anion element inside the pair's bond window, at any occupancy, where every charge the file states for the two atoms is −1 or a fraction between −1 and 0, or the formula is at least 35% short of positive charge with every anion at its ordinary charge, every atom counted by the multiplicity the file states, and every element the formula names present in the model; the windows and the threshold are measured on the 7,004 CIFs of the 2.0.47 test sets. G2 no longer reads a bond inside a unit, or a 1,3 contact across one longer than a bond (the azide's end-to-end N···N, 2.34 Å). A contact shorter than its window, a contact between two units, and a formula that balances all keep G2, so broken entries are still expunged. Unit atoms get no anion-centred sum. ICSD 25427 (LiN₂ at 33 GPa), ACCEPT in 2.0.47, is R8, and so are the disordered superoxides and the molecular entries whose only cation is H (H₂O₂, D₂O₂, HN₃, NH₄N₃, N₂H₅N₃). On the 2.0.47 test sets 365 structures change, every one to R8: 333 from EXPUNGE (G2), 19 from ACCEPT, 10 from R3, 2 from R1 and 1 from ACCEPT_IMPRECISE; no other verdict moves. Kept on G2: azides with N–N at 1.06 Å and a disulfide at S–S 1.81 Å, shorter than their windows, and O–O contacts of 2.0 to 2.2 Å between peroxide units. Polytellurides that state Te −1.5 or −1.67 are not units by the stated charge, and their formulas are only 20 to 33% short. `VALIDATE()` tests 35 to 44 and gate test 14.
 - M12's evidence says what the file holds as written: the number of images the stated coordinates give and how close the nearest two are, and that Eir used the special position. ICSD 213392 now reads "as written, 192 images, the closest two 0.0036 A apart". The verdict stays FLAG: the analysis stands for the structure the multiplicity names, and the evidence tells anyone loading the CIF elsewhere what they will get. No verdict changes.

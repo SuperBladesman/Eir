@@ -13,7 +13,7 @@
 The engine loads on first use, which takes a second or two.
 """
 
-__version__ = '2.1.1'
+__version__ = '2.1.2'
 
 from ._manifest import ENGINE_VERSION  # noqa: E402
 
