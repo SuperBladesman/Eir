@@ -341,6 +341,15 @@ def classify_site(row, struct):
     if _pgrm_has_value(_mm2):
         return ('P2', 'multiplicity_mismatch', str(_mm2).strip())
 
+    # v2.0.48: R8 for hydrogen, which gates nothing below. H bonded to a
+    # homopolar unit (H2O2, HN3, NH4N3) is outside the ionic model as the
+    # unit is (#10); without this a structure whose only cation is H came
+    # out ACCEPT.
+    _hu = row.get('homopolar_unit')
+    if (row.get('element') in CATION_FLOOR_EXCLUDED_ELEMENTS
+            and _pgrm_has_value(_hu)):
+        return ('R8', 'homopolar_unit', str(_hu).strip())
+
     # v2.0.46: a hydrogen site is summed and reported, and gates nothing.
     # X-ray H positions sit 0.1-0.2 A short of the nucleus, so no floor or
     # table measured on heavier ions applies to them; a hydroxide is judged
@@ -476,6 +485,12 @@ def classify_site(row, struct):
         return ('G5', 'cation_packing_impossible',
                 f'shortest cation-cation {cc:.3f} A, floor {_PGRM_CATION_FLOOR} A')
     # ---- R : can we assess it? -----------------------------------------
+    # v2.0.48: R8, first in R. A cation bonded to a homopolar unit (#10):
+    # the parameters describe X(2-), and with them these cations sum 7 to
+    # 55% over valence. Asked after G, so an entry with a real geometric
+    # fault is still expunged; G2 no longer reads the unit's own bond.
+    if _pgrm_has_value(_hu):
+        return ('R8', 'homopolar_unit', str(_hu).strip())
     if row.get('bvs') is None or _pgrm_f(row.get('bvs')) != _pgrm_f(row.get('bvs')):
         return ('R1', 'no_bond_valence_parameters',
                 f'{row.get("element")}({row.get("valence")}) to {row.get("ligand_types")}')
@@ -795,8 +810,10 @@ def classify_pgrm(df):
                   # structure is not assessed), R6 below R4; R and M codes
                   # renumbered, not squeezed, so every existing pair keeps
                   # its order.
-                  'R7': 8, 'R5': 9, 'R1': 10, 'R2': 11, 'R3': 12, 'R4': 13,
-                  'R6': 14,
+                  # v2.0.48: R8 after R5, ahead of R1-R4, for the same
+                  # reason; the rest renumbered.
+                  'R7': 8, 'R5': 9, 'R8': 10, 'R1': 11, 'R2': 12, 'R3': 13,
+                  'R4': 14, 'R6': 15,
                   # v2.0.22: M8 outranks the model codes for the same reason
                   # G1 outranks G5 - it says WHERE, and it is a measurement.
                   # v2.0.25: M2 and M3 sort LAST among the M codes. They are
@@ -810,9 +827,9 @@ def classify_pgrm(df):
                   # squeezed, so every existing pair keeps its order.
                   # v2.0.46: M11 sits below M8, above M10, for the same
                   # reason, and the rest are renumbered.
-                  'M5': 15, 'M8': 16, 'M11': 17, 'M10': 18, 'M7': 19,
-                  'M4': 20, 'M1': 21, 'M6': 22, 'M12': 23, 'M3': 24,
-                  'M2': 25, '-': 99}
+                  'M5': 16, 'M8': 17, 'M11': 18, 'M10': 19, 'M7': 20,
+                  'M4': 21, 'M1': 22, 'M6': 23, 'M12': 24, 'M3': 25,
+                  'M2': 26, '-': 99}
     # v2.0.47: among sites failing the same contact gate, the headline
     # evidence is the worst site's on the measure that gate judges, not the
     # last row's: the shortest contact for G1, the lowest ratio to the
@@ -978,6 +995,21 @@ def VALIDATE_GATES(verbose=True):
     _g6 = classify_site(dict(_sound6, min_bond_length=1.0,
                              contact_above_floor=False),
                         {'gii_recommended_value': 0.1})
+    # v2.0.48. R8: a cation bonded to a homopolar unit, asked after G; and
+    # H, before the early return that lets it gate nothing.
+    _u14 = 'O1-O1 1.490 A; formula 100% short of positive charge'
+    _r14 = classify_site(dict(_sound6, index_check='',
+                              homopolar_unit='Ba1 bonded to O1; ' + _u14),
+                         {'gii_recommended_value': 0.1})
+    _g14 = classify_site(dict(_sound6, index_check='',
+                              homopolar_unit='Ba1 bonded to O1; ' + _u14,
+                              min_bond_length=1.0, contact_above_floor=False),
+                         {'gii_recommended_value': 0.1})
+    _h14 = classify_site({'coords': '(0.0, 0.0, 0.0)', 'element': 'H',
+                          'valence': 1,
+                          'homopolar_unit': 'H1 bonded to O1; ' + _u14}, {})
+    _n14 = classify_site(dict(_sound6, index_check=''),
+                         {'gii_recommended_value': 0.1})
     # v2.0.47. G4 does not rest on a shift screen built on a doubted cn.
     _sh9 = dict(_row, cn=4, bvs=2.95, bvs_percent_diff=-1.8, bl_tier=1.0,
                 element='B', valence=3, cn_shannon_min=3,
@@ -1061,11 +1093,17 @@ def VALIDATE_GATES(verbose=True):
            _o11['p2'][0][0] and not _o11['ok'][0][0] and not _o11['ok'][0][1],
            f"stated 8 on 4a: {_o11['p2'][0][0]}; stated 4: {_o11['ok'][0]}")
     report('12. M12: a coordinate off the special position it names',
-           _o11['m12'][0][1] and not _o11['m12'][0][0],
+           (bool(_o11['m12'][0][1]) and not _o11['m12'][0][0]
+            and '24 images, the closest two 0.0024 A apart' in _o11['m12'][0][1][0]),
            f"Mg at x = 0.0004 on 4a: {_o11['m12'][0][1]}")
     report('13. R7: a setting Eir cannot read is caught',
            bool(_o11['r7'][1]) and not _o11['ok'][1],
            f"'C 1 1 21/m': {_o11['r7'][1]!r}; rock salt: {_o11['ok'][1]!r}")
+    report('14. R8: a cation bonded to a homopolar unit, after G; H too',
+           _r14[0] == 'R8' and _g14[0] == 'G1' and _h14[0] == 'R8'
+           and _n14[0] == '-',
+           f'Ba bonded to O-O: {_r14[0]}; with a contact under the floor: '
+           f'{_g14[0]}; H bonded to O-O: {_h14[0]}; no unit: {_n14[0]}')
 
     report('8. R6: an index the table cannot rebuild is not assessed, after G',
            _r6[0] == 'R6' and _g6[0] == 'G1',

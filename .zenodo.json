@@ -1,8 +1,8 @@
 {
   "title": "Eir: bond valence screening of crystal structures, with an integrity verdict",
-  "version": "2.0.47",
+  "version": "2.0.48",
   "upload_type": "software",
-  "description": "<p>Eir reads CIF files and asks two questions of each structure: can it be assessed at all, and if so, how well do its bond valence sums agree with the formal valences? It returns an integrity verdict (ACCEPT, FLAG, NOT_ASSESSED or EXPUNGE, with the code that decided it), the bond valence sum of every site, the global instability index, and the evidence for each. It runs as a Jupyter notebook or, from eir-bvs 2.1.0, as a Python package with a command line and a one-page report per structure.</p><p>This release is engine 2.0.47, packaged as eir-bvs 2.1.1. CHANGELOG.md describes every version.</p>",
+  "description": "<p>Eir reads CIF files and asks two questions of each structure: can it be assessed at all, and if so, how well do its bond valence sums agree with the formal valences? It returns an integrity verdict (ACCEPT, FLAG, NOT_ASSESSED or EXPUNGE, with the code that decided it), the bond valence sum of every site, the global instability index, and the evidence for each. It runs as a Jupyter notebook or, from eir-bvs 2.1.0, as a Python package with a command line and a one-page report per structure.</p><p>This release is engine 2.0.48, packaged as eir-bvs 2.1.2. CHANGELOG.md describes every version.</p>",
   "creators": [
     {
       "name": "Reeves-McLaren, Nik",

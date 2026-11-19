@@ -5487,8 +5487,31 @@ def process_single_cif(file_path, user_oxidation_states=None):
         # anion-anion screen: the only test here that looks at the anion
         # sublattice rather than outward from a cation. v2.0.46: told which
         # species the CIF states are anions (see _packing_valences).
+        # v2.0.48: and the cation valences Eir assigned, so the scan can
+        # tell a homopolar unit from a fault by the formula's charge (#10)
+        _cv = {}
+        for _s in results['sites']:
+            if _s.get('valence') is None:
+                continue
+            if _s.get('site_label'):
+                _cv[_s['site_label']] = _s['valence']
+            if _s.get('element'):
+                _cv.setdefault(_s['element'], _s['valence'])
         _aa, _cc = anion_anion_contacts(
-            file_path, valences=_packing_valences(file_path, _pair_valences))
+            file_path, valences=_packing_valences(file_path, _pair_valences),
+            cation_valences=_cv)
+        # v2.0.48: homopolar anion units (#10): the evidence on the result,
+        # and on each cation site bonded to one (R8), with the unit atoms'
+        # labels, which the anion side leaves out
+        _hu = _HOMOPOLAR_UNITS.pop(str(file_path), None) or {}
+        results['homopolar_unit'] = _hu.get('evidence') or None
+        _hl = ' '.join(sorted(_hu.get('labels', ()))) or None
+        for _s in results['sites']:
+            _b = (_hu.get('bonded') or {}).get(_s.get('site_label'))
+            _s['homopolar_unit'] = (
+                f"{_s.get('site_label')} bonded to {_b}; {_hu['evidence']}"
+                if _b else None)
+            _s['homopolar_unit_labels'] = _hl
         # v2.0.14: `if _aa` discards a measured 0.0 as though it were
         # absent. dedup_tol keeps 0.0 from arising today, so this is a
         # correctness fix rather than a behaviour change - but 'no value'
@@ -6395,6 +6418,7 @@ def batch_process_directory(directory_path):
                     'cif_sign_inversion': result.get('cif_sign_inversion'),
                     'cif_sign_inversion_detail': result.get('cif_sign_inversion_detail'),
                     'anion_anion_min': result.get('anion_anion_min'),
+                    'structure_homopolar_unit': result.get('homopolar_unit'),  # v2.0.48
                     'polyanion_edge_min': result.get('polyanion_edge_min'),  # v2.0.46
                     'alternative_contacts_set_aside': result.get(
                         'alternative_contacts_set_aside'),                   # v2.0.46

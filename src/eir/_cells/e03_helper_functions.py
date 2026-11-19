@@ -4523,7 +4523,227 @@ def conditional_ligand_count(bonds, p_here, centre, ligand):
                for p, d, n in bonds if polyanion_bond(centre, ligand, d))
 
 
-def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
+# v2.0.48: HOMOPOLAR ANION UNITS (issue #10).
+#
+# Anions bonded to each other - the O2 of peroxides and superoxides, the S2
+# of disulfides and the Sn chains of polysulfides, Se2 and Te2, the N3 of
+# azides and the N2 of diazenides - are outside the ionic model: G2 read the
+# bond as two anions that cannot be there, and their cations, summed with
+# parameters fitted for O(2-), S(2-) and N(3-), come out 7 to 55% over
+# valence. A unit is two atoms of one anion element whose distance falls in
+# the pair's bond window, at any occupancy, where either
+#   * every charge the file states for the pair's two atoms (at least one)
+#     is -1 or a fraction between -1 and 0 (O -1 or -1/2, S -1, N -1/3),
+#     the pair judged on its own two atoms, or
+#   * the formula is short of positive charge by at least
+#     UNIT_ANION_EXCESS_MIN of the cation charge, with every atom of an
+#     element acting as an anion at that element's ordinary charge (so a
+#     perchlorate's Cl(7+) counts as Cl(-); ICSD 94855, a nitrosyl
+#     perchlorate, reads 69% short for that reason, and R5 decides it
+#     first), every other atom at the valence Eir assigned, and the
+#     model holds every element its formula names (a hydrate whose H are
+#     not located reads as anion-rich, and its disordered water O-O would
+#     read as a peroxide).
+# Inside a unit the packing scan skips the bonded pairs, and the 1,3 pairs
+# through a bonded neighbour where the 1,3 contact is longer than a bond
+# (the azide's end-to-end N...N, 2.34 A); contacts between units, and any
+# contact shorter than the window, stay on the floor, so a broken entry is
+# still expunged. A cation bonded to a unit atom, and the nearest cation to
+# each unit atom, are NOT_ASSESSED (R8), and unit atoms get no
+# anion-centred sum.
+#
+# HOMOPOLAR_WINDOWS: CHOSEN as starting windows around the single and
+# multiple homopolar bond lengths, and MEASURED on the 7,004 CIFs of the
+# 2.0.47 test sets: every unit found lies inside its window (N-N 1.081 to
+# 1.281, O-O 1.203 to 1.542, S-S 1.954 to 2.299, Se-Se 2.333 to 2.505,
+# Te-Te 2.712 to 2.989 A). A contact below the lower end is not a unit, and
+# G2 stands on it: six superoxides at O-O 1.09 to 1.19 A, a peroxide at
+# 1.10, two azides at N-N 1.06, disulfides at S-S 1.81 and 1.93.
+HOMOPOLAR_WINDOWS = {'N': (1.08, 1.30), 'O': (1.20, 1.60), 'S': (1.95, 2.30),
+                     'Se': (2.25, 2.60), 'Te': (2.65, 3.00)}     # A
+# UNIT_ANION_EXCESS_MIN: MEASURED, in the gap on the same CIFs. Every
+# structure with a unit came out at least 0.50 short (LiN2, ICSD 25427,
+# 5.0); every structure with an in-window contact and no unit at most 0.22
+# (disordered nitrate and nitrosyl models, a caesium telluride, UO2.12),
+# except two nitrosyl polyoxometalates with no H located (ICSD 159011 and
+# 416825, 0.97 and 0.58), which the formula test below sets aside. Genuine
+# faults balance (broken perovskites, a pyrochlore, six high-pressure
+# Li2CO3 entries), so G2 still expunges them.
+UNIT_ANION_EXCESS_MIN = 0.35
+# UNIT_BOND_FACTOR: CHOSEN, the same 1.30 as CN_RELATIVE_CUTOFF (CELL 7): a
+# cation is bonded to a unit atom within 1.30 times its shortest contact to
+# any anion.
+UNIT_BOND_FACTOR = 1.30
+_HOMOPOLAR_UNITS = {}       # str(cif path) -> homopolar_units(), read by CELL 2
+
+
+def homopolar_units(st, anion_set, stated=None, cation_valences=None,
+                    formula=None, multiplicity=None):
+    """The homopolar anion units of one structure (issue #10).
+
+    st: the structure as the packing scan reads it. anion_set: the elements
+    acting as anions (resolve_anions). stated: {label: charge the CIF
+    states}. cation_valences: {label or element: valence} as Eir assigned
+    them; without one for every cation, only a stated charge can identify a
+    unit. formula: the elements the CIF's formula names; where the model
+    lacks one of them, only a stated charge can identify a unit.
+    multiplicity: {label: the multiplicity the CIF states}, which the
+    occupancy refers to; where none is stated, the images are counted.
+
+    Returns {'elements': {el: (lo, hi)}, 'labels': set of unit atom labels,
+    'pairs': set of frozensets of two labels, 'bonded': {cation label: unit
+    atom label}, 'evidence': str, 'excess': float or None}; 'elements' is
+    empty when there is no unit.
+    """
+    import numpy as _np
+    out = {'elements': {}, 'labels': set(), 'pairs': set(), 'bonded': {},
+           'evidence': '', 'excess': None}
+    sites = [s for s in st.sites
+             if (1.0 if getattr(s, 'occ', None) is None else float(s.occ)) > 0]
+    cand = [e for e in HOMOPOLAR_WINDOWS
+            if e in anion_set and any(s.element.name == e for s in sites)]
+    if not cand or st.spacegroup is None:
+        return out
+    stated = stated or {}
+    cv = cation_valences or {}
+    ops = list(st.spacegroup.operations())
+    rng = range(-image_range(st.cell, 4.0), image_range(st.cell, 4.0) + 1)
+    pts, n_cell = [], {}
+    mult = multiplicity or {}
+    for s in sites:
+        seen = []
+        for op in ops:
+            f = wrap_into_cell(op.apply_to_xyz([s.fract.x, s.fract.y,
+                                                s.fract.z]))
+            if not any(max(min(abs(a - b), 1 - abs(a - b))
+                           for a, b in zip(f, g)) < 1e-4 for g in seen):
+                seen.append(f)
+                for i in rng:
+                    for j in rng:
+                        for k in rng:
+                            p = st.cell.orthogonalize(gemmi.Fractional(
+                                f[0] + i, f[1] + j, f[2] + k))
+                            pts.append((s.label, s.element.name,
+                                        p.x, p.y, p.z))
+        # The formula's charge counts each atom as the file does: by the
+        # multiplicity it states, which its occupancy refers to. Counting
+        # images instead overcounts a coordinate rounded off its special
+        # position (ICSD 213392's O1, 32 stated, 192 images), and merging
+        # images closer than COLOCATED_IMAGE_TOL undercounts a split
+        # position (60163's N2, 32 stated, 0.0007 off 4a, merged to 4).
+        _m = mult.get(s.label)
+        n_cell[s.label] = _m if isinstance(_m, int) and _m > 0 else len(seen)
+    P = _np.array([[p[2], p[3], p[4]] for p in pts])
+    labs = [p[0] for p in pts]
+    els = _np.array([p[1] for p in pts])
+
+    # In-window contacts, any occupancy
+    pairs = {}
+    for s in sites:
+        el = s.element.name
+        if el not in cand:
+            continue
+        lo, hi = HOMOPOLAR_WINDOWS[el]
+        o = site_centre(st.cell, s)
+        d = _np.linalg.norm(P - _np.array([o.x, o.y, o.z]), axis=1)
+        for m in _np.where((els == el) & (d >= lo) & (d <= hi))[0]:
+            pairs.setdefault(el, []).append((float(d[m]), s.label, labs[m]))
+    if not pairs:
+        return out
+
+    # The formula's charge, anions at their ordinary charge
+    cat = tot = 0.0
+    for s in sites:
+        el = s.element.name
+        w = ((1.0 if getattr(s, 'occ', None) is None else float(s.occ))
+             * n_cell[s.label])
+        if el in anion_set:
+            q = KNOWN_ANIONS.get(el)
+        else:
+            q = cv.get(s.label, cv.get(el))
+        if q is None:
+            cat = None
+            break
+        q = float(q)
+        tot += w * q
+        if q > 0:
+            cat += w * q
+    excess = (round(tot / cat, 3) if cat else None)
+    out['excess'] = excess
+    _site_els = {s.element.name for s in sites}
+    complete = not formula or set(formula) <= _site_els
+    by_charge = (complete and excess is not None
+                 and excess <= -UNIT_ANION_EXCESS_MIN)
+
+    def _dimer_charge(lab):
+        q = stated.get(lab)
+        try:
+            q = None if q is None else float(q)
+        except (TypeError, ValueError):
+            q = None
+        return q
+
+    ev = []
+    for el, pl in pairs.items():
+        unit_pl = []
+        for d_, a, b in pl:
+            qs = [q for q in (_dimer_charge(a), _dimer_charge(b))
+                  if q is not None]
+            stated_ok = bool(qs) and all(-1.0 - 1e-6 <= q < 0 for q in qs)
+            if stated_ok or by_charge:
+                unit_pl.append((d_, a, b, qs if stated_ok else None))
+        if not unit_pl:
+            continue
+        out['elements'][el] = HOMOPOLAR_WINDOWS[el]
+        for d_, a, b, _q in unit_pl:
+            out['labels'] |= {a, b}
+            out['pairs'].add(frozenset((a, b)))
+        d_, a, b, qs = min(unit_pl, key=lambda t: t[0])
+        why = (f'{el} stated {qs[0]:g}' if qs is not None else
+               f'formula {abs(excess) * 100:.0f}% short of positive charge')
+        ev.append(f'{a}-{b} {d_:.3f} A; {why}')
+    if not out['elements']:
+        return out
+    out['evidence'] = '; '.join(ev)
+
+    # The cations bonded to a unit atom
+    is_an = _np.array([e in anion_set for e in els])
+    is_unit = _np.array([(e in out['elements']) and (l in out['labels'])
+                         for e, l in zip(els, labs)])
+    for s in sites:
+        if s.element.name in anion_set:
+            continue
+        o = site_centre(st.cell, s)
+        d = _np.linalg.norm(P - _np.array([o.x, o.y, o.z]), axis=1)
+        sel = is_an & (d > 0.05)
+        if not sel.any():
+            continue
+        dmin = float(d[sel].min())
+        hit = _np.where(is_unit & (d > 0.05)
+                        & (d <= UNIT_BOND_FACTOR * dmin))[0]
+        if len(hit):
+            out['bonded'][s.label] = labs[int(hit[_np.argmin(d[hit])])]
+    # And every unit atom's nearest cation, so a unit balanced by a cation
+    # that bonds to it only through hydrogen bonds or longer contacts is
+    # still seen: in ammonium azide and [Co(NH3)6](N3)3 the only cation
+    # within reach of the azide is the H of NH4 or NH3, 1.9 to 2.1 A away,
+    # and without this the unit went unremarked and the entry was ACCEPT.
+    is_cat = _np.array([e not in anion_set for e in els])
+    for s in sites:
+        if s.label not in out['labels'] or s.element.name not in out['elements']:
+            continue
+        o = site_centre(st.cell, s)
+        d = _np.linalg.norm(P - _np.array([o.x, o.y, o.z]), axis=1)
+        sel = _np.where(is_cat & (d > 0.05))[0]
+        if len(sel):
+            # all cations at that distance, within a numerical tolerance
+            for _m in sel[d[sel] <= d[sel].min() + 0.05]:
+                out['bonded'].setdefault(labs[int(_m)], s.label)
+    return out
+
+
+def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
+                         cation_valences=None):
     """
     Shortest anion-anion and cation-cation contact in the structure.
 
@@ -4584,7 +4804,8 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
     _hard = [None]      # ... of those not between mobile ions (mobile_pair)
     _soft = [None]      # ... of those that are
 
-    def _scan(st, anion_set, rmax, esd=None, sv=None, tot=None):
+    def _scan(st, anion_set, rmax, esd=None, sv=None, tot=None,
+              units=None):
         # v2.0.14: the image range follows the search radius. At one image a
         # 6.5 A search in a 5 A cell cannot reach the neighbour it is looking
         # for, so widening rmax alone would have been a half fix.
@@ -4631,6 +4852,9 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         # v2.0.46: see POLYANION_CENTRES
         is_centre = _np.array([e in POLYANION_CENTRES and e not in anion_set
                                for e in els])
+        # v2.0.48: the elements that form homopolar units here (#10)
+        _uel = (units or {}).get('elements', {})
+        _umask = {e: _np.array([x == e for x in els]) for e in _uel}
 
         aa = cc = None
         for s in st.sites:
@@ -4647,6 +4871,15 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
             d = _np.linalg.norm(P - p0, axis=1)
             m = _np.where((d > dedup_tol) & (d <= rmax))[0]
             el_is_anion = el in anion_set
+            # v2.0.48: this atom's bonds inside its homopolar unit (#10):
+            # same element, in the window, and a pair the unit test passed
+            _uw = (_uel.get(el) if el_is_anion
+                   and s.label in (units or {}).get('labels', ()) else None)
+            _upr = (units or {}).get('pairs', set())
+            _ub = (set(_k for _k in _np.where(
+                       _umask[el] & (d >= _uw[0]) & (d <= _uw[1]))[0].tolist()
+                       if frozenset((s.label, labs[_k])) in _upr)
+                   if _uw else set())
             _cen = (_np.where(is_centre & (d > dedup_tol)
                               & (d <= POLYANION_BOND_MAX))[0]
                     if el_is_anion else ())
@@ -4661,6 +4894,18 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
                         and els[idx] in CATION_FLOOR_EXCLUDED_ELEMENTS):
                     continue                      # v2.0.15: not a packing sphere
                 dist = float(d[idx])
+                # v2.0.48: inside a homopolar unit (#10), a bonded pair, or a
+                # 1,3 pair through a bonded neighbour longer than a bond (the
+                # azide's end-to-end N...N, 2.34 A), is not a packing
+                # contact. A contact shorter than the window is never
+                # skipped, whatever it is bonded to.
+                if _ub and els[idx] == el and dist < ANION_ANION_MIN:
+                    if idx in _ub or (dist > _uw[1] and any(
+                            _uw[0] <= float(_np.linalg.norm(P[_k] - P[idx]))
+                            <= _uw[1]
+                            and frozenset((labs[_k], labs[idx])) in _upr
+                            for _k in _ub if _k != idx)):
+                        continue
                 # v2.0.46: alternatives to the floor, not to 1.20 A, and
                 # over-full only within the stated uncertainties
                 _floor = ANION_ANION_MIN if el_is_anion else CATION_CATION_MIN
@@ -4719,7 +4964,33 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         except (OSError, UnicodeDecodeError, ValueError):
             _sv = {}
         _tot = _position_occupancies(st, _esd)
-        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot)
+        # v2.0.48: homopolar anion units (#10), before the scan reads them.
+        # A failure here costs the units, not the packing gates.
+        try:
+            try:
+                _fs = gemmi.cif.read(str(cif_path)).sole_block().find_value(
+                    '_chemical_formula_sum')
+                _form = set(parse_chemical_formula(
+                    str(_fs).strip().strip('\'"')) or {}) if _fs else None
+            except Exception:
+                _form = None
+            try:
+                _bm = gemmi.cif.read(str(cif_path)).sole_block()
+                _mlab = list(_bm.find_loop('_atom_site_label'))
+                _mval = list(_bm.find_loop('_atom_site_symmetry_multiplicity'))
+                _mult = ({l: int(v) for l, v in zip(_mlab, _mval)
+                          if str(v).strip().isdigit()}
+                         if len(_mval) == len(_mlab) else {})
+            except Exception:
+                _mult = {}
+            _units = homopolar_units(st, _anion_set, _sv, cation_valences,
+                                     formula=_form, multiplicity=_mult)
+        except (ValueError, KeyError, IndexError, RuntimeError) as _ue:
+            print(f'  [homopolar units unavailable for '
+                  f'{os.path.basename(str(cif_path))}: {_ue}]')
+            _units = {}
+        _HOMOPOLAR_UNITS[str(cif_path)] = _units
+        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot, _units)
 
         # v2.0.14: one widened retry, and only where a bucket that SHOULD
         # have a member came back empty. A structure with no cations has no
@@ -4727,7 +4998,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None):
         if ((_has_anion and aa is None) or (_has_cation and cc is None)) \
                 and rmax < ANION_CONTACT_RMAX_WIDE:
             aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd,
-                             _sv, _tot)
+                             _sv, _tot, _units)
             aa = aa if aa is not None else aa2
             cc = cc if cc is not None else cc2
         _POLYANION_EDGE_MIN[str(cif_path)] = min(_edges) if _edges else None
