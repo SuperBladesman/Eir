@@ -1049,6 +1049,213 @@ H1 H1+ 0.1 0.1 0.26667 1.
         _ok34, _det34 = False, f'{type(_x34).__name__}: {_x34}'
     report('34. a ligand on its centre is no polyanion edge', _ok34, _det34)
 
+    # 35 to 40. v2.0.48: homopolar anion units (#10), on invented cells. A
+    #     tetragonal I4/mmm cell (a 3.8, c 6.8 A) puts a cation on 2b and an
+    #     X2 dimer on 4e, its bond along c; only the cation and the
+    #     occupancy change from test to test.
+    _cell35 = """data_eir_validation_unit
+_cell_length_a 3.800000
+_cell_length_b 3.800000
+_cell_length_c 6.800000
+_cell_angle_alpha 90.
+_cell_angle_beta 90.
+_cell_angle_gamma 90.
+_space_group_IT_number 139
+_symmetry_space_group_name_H-M 'I 4/m m m'
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+{cat}1 {cat}{cv}+ 0. 0. 0.5 1.
+{x}1 {x}{xv}- 0. 0. {z} {occ}
+"""
+    _p1 = """data_eir_validation_unit_p1
+_cell_length_a 6.000000
+_cell_length_b 6.000000
+_cell_length_c 6.000000
+_cell_angle_alpha 90.
+_cell_angle_beta 90.
+_cell_angle_gamma 90.
+_space_group_IT_number 1
+_symmetry_space_group_name_H-M 'P 1'
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+"""
+
+    def _unit_case(text):
+        r = _run_cif(text)
+        flagged = sorted(str(x.get('site_label')) for x in r.get('sites', [])
+                         if x.get('homopolar_unit'))
+        return (bool(r.get('success')), r.get('homopolar_unit'),
+                r.get('anion_anion_min'), flagged)
+
+    # 35. A peroxide typed O(2-): BaO2 balances only with an O2 unit.
+    try:
+        _u35 = _unit_case(_cell35.format(cat='Ba', cv=2, x='O', xv=2,
+                                         z=0.10956, occ=1.))
+        _ok35 = (_u35[0] and bool(_u35[1]) and '100% short' in _u35[1]
+                 and (_u35[2] is None or _u35[2] >= ANION_ANION_MIN)
+                 and _u35[3] == ['Ba1'])
+        _det35 = (f'unit {_u35[1]!r}; anion_anion_min {_u35[2]} (want none '
+                  f'under {ANION_ANION_MIN}); flagged {_u35[3]} (want Ba1)')
+    except Exception as _x35:
+        _ok35, _det35 = False, f'{type(_x35).__name__}: {_x35}'
+    report('35. a peroxide typed O(2-) is a unit, not a G2 contact',
+           _ok35, _det35)
+
+    # 36. The same O-O, 1.49 A, in a formula that balances (TiO2): a fault,
+    #     not a unit, and G2 still reads it.
+    try:
+        _u36 = _unit_case(_cell35.format(cat='Ti', cv=4, x='O', xv=2,
+                                         z=0.10956, occ=1.))
+        _ok36 = (_u36[0] and not _u36[1] and _u36[2] is not None
+                 and abs(_u36[2] - 1.49) < 0.01 and _u36[3] == [])
+        _det36 = (f'unit {_u36[1]!r} (want none); anion_anion_min '
+                  f'{_u36[2]} (want 1.49); flagged {_u36[3]}')
+    except Exception as _x36:
+        _ok36, _det36 = False, f'{type(_x36).__name__}: {_x36}'
+    report('36. the same O-O in a balanced formula stays a G2 contact',
+           _ok36, _det36)
+
+    # 37. Half-occupied N2 (as in LiN2, ICSD 25427): a unit whatever the
+    #     occupancy, though the alternatives rule sets the bond aside.
+    try:
+        _u37 = _unit_case(_cell35.format(cat='Li', cv=1, x='N', xv=3,
+                                         z=0.08529, occ=0.5))
+        _ok37 = _u37[0] and bool(_u37[1]) and _u37[3] == ['Li1']
+        _det37 = f'unit {_u37[1]!r}; flagged {_u37[3]} (want Li1)'
+    except Exception as _x37:
+        _ok37, _det37 = False, f'{type(_x37).__name__}: {_x37}'
+    report('37. a half-occupied N2 is a unit', _ok37, _det37)
+
+    # 38. A linear azide: N-N 1.17 A bonds and the end-to-end N...N, 2.34 A,
+    #     a 1,3 pair inside the unit, under the anion floor.
+    try:
+        _u38 = _unit_case(_p1 + "N1 N 0.305 0.5 0.5 1.\n"
+                                "N2 N 0.5 0.5 0.5 1.\n"
+                                "N3 N 0.695 0.5 0.5 1.\n"
+                                "Na1 Na1+ 0.5 0. 0.5 1.\n")
+        _ok38 = (_u38[0] and bool(_u38[1])
+                 and (_u38[2] is None or _u38[2] >= ANION_ANION_MIN)
+                 and _u38[3] == ['Na1'])
+        _det38 = (f'unit {_u38[1]!r}; anion_anion_min {_u38[2]} (want '
+                  f'none under {ANION_ANION_MIN}); flagged {_u38[3]}')
+    except Exception as _x38:
+        _ok38, _det38 = False, f'{type(_x38).__name__}: {_x38}'
+    report('38. an azide\'s 1,3 N...N is inside its unit', _ok38, _det38)
+
+    # 39. H2O2, whose only cation is H: H bonded to the unit is flagged,
+    #     where before nothing gated it.
+    try:
+        _u39 = _unit_case(_p1 + "O1 O2- 0. 0. 0. 1.\n"
+                                "O2 O2- 0.245 0. 0. 1.\n"
+                                "H1 H1+ 0. 0.1617 0. 1.\n"
+                                "H2 H1+ 0.245 0. 0.1617 1.\n")
+        _ok39 = _u39[0] and bool(_u39[1]) and _u39[3] == ['H1', 'H2']
+        _det39 = f'unit {_u39[1]!r}; flagged {_u39[3]} (want H1, H2)'
+    except Exception as _x39:
+        _ok39, _det39 = False, f'{type(_x39).__name__}: {_x39}'
+    report('39. H bonded to an O2 unit is flagged', _ok39, _det39)
+
+    # 40. An azide whose only cation is the H of an ammonium-like N, 2.0 A
+    #     away, beyond the 1.30 x 1.0 A bond reach: the unit atom's nearest
+    #     cation is flagged, so the unit is not left unremarked (ammonium
+    #     azide and [Co(NH3)6](N3)3 were ACCEPT).
+    try:
+        _u40 = _unit_case(_p1 + "N1 N 0.305 0.5 0.5 1.\n"
+                                "N2 N 0.5 0.5 0.5 1.\n"
+                                "N3 N 0.695 0.5 0.5 1.\n"
+                                "N4 N 0.5 0. 0.5 1.\n"
+                                "H1 H1+ 0.5 0.1667 0.5 1.\n"
+                                "H2 H1+ 0.5 0.8333 0.5 1.\n")
+        _ok40 = _u40[0] and bool(_u40[1]) and _u40[3] == ['H1', 'H2']
+        _det40 = f'unit {_u40[1]!r}; flagged {_u40[3]} (want H1, H2)'
+    except Exception as _x40:
+        _ok40, _det40 = False, f'{type(_x40).__name__}: {_x40}'
+    report('40. a unit reached only by H bonds still flags its cation',
+           _ok40, _det40)
+
+    # 41 to 43. v2.0.48, after the independent check of #44: what the unit
+    #     rule must not hide. Na2O2 by charge alone on the P1 cell, O1-O2
+    #     1.47 A.
+    _na2o2 = (_p1 + "O1 O2- 0. 0. 0. 1.\n" "O2 O2- 0.245 0. 0. 1.\n"
+              "Na1 Na1+ 0.5 0.5 0.5 1.\n" "Na2 Na1+ 0.5 0.5 0. 1.\n")
+
+    # 41. An O 0.40 A from one unit atom and 1.52 A from the other: the
+    #     0.40 A contact is shorter than any bond and stays a G2 contact,
+    #     though both atoms are in a unit with O1.
+    try:
+        _u41 = _unit_case(_na2o2 + "O3 O2- 0.245 0.0667 0. 1.\n")
+        _ok41 = (_u41[0] and bool(_u41[1]) and _u41[2] is not None
+                 and abs(_u41[2] - 0.40) < 0.01)
+        _det41 = f'unit {_u41[1]!r}; anion_anion_min {_u41[2]} (want 0.40)'
+    except Exception as _x41:
+        _ok41, _det41 = False, f'{type(_x41).__name__}: {_x41}'
+    report('41. a contact shorter than a bond is never skipped', _ok41,
+           _det41)
+
+    # 42. The stated charge is judged per pair: an O(1-) peroxide does not
+    #     make an O(2-)-O(2-) contact of 1.50 A a unit, in a formula only
+    #     33% short (Ba3O4).
+    try:
+        _u42 = _unit_case(_p1 + "O1 O1- 0. 0. 0. 1.\n"
+                                "O2 O1- 0.245 0. 0. 1.\n"
+                                "O3 O2- 0. 0.5 0.5 1.\n"
+                                "O4 O2- 0.25 0.5 0.5 1.\n"
+                                "Ba1 Ba2+ 0.5 0.25 0.25 1.\n"
+                                "Ba2 Ba2+ 0.5 0.75 0.75 1.\n"
+                                "Ba3 Ba2+ 0.6 0.0 0.75 1.\n")
+        _ok42 = (_u42[0] and bool(_u42[1]) and 'O stated -1' in _u42[1]
+                 and _u42[2] is not None and abs(_u42[2] - 1.50) < 0.01)
+        _det42 = (f'unit {_u42[1]!r}; anion_anion_min {_u42[2]} (want '
+                  f'1.50, the O(2-) pair)')
+    except Exception as _x42:
+        _ok42, _det42 = False, f'{type(_x42).__name__}: {_x42}'
+    report('42. a stated charge makes only its own pair a unit', _ok42,
+           _det42)
+
+    # 43. A formula naming an element the model lacks (H not located): the
+    #     charge test is off, and Na2O2 typed O(2-) keeps its G2 contact.
+    try:
+        _u43 = _unit_case(_na2o2.replace(
+            'loop_', "_chemical_formula_sum 'H4 Na2 O2'\nloop_", 1))
+        _ok43 = (_u43[0] and not _u43[1] and _u43[2] is not None
+                 and abs(_u43[2] - 1.47) < 0.01)
+        _det43 = (f'unit {_u43[1]!r} (want none); anion_anion_min '
+                  f'{_u43[2]} (want 1.47)')
+    except Exception as _x43:
+        _ok43, _det43 = False, f'{type(_x43).__name__}: {_x43}'
+    report('43. the charge test needs every element of the formula', _ok43,
+           _det43)
+
+    # 44. Atoms are counted by the multiplicity the file states: TiO2 on the
+    #     test 35 cell, its O 0.0005 off the 4e position it names. Counted
+    #     by images the O would be 16 and the formula anion-rich; counted as
+    #     stated it balances, so its 1.49 A O-O stays a G2 contact.
+    try:
+        _u44 = _unit_case(_cell35.format(cat='Ti', cv=4, x='O', xv=2,
+                                         z=0.10956, occ=1.).replace(
+            '_atom_site_type_symbol\n',
+            '_atom_site_type_symbol\n_atom_site_symmetry_multiplicity\n').replace(
+            'Ti1 Ti4+ ', 'Ti1 Ti4+ 2 ').replace(
+            'O1 O2- 0. 0. 0.10956', 'O1 O2- 4 0.0005 0. 0.10956'))
+        _ok44 = (_u44[0] and not _u44[1] and _u44[2] is not None
+                 and abs(_u44[2] - 1.49) < 0.01)
+        _det44 = (f'unit {_u44[1]!r} (want none); anion_anion_min '
+                  f'{_u44[2]} (want 1.49)')
+    except Exception as _x44:
+        _ok44, _det44 = False, f'{type(_x44).__name__}: {_x44}'
+    report('44. atoms are counted by the multiplicity the file states',
+           _ok44, _det44)
+
     if verbose:
         print()
         print("=" * 70)

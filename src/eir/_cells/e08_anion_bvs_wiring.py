@@ -66,6 +66,13 @@ def anion_bvs_for_structure(cif_path, sites, cation_gii=None):
         print(f'    (anion BVS failed: {type(e).__name__}: {e})')
         res = []
 
+    # v2.0.48: atoms of a homopolar unit get no anion-centred sum (#10)
+    _ul = set()
+    for s in sites:
+        _ul |= set(str(s.get('homopolar_unit_labels') or '').split())
+    if _ul:
+        res = [a for a in res if a.get('anion_label') not in _ul]
+
     return res, summarise_anion_bvs(res, cation_gii=cation_gii)
 
 

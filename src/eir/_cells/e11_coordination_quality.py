@@ -1567,6 +1567,8 @@ def _eir_anion_side(args):
     path, vals = args[0], args[1]
     # v2.0.44: the void-guard limits, when the job carries them.
     limits = args[2] if len(args) > 2 else None
+    # v2.0.48: the atoms of homopolar units, which get no anion sum (#10)
+    exclude = args[3] if len(args) > 3 else None
     try:
         # v2.0.29: a DIRECT reference, not globals()['calculate_anion_bvs'].
         #
@@ -1581,7 +1583,8 @@ def _eir_anion_side(args):
         # globals() - is untouched, and is right: it runs in the parent.
         return [a.get('anion_deviation')
                 for a in calculate_anion_bvs(path, vals,
-                                             shell_limits=limits)], None
+                                             shell_limits=limits)
+                if not exclude or a.get('anion_label') not in exclude], None
     except (NameError, AttributeError, TypeError):
         raise
     except Exception as e:
@@ -2463,12 +2466,18 @@ def add_coordination_quality(batch_csv_path, cif_directory,
                          for _, rr in g.iterrows()
                          if rr.get('site_label') and
                          pd.notna(rr.get('shell_void_limit'))} or None
-            _ga_jobs.append((fn, path, vals, _lims, g))
+            # v2.0.48: unit atoms get no anion-centred sum (#10)
+            _excl = None
+            if 'homopolar_unit_labels' in g.columns:
+                _excl = {l for v in g['homopolar_unit_labels'].dropna()
+                         for l in str(v).split()} or None
+            _ga_jobs.append((fn, path, vals, _lims, g, _excl))
 
-        for (fn, path, vals, _lims, g), (adev, _note) in zip(
+        for (fn, path, vals, _lims, g, _excl), (adev, _note) in zip(
                 _ga_jobs,
                 _measured_map(
-                    [(j[1], j[2], j[3]) for j in _ga_jobs], _eir_anion_side,
+                    [(j[1], j[2], j[3], j[5]) for j in _ga_jobs],
+                    _eir_anion_side,
                     announce=(lambda a, b, c, d, e: _parallel_banner(
                         lambda s: print(s, flush=True), 'anion side',
                         a, b, c, d, e, unit='structure')) if verbose else None,
