@@ -30,6 +30,10 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
+### 2.0.48 – unreleased
+
+- M12's evidence says what the file holds as written: the number of images the stated coordinates give and how close the nearest two are, and that Eir used the special position. ICSD 213392 now reads "as written, 192 images, the closest two 0.0036 A apart". The verdict stays FLAG: the analysis stands for the structure the multiplicity names, and the evidence tells anyone loading the CIF elsewhere what they will get. No verdict changes.
+
 ### 2.0.47 – 18 November 2026
 
 **Every fault the 2.0.47 checks found, fixed; five new codes; a name removed, and every threshold says where its value comes from**
