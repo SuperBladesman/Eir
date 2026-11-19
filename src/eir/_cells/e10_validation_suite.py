@@ -1236,6 +1236,26 @@ _atom_site_occupancy
     report('43. the charge test needs every element of the formula', _ok43,
            _det43)
 
+    # 44. Atoms are counted by the multiplicity the file states: TiO2 on the
+    #     test 35 cell, its O 0.0005 off the 4e position it names. Counted
+    #     by images the O would be 16 and the formula anion-rich; counted as
+    #     stated it balances, so its 1.49 A O-O stays a G2 contact.
+    try:
+        _u44 = _unit_case(_cell35.format(cat='Ti', cv=4, x='O', xv=2,
+                                         z=0.10956, occ=1.).replace(
+            '_atom_site_type_symbol\n',
+            '_atom_site_type_symbol\n_atom_site_symmetry_multiplicity\n').replace(
+            'Ti1 Ti4+ ', 'Ti1 Ti4+ 2 ').replace(
+            'O1 O2- 0. 0. 0.10956', 'O1 O2- 4 0.0005 0. 0.10956'))
+        _ok44 = (_u44[0] and not _u44[1] and _u44[2] is not None
+                 and abs(_u44[2] - 1.49) < 0.01)
+        _det44 = (f'unit {_u44[1]!r} (want none); anion_anion_min '
+                  f'{_u44[2]} (want 1.49)')
+    except Exception as _x44:
+        _ok44, _det44 = False, f'{type(_x44).__name__}: {_x44}'
+    report('44. atoms are counted by the multiplicity the file states',
+           _ok44, _det44)
+
     if verbose:
         print()
         print("=" * 70)

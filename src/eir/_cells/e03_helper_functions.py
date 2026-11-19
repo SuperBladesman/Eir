@@ -4532,12 +4532,15 @@ def conditional_ligand_count(bonds, p_here, centre, ligand):
 # parameters fitted for O(2-), S(2-) and N(3-), come out 7 to 55% over
 # valence. A unit is two atoms of one anion element whose distance falls in
 # the pair's bond window, at any occupancy, where either
-#   * the file states for both a charge of -1 or a fraction between -1
-#     and 0 (O -1 or -1/2, S -1, N -1/3), the pair judged on its own two
-#     atoms, or
+#   * every charge the file states for the pair's two atoms (at least one)
+#     is -1 or a fraction between -1 and 0 (O -1 or -1/2, S -1, N -1/3),
+#     the pair judged on its own two atoms, or
 #   * the formula is short of positive charge by at least
-#     UNIT_ANION_EXCESS_MIN of the cation charge, with every anion at its
-#     ordinary charge and every cation at the valence Eir assigned, and the
+#     UNIT_ANION_EXCESS_MIN of the cation charge, with every atom of an
+#     element acting as an anion at that element's ordinary charge (so a
+#     perchlorate's Cl(7+) counts as Cl(-); ICSD 94855, a nitrosyl
+#     perchlorate, reads 69% short for that reason, and R5 decides it
+#     first), every other atom at the valence Eir assigned, and the
 #     model holds every element its formula names (a hydrate whose H are
 #     not located reads as anion-rich, and its disordered water O-O would
 #     read as a peroxide).
@@ -4545,8 +4548,9 @@ def conditional_ligand_count(bonds, p_here, centre, ligand):
 # through a bonded neighbour where the 1,3 contact is longer than a bond
 # (the azide's end-to-end N...N, 2.34 A); contacts between units, and any
 # contact shorter than the window, stay on the floor, so a broken entry is
-# still expunged. A cation bonded to a unit atom, or the nearest cation to
-# one, is NOT_ASSESSED (R8), and unit atoms get no anion-centred sum.
+# still expunged. A cation bonded to a unit atom, and the nearest cation to
+# each unit atom, are NOT_ASSESSED (R8), and unit atoms get no
+# anion-centred sum.
 #
 # HOMOPOLAR_WINDOWS: CHOSEN as starting windows around the single and
 # multiple homopolar bond lengths, and MEASURED on the 7,004 CIFs of the
