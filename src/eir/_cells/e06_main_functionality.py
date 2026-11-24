@@ -495,6 +495,22 @@ def get_bv_parameters_fractional(cation, cation_valence, anion):
 # distribution is described but its tail is not.
 BL_MIN_SAMPLE = 30
 
+# v2.0.50 (#11): THE BAND ROUND AN ESTIMATED BOND LENGTH. MEASURED.
+#
+# Where Gagne has no measurement for an ion at its valence, its expected bond
+# length is estimated (tiers 4 and 5 below). An estimate can flag an entry but
+# never expunge it, and the band says how far a site's mean bond may sit from
+# the estimate before it is flagged as off it (M14, CELL 7b). 0.156 is the
+# 95th percentile of |Shannon sum - Gagne's mean| / Gagne's mean over every
+# configuration both cover: 15.6% on 457 bonded to O and 15.5% on 136 bonded
+# to N (median miss 0.05 and 0.07 A). Interpolating in valence between two of
+# Gagne's measured valences of the same ion misses by 14.6% at the 95th
+# percentile on the 38 configurations it can be tested on, so one band serves
+# both. S, Se, Te and the halides have nothing measured to calibrate against:
+# CHOSEN, the same band, until a survey of them exists.
+ESTIMATE_BAND = 0.156
+ESTIMATED_TIERS = (4, 5)
+
 
 def expected_bond_length(element, valence, cn, anion='O', db=None):
     """
@@ -512,9 +528,18 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
                                with CN for the larger cations)
       3 measured_extrapolated  CN outside the tabulated range; the nearest is
                                used and named. Treat with care.
+      5 valence_interpolated   v2.0.50 (#11): no measurement at this valence;
+                               linear in valence between two measured valences
+                               of the same ion and anion (Ni(3+) between Ni(2+)
+                               and Ni(4+)), each at this CN by tiers 1 to 3.
+                               Never extrapolated. An ESTIMATE.
       4 shannon_additive       adding ionic radii, the old behaviour, kept as a
-                               fallback and FLAGGED as such because it is the
-                               construction G&H's own data argues against.
+                               fallback because it is the construction G&H's
+                               own data argues against. An ESTIMATE. Asked
+                               after tier 5, which stays closer to measurement.
+
+    An estimate (tiers 4 and 5) carries 'band', ESTIMATE_BAND: it can flag an
+    entry (M13, M14) but never expunge one, and never decide G6 or M10.
     """
     db = db or db_manager
     try:
@@ -556,13 +581,34 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
                 'source': f'measured_extrapolated_from_CN{near}',
                 'tier': 3, 'cn_used': near}
 
+    # v2.0.50 (#11): interpolate in valence, never beyond the measured range
+    vals = sorted({k[1] for k in bl if k[0] == element and k[2] == anion})
+    v_lo = max([x for x in vals if x < v], default=None)
+    v_hi = min([x for x in vals if x > v], default=None)
+    if v_lo is not None and v_hi is not None:
+        a = expected_bond_length(element, v_lo, c, anion, db)
+        b = expected_bond_length(element, v_hi, c, anion, db)
+        if a and b and a['tier'] <= 3 and b['tier'] <= 3:
+            f = (v - v_lo) / (v_hi - v_lo)
+            return {'mean': round(a['mean'] + f * (b['mean'] - a['mean']), 4),
+                    'sd': None, 'min': None, 'n_polyhedra': None,
+                    'ref': '; '.join(dict.fromkeys(str(x.get('ref')) for x in (a, b))),
+                    'source': f'valence_interpolated_{v_lo}_{v_hi}',
+                    'tier': 5, 'cn_used': c, 'band': ESTIMATE_BAND}
+
+    # v2.0.50 (#11): the anion at the charge Eir gives it. Every anion but O
+    # was looked up as 3-, so S, Se, Te and the halides had no estimate.
+    q = ALWAYS_ANION.get(anion, AMPHOTERIC_ANION.get(anion))
+    if q is None:
+        return None
     r_cat, _ = get_ionic_radius_fractional(element, v, c)
-    r_an, _ = get_ionic_radius_fractional(anion, -2 if anion == 'O' else -3, c)
+    r_an, _ = get_ionic_radius_fractional(anion, q, c)
     if r_cat is None or r_an is None:
         return None
     return {'mean': round(r_cat + r_an, 4), 'sd': None, 'min': None,
             'n_polyhedra': None, 'ref': 'Shannon (1976) Acta Cryst A32, 751',
-            'source': 'shannon_additive', 'tier': 4, 'cn_used': c}
+            'source': 'shannon_additive', 'tier': 4, 'cn_used': c,
+            'band': ESTIMATE_BAND}
 
 
 def get_ionic_radius_fractional(element, valence, cn):
@@ -5286,6 +5332,14 @@ def process_single_cif(file_path, user_oxidation_states=None):
                                 and _bl['sd'] > 0):
                             site_result['bond_size_z'] = round(
                                 (_obs_mean - _bl['mean']) / _bl['sd'], 3)
+                        # v2.0.50 (#11): for an estimate, its band and how
+                        # far this site's mean bond sits from it, as a
+                        # fraction; null where the expectation is measured
+                        site_result['bl_estimate_band'] = _bl.get('band')
+                        site_result['bl_estimate_deviation'] = (
+                            round((_obs_mean - _bl['mean']) / _bl['mean'], 4)
+                            if _bl.get('band') and _obs_mean is not None
+                            and _bl['mean'] else None)
 
 
                     # ========================================================================

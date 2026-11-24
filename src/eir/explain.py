@@ -203,7 +203,20 @@ def _reason_sentence(code, reason, site):
         'no_measured_bond_lengths':
             f'Gagn\u00e9\u2019s bond length surveys have no measurements for '
             f'{ion}' + (f' bonded to {lig}' if lig else '')
-            + ', so the checks against measured bond lengths cannot be made.',
+            + ', and there is no radius to estimate a bond length from, so '
+            'the checks against bond lengths cannot be made.',
+        'bond_lengths_estimated':
+            f'Gagn\u00e9\u2019s bond length surveys have no measurements for '
+            f'{ion}' + (f' bonded to {lig}' if lig else '')
+            + ', so its bonds were judged against an estimate: interpolated '
+            'between measured valences of the same ion where there are two, '
+            'otherwise the sum of Shannon radii. An estimate can raise doubt '
+            'but cannot certify a structure, so the entry is flagged.',
+        'polyhedron_size_off_estimate':
+            f'The bonds of {ion}{at} are, on average, further from the '
+            f'estimated bond length than estimates miss measurements by '
+            f'(the band in the evidence). There are no measurements for this '
+            f'ion to judge it by, so it is flagged rather than expunged.',
         'no_index':
             'The recommended instability index could not be calculated.',
         'symmetry_not_read':

@@ -38,6 +38,10 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
+### 2.0.50 – unreleased
+
+- **An ion with no measured bond lengths is judged against an estimate, and flagged** (#11). G6 and M10 compare bonds with Gagné's measured lengths, which cover O and N only, so every sulfide, selenide, telluride and halide, and every oxide of an ion Gagné did not survey (octahedral Ni³⁺, U³⁺, Np³⁺, Pa, Tc⁴⁺ and others), was NOT_ASSESSED (R3). `expected_bond_length` now estimates: tier 5 interpolates in valence between two of Gagné's measured valences of the same ion and anion (Ni³⁺ between Ni²⁺ and Ni⁴⁺), never beyond them; tier 4, the sum of Shannon radii, follows. The band, `ESTIMATE_BAND` = 15.6%, is the 95th percentile of how far Shannon sums miss Gagné's means on the 593 configurations both cover; valence interpolation misses by 14.6% on the 38 it can be tested on; for S, Se, Te and the halides it is chosen. An estimate flags but never expunges or certifies: a site judged against one is FLAG, M13 (`bond_lengths_estimated`) within the band and M14 (`polyhedron_size_off_estimate`) beyond it, with M10's eligibility rules; M13 is asked before M2, M3 and M9, whose tiers accept. R3 is left for a site with no estimate either, and says so. The Shannon fallback looked every anion but O up at 3−, so S, Se, Te and the halides had no estimate at all; they are looked up at the charge Eir gives them. New site columns `bl_estimate_band` and `bl_estimate_deviation`. `VALIDATE_GATES()` tests 15 to 17 and `VALIDATE_PARSING()` tests 50 and 51.
+
 ### 2.0.49 – 24 November 2026
 
 **Labels that over-fill one position are expunged; a dopant beside mobile ions is read as M11; a file with no site to assess is counted as failed; Gagné's sample sizes are named as polyhedra**
