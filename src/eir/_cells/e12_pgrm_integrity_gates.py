@@ -79,6 +79,10 @@ PGRM_SUPPRESS = False
 # and counting each polyhedron's bonds as independent draws would overstate
 # the sample by up to CN times. 50 stays; no verdict moves.
 MEASURED_MIN_RATIO = 0.90
+# v2.0.49 (#49): the reason each over-filled position reports, by gate
+_OVERFULL_REASON = {'G1': 'contact_below_physical_floor',
+                    'G2': 'anion_packing_impossible',
+                    'G5': 'cation_packing_impossible'}
 MEASURED_MIN_SAMPLE = 50
 
 # v2.0.36. THE POLYHEDRON IS THE WRONG SIZE FOR THE ION IN IT.
@@ -471,6 +475,15 @@ def classify_site(row, struct):
     # Where the shift is NOT supported, or has not been tested, the packing
     # floors still fire below and the structure is still condemned - on the
     # measurement rather than on an untested claim.
+    # v2.0.49 (#49): labels written at one position that over-fill it
+    # (overfull_positions, CELL 1). The packing floors cannot see a pair
+    # closer than the scan's dedup_tol; this is the same question at 0 A,
+    # so it is asked with them, under the gate the pair would meet.
+    _pov = struct.get('position_overfull')
+    if _pgrm_has_value(_pov):
+        _pc = str(struct.get('position_overfull_code') or 'G5')
+        return (_pc, _OVERFULL_REASON.get(_pc, 'cation_packing_impossible'),
+                str(_pov))
     aa = _pgrm_f(struct.get('anion_anion_min'))
     if aa == aa and aa < _PGRM_ANION_FLOOR:
         return ('G2', 'anion_packing_impossible',
@@ -1744,6 +1757,48 @@ def VALIDATE_PARSING(verbose=True):
         return (r.get('cation_packing_plausible') is False
                 and r.get('cation_contact_partly_occupied') is False and 'Ca2' in c),             f"plausible {r.get('cation_packing_plausible')}; mobile {r.get('cation_contact_partly_occupied')}: {c}"
     _case(40, 'a shared position counts all it holds: Na 0.40 beside Na and Ca 0.40 each', _t40)
+
+    # ---- v2.0.49: labels written at one position (#49) ---------------------
+    def _mgo(sites):
+        return _parsing_cif('mgo49', 4.2112, 'F m -3 m', sites,
+                            loop=[('Mg2+', 2), ('Ca2+', 2), ('O2-', -2),
+                                  ('F1-', -1)])
+    _mg49 = ('Mg1', 'Mg2+', 0, 0, 0, 1)
+    _o49 = ('O1', 'O2-', 0.5, 0.5, 0.5, 1)
+
+    def _po(r):
+        return r.get('position_overfull_code'), str(r.get('position_overfull'))
+
+    def _t41():
+        c, e = _po(_parsing_run(_mgo([_mg49, _o49, ('O2', 'O2-', 0, 0.5, 0.5, 1)])))
+        return (c == 'G1' and e.startswith('Mg1 and O2 written at one position')
+                and 'total occupancy 2.000 against at most 1.020' in e), f'{c}: {e}'
+    _case(41, 'O written on the cation orbit: G1, a contact no scan reaches', _t41)
+
+    def _t42():
+        c, e = _po(_parsing_run(_mgo([_mg49, ('Mg2', 'Mg2+', 0, 0, 0, 1), _o49])))
+        return c == 'G5' and 'Mg1 and Mg2' in e, f'{c}: {e}'
+    _case(42, 'one label written twice at one position: G5 (2.0.48: ACCEPT)', _t42)
+
+    def _t43():
+        c, e = _po(_parsing_run(_mgo([_mg49, _o49, ('F1', 'F1-', 0.5, 0.5, 0.5, 1)])))
+        return c == 'G2' and 'O1 and F1' in e, f'{c}: {e}'
+    _case(43, 'O and F both full at one position: G2', _t43)
+
+    def _t44():
+        c, e = _po(_parsing_run(_mgo([('Mg1', 'Mg2+', 0, 0, 0, 0.5),
+                                      ('Ca1', 'Ca2+', 0, 0, 0, 0.5), _o49])))
+        return c is None, f'{c}: {e}'
+    _case(44, 'a mixed site summing to one is not over-filled', _t44)
+
+    def _t45():
+        ok, e1 = _po(_parsing_run(_mgo([('Mg1', 'Mg2+', 0, 0, 0, '0.90(1)'),
+                                        ('Ca1', 'Ca2+', 0, 0, 0, '0.13(1)'), _o49])))
+        bad, e2 = _po(_parsing_run(_mgo([('Mg1', 'Mg2+', 0, 0, 0, 0.90),
+                                         ('Ca1', 'Ca2+', 0, 0, 0, 0.13), _o49])))
+        return (ok is None and bad == 'G5' and 'against at most 1.020' in e2,
+                f'refined {ok}: {e1}; fixed {bad}: {e2}')
+    _case(45, 'over by 0.03: within 3 esd of refined values, beyond fixed rounding', _t45)
 
     ok = all(results)
     if verbose:

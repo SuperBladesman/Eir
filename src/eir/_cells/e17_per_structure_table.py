@@ -112,6 +112,7 @@ def build_structure_table(df):
               'alternative_contacts_set_aside',        # v2.0.46
               'cation_cation_contact',                 # v2.0.46
               'cation_contact_partly_occupied',        # v2.0.46
+              'position_overfull', 'position_overfull_code',  # v2.0.49
               'has_antisite_disorder', 'n_antisite_species', 'n_anion_sites',
               # the anion side, which the cation/anion diagnosis and its figure
               # both need and which was omitted from the first version of this

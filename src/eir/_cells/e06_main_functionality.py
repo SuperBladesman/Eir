@@ -5519,6 +5519,14 @@ def process_single_cif(file_path, user_oxidation_states=None):
                 f"{_s.get('site_label')} bonded to {_b}; {_hu['evidence']}"
                 if _b else None)
             _s['homopolar_unit_labels'] = _hl
+        # v2.0.49 (#49): labels written at one position that over-fill
+        # it, worst first; the gate (G1, G5 or G2) reads the first
+        _po = _POSITION_OVERFULL.pop(str(file_path), None) or []
+        results['position_overfull'] = '; '.join(
+            f"{' and '.join(r['labels'])} written at one position, total "
+            f"occupancy {r['total']:.3f} against at most {r['limit']:.3f}"
+            for r in _po) or None
+        results['position_overfull_code'] = _po[0]['code'] if _po else None
         # v2.0.14: `if _aa` discards a measured 0.0 as though it were
         # absent. dedup_tol keeps 0.0 from arising today, so this is a
         # correctness fix rather than a behaviour change - but 'no value'
@@ -6434,6 +6442,9 @@ def batch_process_directory(directory_path):
                         'cation_cation_contact'),                            # v2.0.46
                     'cation_contact_partly_occupied': result.get(
                         'cation_contact_partly_occupied'),                   # v2.0.46
+                    'position_overfull': result.get('position_overfull'),  # v2.0.49
+                    'position_overfull_code': result.get(
+                        'position_overfull_code'),                           # v2.0.49
                     'anion_packing_plausible': result.get('anion_packing_plausible'),
         # v2.0.13a: computed and printed since v2.0.12 and never
         # exported, so the triage and summary both reported it as 0

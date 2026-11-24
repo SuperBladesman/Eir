@@ -363,3 +363,41 @@ def test_the_copy_as_read_is_kept_and_found(tmp_path):
     assert e.cif_path_for(tmp_path, 'a.cif') == str(d / 'a.cif')
     assert e.cif_path_for(tmp_path, 'b.cif') == str(tmp_path / 'b.cif')
     assert len(res) == 2
+
+
+# ---- 2.0.49: labels written at one position (#49) ---------------------------
+MGO = (4.2112, 4.2112, 4.2112, 90, 90, 90)
+MG = ('Mg1', 'Mg2+', 0, 0, 0, 1)
+OX = ('O1', 'O2-', 0.5, 0.5, 0.5, 1)
+
+
+def mgo(sites):
+    return cif('mgo', MGO, 'F m -3 m', sites,
+               [('Mg2+', 2), ('Ca2+', 2), ('O2-', -2), ('F1-', -1)])
+
+
+@pytest.mark.parametrize('extra, code', [
+    (('O2', 'O2-', 0, 0.5, 0.5, 1), 'G1'),     # O on the cations' orbit
+    (('Mg2', 'Mg2+', 0, 0, 0, 1), 'G5'),       # one label written twice
+    (('F1', 'F1-', 0.5, 0.5, 0.5, 1), 'G2')])  # O and F both full
+def test_labels_that_overfill_one_position_are_expunged(tmp_path, extra, code):
+    r = run(tmp_path, mgo([MG, OX, extra]))
+    assert (r.tier, r.code) == ('EXPUNGE', code), r.evidence
+    assert 'total occupancy 2.000 against at most 1.020' in r.evidence
+
+
+def test_a_mixed_site_summing_to_one_is_not_overfilled(tmp_path):
+    r = run(tmp_path, mgo([('Mg1', 'Mg2+', 0, 0, 0, 0.5),
+                           ('Ca1', 'Ca2+', 0, 0, 0, 0.5), OX]))
+    assert r.tier != 'EXPUNGE', (r.code, r.evidence)
+
+
+def test_refined_occupancies_get_three_esds_and_fixed_ones_rounding(tmp_path):
+    # the same 1.03: within 3 combined esd of 0.90(1) + 0.13(1), over the
+    # 0.02 that rounding allows fixed values
+    ok = run(tmp_path, mgo([('Mg1', 'Mg2+', 0, 0, 0, '0.90(1)'),
+                            ('Ca1', 'Ca2+', 0, 0, 0, '0.13(1)'), OX]), name='a.cif')
+    bad = run(tmp_path, mgo([('Mg1', 'Mg2+', 0, 0, 0, 0.90),
+                             ('Ca1', 'Ca2+', 0, 0, 0, 0.13), OX]), name='b.cif')
+    assert ok.tier != 'EXPUNGE', (ok.code, ok.evidence)
+    assert (bad.tier, bad.code) == ('EXPUNGE', 'G5'), bad.evidence
