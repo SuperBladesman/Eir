@@ -94,7 +94,8 @@ def fig_screen_overlap(per, ax=None):
                ('cation packing','cation_packing_plausible'),
                ('bond-valence dist.','structure_bvs_geometry_plausible'),
                ('radii ratio','structure_core_geometry_plausible'),
-               ('coordination','structure_cn_plausible')]
+               ('coordination','structure_cn_plausible'),
+               ('position occupancy','position_occupancy_plausible')]
     sets={}
     for n,c in screens:
         if c in per.columns:            # absent is not the same as zero

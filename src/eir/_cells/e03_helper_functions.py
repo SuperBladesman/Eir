@@ -4181,6 +4181,85 @@ def _position_occupancies(st, esd=None):
     return out
 
 
+# v2.0.49 (#49): LABELS WRITTEN AT ONE POSITION THAT OVER-FILL IT.
+#
+# Two labels a file writes at one position never meet a gate: the bond
+# finder (CELL 2) keeps neighbours from 0.01 A out, and the packing scan
+# (anion_anion_contacts) skips anything within its dedup_tol, 0.02 A. A
+# shared position is ordinary when its labels are the species of a mixed
+# site, whose occupancies sum to one. When they sum to more, the file puts
+# more atoms there than one position holds. ICSD 14564 writes its O on the
+# cations' 4a orbit (total 1.932), and ICSD 19975 writes a full Li1 on the
+# La 24c orbit (2.000); 2.0.48 FLAGged both, for mixed valence and for
+# partial occupancy. A duplicated label, Mg twice at one position, was
+# ACCEPT.
+#
+# The test is the alternatives rule's (ALTERNATIVE_OCC_SUM_MAX, OCC_ESD_K):
+# a position may exceed one by rounding where its occupancies are fixed, or
+# by OCC_ESD_K combined standard uncertainties where the file gives them.
+# Over that, the gate follows the pair: a cation and an anion G1, cations
+# only G5, anions only G2. A label overlapping its own symmetry image is a
+# different question (usually a special position written with rounded
+# coordinates) and is not asked here. Measured on 307 ICSD Li garnets and
+# high-entropy oxides (23 November 2026): ten structures over-fill a
+# position, four already EXPUNGE on other gates; 14564, 19975 and four
+# mixed sites over by 2.6 to 12% (176514, 176515, 45742, 45743) become
+# EXPUNGE.
+_POSITION_OVERFULL = {}      # str(cif path) -> overfull_positions(), read by CELL 2
+_OVERFULL_RANK = {'G1': 0, 'G5': 1, 'G2': 2}
+
+
+def overfull_positions(st, esd=None, anion_set=()):
+    """[{'labels', 'total', 'sigma', 'limit', 'code'}] for each position whose
+    labels' occupancies sum to more than one beyond the alternatives rule's
+    allowance, the most serious gate first (G1, G5, G2), then the largest
+    excess. Positions are found as _position_occupancies finds them; labels
+    refined to zero occupancy hold no atom and are left out."""
+    import math as _m
+    esd = esd or {}
+    sites = [s for s in st.sites
+             if getattr(s, 'occ', None) is None or float(s.occ) > 0]
+    ops = list(st.spacegroup.operations()) if st.spacegroup is not None else []
+
+    def _same(a, b):
+        fa = (a.fract.x, a.fract.y, a.fract.z)
+        for op in ops or [None]:
+            fb = ((b.fract.x, b.fract.y, b.fract.z) if op is None else
+                  op.apply_to_xyz([b.fract.x, b.fract.y, b.fract.z]))
+            df = [x - y - round(x - y) for x, y in zip(fa, fb)]
+            c = st.cell.orthogonalize(gemmi.Fractional(*df))
+            if c.x * c.x + c.y * c.y + c.z * c.z < POSITION_TOL ** 2:
+                return True
+        return False
+
+    groups = []
+    for a in sites:
+        for g in groups:
+            if _same(g[0], a):
+                g.append(a)
+                break
+        else:
+            groups.append([a])
+    out = []
+    for g in groups:
+        if len(g) < 2:
+            continue
+        tot = sum(1.0 if getattr(s, 'occ', None) is None else float(s.occ)
+                  for s in g)
+        sig = _m.sqrt(sum(esd.get(s.label, 0.0) ** 2 for s in g))
+        allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * sig)
+        if tot - 1.0 <= allow + 1e-9:
+            continue
+        an = [s.element.name in anion_set for s in g]
+        code = 'G1' if any(an) and not all(an) else 'G2' if all(an) else 'G5'
+        out.append({'labels': [s.label for s in g], 'total': round(tot, 4),
+                    'sigma': round(sig, 4), 'limit': round(1.0 + allow, 4),
+                    'code': code})
+    out.sort(key=lambda r: (_OVERFULL_RANK[r['code']],
+                            -(r['total'] - r['limit'])))
+    return out
+
+
 def _are_alternatives(s1, s2, esd=None, totals=None):
     """v2.0.46. Can the model fill these two positions one at a time? Their
     occupancies sum to one or less, within ALTERNATIVE_OCC_SUM_MAX or
@@ -4804,6 +4883,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
     _gov = [None]       # v2.0.46: the cation contact nearest its floor
     _hard = [None]      # ... of those not between mobile ions (mobile_pair)
     _soft = [None]      # ... of those that are
+    _POSITION_OVERFULL.pop(str(cif_path), None)   # v2.0.49: never stale
 
     def _scan(st, anion_set, rmax, esd=None, sv=None, tot=None,
               units=None):
@@ -4965,6 +5045,15 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
         except (OSError, UnicodeDecodeError, ValueError):
             _sv = {}
         _tot = _position_occupancies(st, _esd)
+        # v2.0.49: positions the file over-fills (#49), for CELL 2. The
+        # scan below cannot see a pair closer than dedup_tol.
+        try:
+            _POSITION_OVERFULL[str(cif_path)] = overfull_positions(
+                st, _esd, _anion_set)
+        except (ValueError, KeyError, IndexError, RuntimeError) as _e:
+            # no record, so the screen reads None: not assessed. TypeError
+            # and AttributeError are defects here and re-raise below.
+            _note_read_failure(cif_path, 'overfull_positions', _e)
         # v2.0.48: homopolar anion units (#10), before the scan reads them.
         # A failure here costs the units, not the packing gates.
         try:

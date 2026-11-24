@@ -168,6 +168,11 @@ def _reason_sentence(code, reason, site):
             f'tabulated for it, and its bond valence sum is less than half '
             f'its valence: bonds are missing from the model, so no sum '
             f'built on it can be trusted.',
+        'position_overfilled':
+            'The file writes two or more labels at one position, and '
+            'their occupancies add up to more than one, by more than '
+            'rounding or the stated uncertainties allow. One position '
+            'cannot hold more than one atom.',
         'anion_packing_impossible':
             'Two anions are closer together than their electron clouds '
             'allow.',
@@ -279,7 +284,8 @@ SCREENS = [('radii ratio', 'structure_core_geometry_plausible'),
            ('bond-valence distance', 'structure_bvs_geometry_plausible'),
            ('anion packing', 'anion_packing_plausible'),
            ('cation packing', 'cation_packing_plausible'),
-           ('coordination', 'structure_cn_plausible')]
+           ('coordination', 'structure_cn_plausible'),
+           ('position occupancy', 'position_occupancy_plausible')]
 
 
 def failed_screens(result):

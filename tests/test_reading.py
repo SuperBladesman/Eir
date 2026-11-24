@@ -8,6 +8,7 @@ reading stage. VALIDATE_PARSING() in the notebook holds the same cases at
 the level of the engine.
 """
 import json
+import re
 
 import pandas as pd
 import pytest
@@ -363,3 +364,81 @@ def test_the_copy_as_read_is_kept_and_found(tmp_path):
     assert e.cif_path_for(tmp_path, 'a.cif') == str(d / 'a.cif')
     assert e.cif_path_for(tmp_path, 'b.cif') == str(tmp_path / 'b.cif')
     assert len(res) == 2
+
+
+# ---- 2.0.49: labels written at one position (#49) ---------------------------
+MGO = (4.2112, 4.2112, 4.2112, 90, 90, 90)
+MG = ('Mg1', 'Mg2+', 0, 0, 0, 1)
+OX = ('O1', 'O2-', 0.5, 0.5, 0.5, 1)
+
+
+def mgo(sites):
+    return cif('mgo', MGO, 'F m -3 m', sites,
+               [('Mg2+', 2), ('Ca2+', 2), ('O2-', -2), ('F1-', -1)])
+
+
+@pytest.mark.parametrize('extra, code', [
+    (('O2', 'O2-', 0, 0.5, 0.5, 1), 'G1'),     # O on the cations' orbit
+    (('Mg2', 'Mg2+', 0, 0, 0, 1), 'G5'),       # one label written twice
+    (('F1', 'F1-', 0.5, 0.5, 0.5, 1), 'G2'),   # O and F both full
+    (('Ca1', 'Ca2+', 0, 0, 0, 1), 'G5'),       # Mg and Ca both full
+    (('O2', 'O2-', 0.5, 0.5, 0.5, 1), 'G2'),   # O written twice
+    (('O2', 'O2-', 0.0012, 0, 0, 1), 'G1')])   # O 0.005 A from Mg
+def test_labels_that_overfill_one_position_are_expunged(tmp_path, extra, code):
+    r = run(tmp_path, mgo([MG, OX, extra]))
+    assert (r.tier, r.code) == ('EXPUNGE', code), r.evidence
+    assert r.reason == 'position_overfilled', r.reason
+    assert 'total occupancy 2.000 against at most 1.020' in r.evidence
+    assert r.structure.get('position_occupancy_plausible') is False
+
+
+def test_h_and_d_written_at_one_position_count_as_any_other_overfill(tmp_path):
+    # decided for 2.0.49: H and D are summed like any other label, although
+    # since 2.0.15 H decides no other gate
+    txt = cif('mgo', MGO, 'F m -3 m',
+              [MG, OX, ('H1', 'H1+', 0.25, 0.25, 0.25, 0.6),
+               ('D1', 'D1+', 0.25, 0.25, 0.25, 0.6)],
+              [('Mg2+', 2), ('O2-', -2), ('H1+', 1), ('D1+', 1)])
+    r = run(tmp_path, txt)
+    assert (r.tier, r.code) == ('EXPUNGE', 'G5'), r.evidence
+    assert 'H1 and D1 written at one position, total occupancy 1.200' in r.evidence
+
+
+def test_an_anion_only_on_the_cation_orbit_is_still_expunged(tmp_path):
+    # O written on Mg's 4a orbit with 4b empty: no bond survives, and the
+    # file is condemned as P before any position is summed. Pinned here;
+    # that a folder run leaves it out of the table, as 2.0.48 did, is a
+    # separate fault.
+    r = run(tmp_path, mgo([MG, ('O1', 'O2-', 0, 0.5, 0.5, 1)]))
+    assert (r.tier, r.code) == ('EXPUNGE', 'P'), r.evidence
+
+
+def test_the_summary_counts_an_overfilled_position_as_a_screen(tmp_path):
+    (tmp_path / 'ok.cif').write_text(mgo([MG, OX]))
+    # O written twice, which passed every other screen on 2.0.48
+    (tmp_path / 'bad.cif').write_text(mgo([MG, OX, ('O2', 'O2-', 0.5, 0.5, 0.5, 1)]))
+    res = eir.check_folder(tmp_path, verbose=False)
+    st = res.structures.set_index('filename')
+    assert st.loc['bad.cif', 'position_occupancy_plausible'] in (False, 'False')
+    assert st.loc['ok.cif', 'position_occupancy_plausible'] in (True, 'True')
+    assert int(st.loc['bad.cif', 'n_screens_failed']) == 1
+    assert int(st.loc['ok.cif', 'n_screens_failed']) == 0
+    assert 'position occupancy' in res.summary
+    assert re.search(r'Passed every test\s+1 of 2', res.summary), res.summary
+
+
+def test_a_mixed_site_summing_to_one_is_not_overfilled(tmp_path):
+    r = run(tmp_path, mgo([('Mg1', 'Mg2+', 0, 0, 0, 0.5),
+                           ('Ca1', 'Ca2+', 0, 0, 0, 0.5), OX]))
+    assert r.tier != 'EXPUNGE', (r.code, r.evidence)
+
+
+def test_refined_occupancies_get_three_esds_and_fixed_ones_rounding(tmp_path):
+    # the same 1.03: within 3 combined esd of 0.90(1) + 0.13(1), over the
+    # 0.02 that rounding allows fixed values
+    ok = run(tmp_path, mgo([('Mg1', 'Mg2+', 0, 0, 0, '0.90(1)'),
+                            ('Ca1', 'Ca2+', 0, 0, 0, '0.13(1)'), OX]), name='a.cif')
+    bad = run(tmp_path, mgo([('Mg1', 'Mg2+', 0, 0, 0, 0.90),
+                             ('Ca1', 'Ca2+', 0, 0, 0, 0.13), OX]), name='b.cif')
+    assert ok.tier != 'EXPUNGE', (ok.code, ok.evidence)
+    assert (bad.tier, bad.code) == ('EXPUNGE', 'G5'), bad.evidence
