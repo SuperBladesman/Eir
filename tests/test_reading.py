@@ -476,7 +476,9 @@ def test_a_dopant_is_released_where_the_mobile_ions_clear_their_own_floor(tmp_pa
               [('Na1+', 1), ('Co3+', 3), ('O2-', -2), ('Ca2+', 2)])
     r = run(tmp_path, txt)
     assert (r.tier, r.code, r.reason) == ('FLAG', 'M11', 'dopant_beside_mobile_ions'), r.evidence
-    assert 'Ca2-Na1 2.200 A, floor 2.40 A' in r.evidence
+    # the pair is named from either end, as the scan meets it first
+    assert any(f'{a}-{b} 2.200 A, floor 2.40 A' in r.evidence
+               for a, b in (('Ca2', 'Na1'), ('Na1', 'Ca2'))), r.evidence
 
 
 @pytest.mark.parametrize('na1', [1.0, 0.95])
