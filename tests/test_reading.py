@@ -392,6 +392,18 @@ def test_labels_that_overfill_one_position_are_expunged(tmp_path, extra, code):
     assert r.structure.get('position_occupancy_plausible') is False
 
 
+def test_h_and_d_written_at_one_position_count_as_any_other_overfill(tmp_path):
+    # decided for 2.0.49: H and D are summed like any other label, although
+    # since 2.0.15 H decides no other gate
+    txt = cif('mgo', MGO, 'F m -3 m',
+              [MG, OX, ('H1', 'H1+', 0.25, 0.25, 0.25, 0.6),
+               ('D1', 'D1+', 0.25, 0.25, 0.25, 0.6)],
+              [('Mg2+', 2), ('O2-', -2), ('H1+', 1), ('D1+', 1)])
+    r = run(tmp_path, txt)
+    assert (r.tier, r.code) == ('EXPUNGE', 'G5'), r.evidence
+    assert 'H1 and D1 written at one position, total occupancy 1.200' in r.evidence
+
+
 def test_an_anion_only_on_the_cation_orbit_is_still_expunged(tmp_path):
     # O written on Mg's 4a orbit with 4b empty: no bond survives, and the
     # file is condemned as P before any position is summed. Pinned here;
