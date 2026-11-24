@@ -766,7 +766,7 @@ def VALIDATE(verbose=True, tol_gii=0.002, tol_len=0.001):
            _ok26, _det26)
 
     # -- 27. v2.0.46: the bond-length columns are always written --------------
-    # Cr(4+)O6 has six measured bonds, too few for a minimum. 2.0.45 left
+    # Cr(4+)O6 has six measured octahedra, too few for a minimum. 2.0.45 left
     # bl_ratio_min out of the row, and a run with no other site stopped in
     # the summary.
     try:

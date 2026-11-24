@@ -5,7 +5,7 @@
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Paper: Dalton Trans. 2026](https://img.shields.io/badge/paper-Dalton%20Trans.%202026%2C%2055%2C%202868-informational.svg)](https://doi.org/10.1039/D5DT03003J)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
-![Version 2.0.48](https://img.shields.io/badge/version-2.0.48-green.svg)
+![Version 2.0.49](https://img.shields.io/badge/version-2.0.49-green.svg)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24138853.svg)](https://doi.org/10.5281/zenodo.24138853)
 
 Eir reads a folder of CIF files and asks two questions of each structure:
@@ -15,7 +15,7 @@ Eir reads a folder of CIF files and asks two questions of each structure:
 
 The order matters. A bond valence sum is computed from bond lengths, so a length that cannot be right makes every number built on it meaningless, and often good-looking. ICSD 85235 (TbCrO₃) has a chromium octahedron within 0.0004 Å of the mean of every measured Cr³⁺–O bond, a global instability index (GII) of 0.0047, and two oxygens 2.191 Å apart against a family median of 2.750 Å. Judged on its chemistry it is the best structure in a 938-entry perovskite set; judged on its geometry it is impossible.
 
-Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.48, comes from a rebuild that checks the geometry before it reads the chemistry.
+Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.49, comes from a rebuild that checks the geometry before it reads the chemistry.
 
 ## What Eir checks
 
@@ -112,7 +112,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 44 tests against structures whose answers are known by hand, the 14 gate tests, the 10 coordination-shell tests, the six tests of the two Fd-3m settings, the 43 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions) and the structural self-check. Run it again after changing anything.
+runs the 44 tests against structures whose answers are known by hand, the 14 gate tests, the 10 coordination-shell tests, the six tests of the two Fd-3m settings, the 52 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions, labels written at one position, dopants on mobile-ion positions, a file with no site to assess) and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 
@@ -148,7 +148,7 @@ outputs/
   eir_batch_results_v<version>_<stamp>.csv      per site, raw
   ..._quality.csv                               per site, screened
   ..._structures.csv                            one row per structure
-  eir_batch_failed_v<version>_<stamp>.csv       parse failures, with reasons
+  eir_batch_failed_v<version>_<stamp>.csv       files not read or assessed, with reasons
   eir_summary.txt                               the narrative summary
   eir_shift_test_<stamp>.csv + shifted_cifs/    the audit trail for proposed shifts
   eir_screens, eir_gii, eir_cation_anion,
@@ -175,10 +175,10 @@ outputs/
 
 ## Versions
 
-The current release is engine **2.0.48**, packaged as **eir-bvs 2.1.2**. eir-bvs 2.1.0 added the command line, the Python interface and the report. Every surviving version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one. To install a particular release rather than the latest code, name its tag:
+The current release is engine **2.0.49**, packaged as **eir-bvs 2.1.3**. eir-bvs 2.1.0 added the command line, the Python interface and the report. Every surviving version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one. To install a particular release rather than the latest code, name its tag:
 
 ```bash
-pip install "git+https://github.com/SuperBladesman/Eir.git@v2.0.48"
+pip install "git+https://github.com/SuperBladesman/Eir.git@v2.0.49"
 ```
 
 To reproduce the rock salt study, use the version that accompanied it:

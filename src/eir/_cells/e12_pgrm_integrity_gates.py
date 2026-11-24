@@ -68,9 +68,16 @@ PGRM_SUPPRESS = False
 # and 0.862, a Cu(2+) site at 0.878); the 0.1st percentile is 0.917.
 # Below 1.00 sit 4.9% of all such sites and 4.2% of those in sound
 # structures, which is why the minimum alone could not be the test. For
-# the sample size, a reason rather than a measurement: the chance that one
-# more bond from the same population falls below the shortest of n is
-# 1/(n+1), 2% at n = 50.
+# the sample size, a reason rather than a measurement: G6 sets one
+# polyhedron's shortest bond against the shortest Gagne found in n
+# polyhedra, and the chance that one more polyhedron from the same
+# population falls below the shortest of n is 1/(n+1), 2% at n = 50.
+#
+# v2.0.49 (#51): n counts coordination polyhedra. The table called it
+# n_bonds, and this paragraph said "bond"; the reasoning holds as it stands
+# once the unit is the polyhedron, which is also the unit of the comparison,
+# and counting each polyhedron's bonds as independent draws would overstate
+# the sample by up to CN times. 50 stays; no verdict moves.
 MEASURED_MIN_RATIO = 0.90
 MEASURED_MIN_SAMPLE = 50
 
@@ -310,6 +317,18 @@ def _pgrm_has_value(x):
     # and as the empty string from a CSV.
     return str(x).strip().lower() not in ('', 'nan', 'none', '<na>')
 
+
+def _bl_sample(row):
+    """The bond-length sample behind a site: bl_n_polyhedra, or bl_n_bonds
+    in output written before 2.0.49, which held the same number (#51)."""
+    try:
+        has_new = 'bl_n_polyhedra' in row
+    except TypeError:
+        has_new = False
+    return _pgrm_f(row.get('bl_n_polyhedra') if has_new
+                   else row.get('bl_n_bonds'), 0.0)
+
+
 def classify_site(row, struct):
     """
     Return (code, reason, evidence) for the most severe gate this site fails.
@@ -378,7 +397,7 @@ def classify_site(row, struct):
     # behind it. Both are statements about a distance rather than about a fit,
     # which is what keeps them in G.
     _blr = _pgrm_f(row.get('bl_ratio_min'))
-    _bln = _pgrm_f(row.get('bl_n_bonds'), 0.0)
+    _bln = _bl_sample(row)
     _blt = _pgrm_f(row.get('bl_tier'))
     if (_blr == _blr and _blr < MEASURED_MIN_RATIO
             and _bln >= MEASURED_MIN_SAMPLE
@@ -387,7 +406,7 @@ def classify_site(row, struct):
                 f'{row.get("element")}({row.get("valence")}) at CN {row.get("cn")}: '
                 f'{_pgrm_f(row.get("min_bond_length")):.3f} A against a measured '
                 f'minimum of {_pgrm_f(row.get("bl_expected_min")):.3f} A over '
-                f'{int(_bln)} bonds, a ratio of {_blr:.3f}')
+                f'{int(_bln)} polyhedra, a ratio of {_blr:.3f}')
 
     cn = _pgrm_f(row.get('cn'))
     if cn == 0 or str(row.get('cn_fault')) == 'no_shell_found':
@@ -464,6 +483,15 @@ def classify_site(row, struct):
     # Where the shift is NOT supported, or has not been tested, the packing
     # floors still fire below and the structure is still condemned - on the
     # measurement rather than on an untested claim.
+    # v2.0.49 (#49): labels written at one position that over-fill it
+    # (overfull_positions, CELL 1). The packing floors cannot see a pair
+    # closer than the scan's dedup_tol; this is the same question at 0 A,
+    # so it is asked with them, under the gate the pair would meet.
+    _pov = struct.get('position_overfull')
+    if _pgrm_has_value(_pov):
+        _pc = struct.get('position_overfull_code')
+        _pc = _pc if _pc in ('G1', 'G2', 'G5') else 'G5'
+        return (_pc, 'position_overfilled', str(_pov))
     aa = _pgrm_f(struct.get('anion_anion_min'))
     if aa == aa and aa < _PGRM_ANION_FLOOR:
         return ('G2', 'anion_packing_impossible',
@@ -544,6 +572,12 @@ def classify_site(row, struct):
     # v2.0.46: mobile ions on partly filled positions closer than their
     # floor, read as never filled together; see mobile_pair in CELL 1.
     if _mobile:
+        # v2.0.49 (#50): a dopant set aside beside a mobile ion's position
+        # is read by what (a) shows, not as a pair of mobile ions
+        if 'set aside' in _mobile:
+            return ('M11', 'dopant_beside_mobile_ions',
+                    _mobile + '; read as the dopant only where its neighbour '
+                    'is empty')
         return ('M11', 'mobile_ions_close',
                 _mobile + '; read as positions not filled together')
 
@@ -639,7 +673,7 @@ def classify_site(row, struct):
     # Coverage is 1610 of 9685 sites. Where any rule fails, M10 says nothing;
     # bond_size_z is exported either way, so the evidence is on the row.
     _bz = _pgrm_f(row.get('bond_size_z'))
-    _bzn = _pgrm_f(row.get('bl_n_bonds'), 0.0)
+    _bzn = _bl_sample(row)
     if (_bz == _bz and abs(_bz) > BOND_SIZE_Z
             and _bzn >= BL_MIN_SAMPLE
             and _pgrm_is_true(row.get('is_dominant_species'))
@@ -654,7 +688,7 @@ def classify_site(row, struct):
                 f'{_pgrm_f(row.get("avg_bond_length")):.3f} A against '
                 f'{_pgrm_f(row.get("bl_expected_mean")):.3f} +/- '
                 f'{_pgrm_f(row.get("bl_expected_sd")):.3f} A over '
-                f'{int(_bzn)} measured bonds, {_bz:+.1f} sd')
+                f'{int(_bzn)} measured polyhedra, {_bz:+.1f} sd')
 
     # v2.0.25: A CAVEAT MUST NOT MASK A DEFECT.
     #
@@ -1737,6 +1771,85 @@ def VALIDATE_PARSING(verbose=True):
         return (r.get('cation_packing_plausible') is False
                 and r.get('cation_contact_partly_occupied') is False and 'Ca2' in c),             f"plausible {r.get('cation_packing_plausible')}; mobile {r.get('cation_contact_partly_occupied')}: {c}"
     _case(40, 'a shared position counts all it holds: Na 0.40 beside Na and Ca 0.40 each', _t40)
+
+    # ---- v2.0.49: labels written at one position (#49) ---------------------
+    def _mgo(sites):
+        return _parsing_cif('mgo49', 4.2112, 'F m -3 m', sites,
+                            loop=[('Mg2+', 2), ('Ca2+', 2), ('O2-', -2),
+                                  ('F1-', -1)])
+    _mg49 = ('Mg1', 'Mg2+', 0, 0, 0, 1)
+    _o49 = ('O1', 'O2-', 0.5, 0.5, 0.5, 1)
+
+    def _po(r):
+        return r.get('position_overfull_code'), str(r.get('position_overfull'))
+
+    def _t41():
+        c, e = _po(_parsing_run(_mgo([_mg49, _o49, ('O2', 'O2-', 0, 0.5, 0.5, 1)])))
+        return (c == 'G1' and e.startswith('Mg1 and O2 written at one position')
+                and 'total occupancy 2.000 against at most 1.020' in e), f'{c}: {e}'
+    _case(41, 'O written on the cation orbit: G1, a contact no scan reaches', _t41)
+
+    def _t42():
+        c, e = _po(_parsing_run(_mgo([_mg49, ('Mg2', 'Mg2+', 0, 0, 0, 1), _o49])))
+        return c == 'G5' and 'Mg1 and Mg2' in e, f'{c}: {e}'
+    _case(42, 'one label written twice at one position: G5 (2.0.48: ACCEPT)', _t42)
+
+    def _t43():
+        c, e = _po(_parsing_run(_mgo([_mg49, _o49, ('F1', 'F1-', 0.5, 0.5, 0.5, 1)])))
+        return c == 'G2' and 'O1 and F1' in e, f'{c}: {e}'
+    _case(43, 'O and F both full at one position: G2', _t43)
+
+    def _t44():
+        c, e = _po(_parsing_run(_mgo([('Mg1', 'Mg2+', 0, 0, 0, 0.5),
+                                      ('Ca1', 'Ca2+', 0, 0, 0, 0.5), _o49])))
+        return c is None, f'{c}: {e}'
+    _case(44, 'a mixed site summing to one is not over-filled', _t44)
+
+    def _t45():
+        ok, e1 = _po(_parsing_run(_mgo([('Mg1', 'Mg2+', 0, 0, 0, '0.90(1)'),
+                                        ('Ca1', 'Ca2+', 0, 0, 0, '0.13(1)'), _o49])))
+        bad, e2 = _po(_parsing_run(_mgo([('Mg1', 'Mg2+', 0, 0, 0, 0.90),
+                                         ('Ca1', 'Ca2+', 0, 0, 0, 0.13), _o49])))
+        return (ok is None and bad == 'G5' and 'against at most 1.020' in e2,
+                f'refined {ok}: {e1}; fixed {bad}: {e2}')
+    _case(45, 'over by 0.03: within 3 esd of refined values, beyond fixed rounding', _t45)
+
+    # ---- v2.0.49: a dopant on a mobile ion's position (#50) ----------------
+    def _dop(r):
+        c = str(r.get('cation_cation_contact'))
+        return r.get('cation_contact_partly_occupied'), c
+
+    def _t46():
+        # Na1 0.60 beside 2d shared by Na2 0.60 and Ca2 0.10: the Na alone
+        # over-fill the pair (1.20), Ca2 with Na1's position is 0.70, and
+        # 0.10 of Ca is less than the 0.20 over-fill: M11
+        m, c = _dop(_parsing_run(_p2(0.60, 0.60, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10)])))
+        return (m is True and 'Ca2 at 0.100 set aside' in c
+                and 'over-fill of 0.200 against 0.100 of dopant' in c), f'mobile {m}: {c}'
+    _case(46, 'a dopant on a mobile ion position, the over-fill the mobile ions own: M11', _t46)
+
+    def _t47():
+        # the same with Na2 0.55, Ca2 0.25, Na1 0.50: 0.25 of Ca against an
+        # over-fill of 0.05 by the Na alone, so the Ca makes it: G5
+        m, c = _dop(_parsing_run(_p2(0.50, 0.55, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.25)])))
+        return m is False and 'Ca2' in c and 'set aside' not in c, f'mobile {m}: {c}'
+    _case(47, 'more dopant than the mobile ions over-fill by: G5', _t47)
+
+    def _t48():
+        # Na1 0.40 and H1 0.25 on 2b beside Na2 0.50 and Ca2 0.10 on 2d: the
+        # Na alone fill 0.90, with H 1.15; H counts, so M11
+        m, c = _dop(_parsing_run(_p2(0.40, 0.50, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10),
+                                                  ('H1', 'H1+', 0, 0, 0.25, 0.25)])))
+        return m is True and 'Ca2 at 0.100 set aside' in c, f'mobile {m}: {c}'
+    _case(48, 'H on a mobile ion position counts with the mobile ions', _t48)
+
+    # ---- v2.0.49: a file with no assessable site (#55) -------------------
+    def _t49():
+        # O written on Mg's 4a orbit, 4b empty: no cation has a shell
+        r = _parsing_run(_mgo([_mg49, ('O1', 'O2-', 0, 0.5, 0.5, 1)]))
+        return (not r.get('success') and r.get('error') == NO_SITE_REASON,
+                f"success {r.get('success')}: {r.get('error')}")
+    _case(49, 'no cation site to assess: a failure, with the reason', _t49)
 
     ok = all(results)
     if verbose:

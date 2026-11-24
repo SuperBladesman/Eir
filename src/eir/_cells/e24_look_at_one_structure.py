@@ -89,7 +89,7 @@ def look_at(code, dfq=None, cif_directory=None, show_3d=False, max_views=4):
     print("\n  SITES")
     _cols = [c for c in ("site_label", "element", "valence", "occupancy", "cn",
                          "cn_gap_shell", "bvs", "bvs_percent_diff",
-                         "bl_delta_mean", "bl_n_bonds", "min_bond_length",
+                         "bl_delta_mean", "bl_n_polyhedra", "min_bond_length",
                          "econ_cn_ratio", "geometry")
              if c in _m.columns]
     for _l in _m[_cols].to_string(index=False).splitlines():

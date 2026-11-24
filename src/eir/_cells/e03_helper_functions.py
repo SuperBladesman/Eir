@@ -3595,8 +3595,8 @@ def bv_shell_boundary(element, valence, cn, anion='O', r0=None, b=None,
     bl = db.load_bond_lengths() or {}
 
     hit = bl.get((element, v, anion, c))
-    if hit and (hit.get('n_bonds') or 0) >= BL_MIN_SAMPLE and hit.get('max'):
-        return float(hit['max']), f"measured_n{hit['n_bonds']}"
+    if hit and (hit.get('n_polyhedra') or 0) >= BL_MIN_SAMPLE and hit.get('max'):
+        return float(hit['max']), f"measured_n{hit['n_polyhedra']}"
 
     # v2.0.8: interpolate across coordination, as expected_bond_length already
     # does. Without this every configuration measured at CN 6 and 8 but not 7,
@@ -3605,7 +3605,7 @@ def bv_shell_boundary(element, valence, cn, anion='O', r0=None, b=None,
     # this that is out by 0.4 A on Li and 0.3 A on Zn.
     known = sorted(k[3] for k in bl
                    if k[:3] == (element, v, anion)
-                   and (bl[k].get('n_bonds') or 0) >= BL_MIN_SAMPLE
+                   and (bl[k].get('n_polyhedra') or 0) >= BL_MIN_SAMPLE
                    and bl[k].get('max'))
     if known:
         lo = max([x for x in known if x < c], default=None)
@@ -3787,7 +3787,7 @@ def econ_weighted_bvs(distances, r0, b, max_iter=25, tol=1e-9):
 #
 # apply_shell_correction (CELL 7) already repairs this where Gagne measured
 # the boundary for the configuration (n >= BL_MIN_SAMPLE). Os(5+) has four
-# bonds in the survey and Re(5+) three, so it never fired for them, and the
+# octahedra in the survey and Re(5+) three, so it never fired for them, and the
 # Lewis-acidity fallback is rightly not trusted to replace a shell alone.
 #
 # This guard needs no fitted boundary. A contact leaves the shell only if
@@ -3822,11 +3822,12 @@ _gagne_longest_cache = {}
 def gagne_longest_bond(element, valence, anion='O', db=None):
     """
     The longest bond Gagne's survey records for this ion against this anion,
-    at any coordination number, and the number of bonds behind the survey.
+    at any coordination number, and the number of coordination polyhedra
+    behind it (v2.0.49: Gagne's tables count polyhedra, not bonds; #51).
 
     A fractional valence reads both neighbouring integers and keeps the
     larger, the generous direction for a value whose job is to PROTECT a
-    contact. Returns (distance, n_bonds), or (None, 0) with no data.
+    contact. Returns (distance, n_polyhedra), or (None, 0) with no data.
     """
     try:
         v = abs(float(valence))
@@ -3844,7 +3845,7 @@ def gagne_longest_bond(element, valence, anion='O', db=None):
     for k, rec in bl.items():
         if (k[0] == element and k[1] in vals and k[2] == anion
                 and rec.get('max')):
-            n += int(rec.get('n_bonds') or 0)
+            n += int(rec.get('n_polyhedra') or 0)
             if best is None or float(rec['max']) > best:
                 best = float(rec['max'])
     _gagne_longest_cache[key] = (best, n)
@@ -4180,6 +4181,177 @@ def _position_occupancies(st, esd=None):
     return out
 
 
+# v2.0.49 (#49): LABELS WRITTEN AT ONE POSITION THAT OVER-FILL IT.
+#
+# Two labels a file writes at one position never meet a gate: the bond
+# finder (CELL 2) keeps neighbours from 0.01 A out, and the packing scan
+# (anion_anion_contacts) skips anything within its dedup_tol, 0.02 A. A
+# shared position is ordinary when its labels are the species of a mixed
+# site, whose occupancies sum to one. When they sum to more, the file puts
+# more atoms there than one position holds. ICSD 14564 writes its O on the
+# cations' 4a orbit (total 1.932), and ICSD 19975 writes a full Li1 on the
+# La 24c orbit (2.000); 2.0.48 FLAGged both, for mixed valence and for
+# partial occupancy. A duplicated label, Mg twice at one position, was
+# ACCEPT.
+#
+# The test is the alternatives rule's (ALTERNATIVE_OCC_SUM_MAX, OCC_ESD_K):
+# a position may exceed one by rounding where its occupancies are fixed, or
+# by OCC_ESD_K combined standard uncertainties where the file gives them.
+# Over that, the gate follows the pair: a cation and an anion G1, cations
+# only G5, anions only G2. A label overlapping its own symmetry image is a
+# different question (usually a special position written with rounded
+# coordinates) and is not asked here. Measured on 307 ICSD Li garnets and
+# high-entropy oxides (23 November 2026): ten structures over-fill a
+# position, four already EXPUNGE on other gates; 14564, 19975 and four
+# mixed sites over by 2.6 to 12% (176514, 176515, 45742, 45743) become
+# EXPUNGE.
+_POSITION_OVERFULL = {}      # str(cif path) -> overfull_positions(), read by CELL 2
+_OVERFULL_RANK = {'G1': 0, 'G5': 1, 'G2': 2}
+
+
+def overfull_positions(st, esd=None, anion_set=()):
+    """[{'labels', 'total', 'sigma', 'limit', 'code'}] for each position whose
+    labels' occupancies sum to more than one beyond the alternatives rule's
+    allowance, the most serious gate first (G1, G5, G2), then the largest
+    excess. Positions are found as _position_occupancies finds them; labels
+    refined to zero occupancy hold no atom and are left out."""
+    import math as _m
+    esd = esd or {}
+    out = []
+    for g in _position_groups(st):
+        g = [s for s in g
+             if getattr(s, 'occ', None) is None or float(s.occ) > 0]
+        if len(g) < 2:
+            continue
+        tot = sum(1.0 if getattr(s, 'occ', None) is None else float(s.occ)
+                  for s in g)
+        sig = _m.sqrt(sum(esd.get(s.label, 0.0) ** 2 for s in g))
+        allow = max(ALTERNATIVE_OCC_SUM_MAX - 1.0, OCC_ESD_K * sig)
+        if tot - 1.0 <= allow + 1e-9:
+            continue
+        an = [s.element.name in anion_set for s in g]
+        code = 'G1' if any(an) and not all(an) else 'G2' if all(an) else 'G5'
+        out.append({'labels': [s.label for s in g], 'total': round(tot, 4),
+                    'sigma': round(sig, 4), 'limit': round(1.0 + allow, 4),
+                    'code': code})
+    out.sort(key=lambda r: (_OVERFULL_RANK[r['code']],
+                            -(r['total'] - r['limit'])))
+    return out
+
+
+def _position_groups(st):
+    """[[site, ...]]: the sites at each position, found as
+    _position_occupancies finds them (within POSITION_TOL, at any symmetry
+    image), in file order. v2.0.49."""
+    ops = list(st.spacegroup.operations()) if st.spacegroup is not None else []
+
+    def _same(a, b):
+        fa = (a.fract.x, a.fract.y, a.fract.z)
+        for op in ops or [None]:
+            fb = ((b.fract.x, b.fract.y, b.fract.z) if op is None else
+                  op.apply_to_xyz([b.fract.x, b.fract.y, b.fract.z]))
+            df = [x - y - round(x - y) for x, y in zip(fa, fb)]
+            c = st.cell.orthogonalize(gemmi.Fractional(*df))
+            if c.x * c.x + c.y * c.y + c.z * c.z < POSITION_TOL ** 2:
+                return True
+        return False
+
+    groups = []
+    for a in st.sites:
+        for g in groups:
+            if _same(g[0], a):
+                g.append(a)
+                break
+        else:
+            groups.append([a])
+    return groups
+
+
+# v2.0.49 (#50): A DOPANT ON A MOBILE ION'S POSITION.
+#
+# The packing scan judges a close pair by its POSITIONS' occupancies, all
+# species together (2.0.46, after ICSD 164286), and mobile_pair forgives a
+# pair only between two monovalent ions. A dopant of higher charge sharing a
+# partly filled mobile-ion position met neither rule, so wherever the mobile
+# ions over-filled the pair the dopant's own contact was G5. In Al-doped
+# Li7La3Zr2O12 (ICSD 235896) 24d holds Li1 0.713(11) and Al1 0.11 beside Li2
+# on 96h at 0.406(11), 1.627 A away: the positions sum to 1.229 and the
+# entry was EXPUNGE for Al1-Li2, although Li alone fills the pair to 1.119,
+# the case mobile_pair reads as not filled together, and Al1 with Li2's
+# position is 0.516. Of the 56 garnet EXPUNGEs in the 23 November 2026
+# screen, 28 were a dopant beside part-filled Li on G5.
+#
+# Such a pair is set aside, and read as M11, when all three hold:
+#   (a) the dopant's own occupancy plus the neighbour's position is within
+#       the alternatives rule's allowance;
+#   (b) the monovalent ions alone on the two positions over-fill the pair
+#       beyond that allowance, on positions mobile_pair would accept (each
+#       partly filled), so the over-fill is the one M11 already forgives;
+#   (c) the dopant's occupancy (every higher-charge cation on its position)
+#       is no more than that over-fill, so the dopant cannot be what
+#       over-fills it.
+# H counts as a monovalent ion in (b) and (c), though the scan leaves it
+# out (NRM, 23 November 2026). Without (b) the Na/Ca case of parsing test
+# 40, where the Ca makes the over-fill, would be forgiven; without (c) an
+# Al at 0.40 beside Li at 0.47 would be, by 0.02 of Li. On the screen this
+# releases 13 of the 28 to M11 (and 136223, 136227, whose files give Zr(2+),
+# to R2); the nine whose dopant position is full stay G5, as do 36943 (Li
+# alone within its allowance) and 19992, 195182 and 196425 (c).
+def _position_species(st, esd=None, sv=None, ev=None, anion_set=()):
+    """{label: (monovalent occupancy at its position, its standard
+    uncertainty, higher-charge cation occupancy at its position, the
+    position's index)}. H and D count as monovalent. v2.0.49 (#50)."""
+    import math as _m
+    esd, sv, ev = esd or {}, sv or {}, ev or {}
+    out = {}
+    for gi, g in enumerate(_position_groups(st)):
+        mono = var = high = 0.0
+        for s in g:
+            el = s.element.name
+            o = 1.0 if getattr(s, 'occ', None) is None else float(s.occ)
+            if o <= 0 or el in anion_set:
+                continue
+            if (el in CATION_FLOOR_EXCLUDED_ELEMENTS
+                    or monovalent(el, sv.get(s.label, ev.get(el)))):
+                mono += o
+                var += esd.get(s.label, 0.0) ** 2
+            else:
+                high += o
+        for s in g:
+            out[s.label] = (mono, _m.sqrt(var), high, gi)
+    return out
+
+
+def dopant_beside_mobile(dop_label, dop_occ, dop_sig, dop_pos, nb_label,
+                         nb_pos, nb_pos_sig, spc):
+    """The note that sets a dopant's contact with a monovalent neighbour
+    aside, by (a), (b) and (c) above, or None. dop_pos and nb_pos are the
+    two positions' occupancies, all species together. Where the two are
+    images of one position, their uncertainties add, as the alternatives
+    rule doubles them for two images of one label. v2.0.49 (#50)."""
+    import math as _m
+    if not spc or dop_label not in spc or nb_label not in spc:
+        return None
+    _full = 1.0 - (ALTERNATIVE_OCC_SUM_MAX - 1.0)
+    if not (dop_pos < _full and nb_pos < _full):
+        return None
+    _base = ALTERNATIVE_OCC_SUM_MAX - 1.0
+    m0, s0, h0, g0 = spc[dop_label]
+    m1, s1, _, g1 = spc[nb_label]
+    _add = (lambda a, b: a + b) if g0 == g1 else _m.hypot
+    if (dop_occ + nb_pos - 1.0
+            > max(_base, OCC_ESD_K * _add(dop_sig, nb_pos_sig)) + 1e-9):
+        return None                                                    # (a)
+    over = m0 + m1 - 1.0
+    if over <= max(_base, OCC_ESD_K * _add(s0, s1)) + 1e-9:
+        return None                                                    # (b)
+    if h0 > over + 1e-9:
+        return None                                                    # (c)
+    return (f'{dop_label} at {dop_occ:.3f} set aside: the monovalent ions '
+            f'alone fill the pair to {m0 + m1:.3f}, an over-fill of '
+            f'{over:.3f} against {h0:.3f} of dopant')
+
+
 def _are_alternatives(s1, s2, esd=None, totals=None):
     """v2.0.46. Can the model fill these two positions one at a time? Their
     occupancies sum to one or less, within ALTERNATIVE_OCC_SUM_MAX or
@@ -4229,7 +4401,7 @@ def _occupancy_esds(cif_path):
 #
 # v2.0.47: CHOSEN, and the first two sentences above are wrong. Gagne's
 # bond-length data record N(5+)-O bonds from 1.150 A (CN 3, mean 1.247, sd
-# 0.030, 468 bonds), C(4+)-O from 1.228 A and B(3+)-O from 1.298 A; leaving
+# 0.030, 468 NO3 groups), C(4+)-O from 1.228 A and B(3+)-O from 1.298 A; leaving
 # out H, which the floor skips, only N and C go below 1.20 A. Real N-O
 # bonds run shorter still where Gagne has no configuration: ICSD 210694, a
 # nitronium borosulfate (N(5+) at CN 2, N-O 1.114 A, GII 0.106), is
@@ -4803,9 +4975,11 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
     _gov = [None]       # v2.0.46: the cation contact nearest its floor
     _hard = [None]      # ... of those not between mobile ions (mobile_pair)
     _soft = [None]      # ... of those that are
+    _POSITION_OVERFULL.pop(str(cif_path), None)   # v2.0.49: never stale
+    _dnote = {}         # v2.0.49 (#50): (label, label) -> dopant note
 
     def _scan(st, anion_set, rmax, esd=None, sv=None, tot=None,
-              units=None):
+              units=None, spc=None):
         # v2.0.14: the image range follows the search radius. At one image a
         # 6.5 A search in a 5 A cell cannot reach the neighbour it is looking
         # for, so widening rmax alone would have been a half fix.
@@ -4938,9 +5112,26 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
                     if _gov[0] is None or _c[0] < _gov[0][0]:
                         _gov[0] = _c
                     # v2.0.46: see mobile_pair
-                    _box = (_soft if mobile_pair(el, v0, pocc0, els[idx],
-                                                 vals[idx], float(poccs[idx]))
-                            else _hard)
+                    _mob = mobile_pair(el, v0, pocc0, els[idx], vals[idx],
+                                       float(poccs[idx]))
+                    # v2.0.49 (#50): a dopant beside a mobile ion, see
+                    # dopant_beside_mobile
+                    if not _mob and dist < _fl and spc:
+                        _mv0 = monovalent(el, v0)
+                        _mv1 = monovalent(els[idx], vals[idx])
+                        _note = None
+                        if _mv1 and not _mv0:
+                            _note = dopant_beside_mobile(
+                                s.label, occ0, sig0, pocc0, labs[idx],
+                                float(poccs[idx]), float(psigs[idx]), spc)
+                        elif _mv0 and not _mv1:
+                            _note = dopant_beside_mobile(
+                                labs[idx], float(occs[idx]), float(sigs[idx]),
+                                float(poccs[idx]), s.label, pocc0, psig0, spc)
+                        if _note:
+                            _mob = True
+                            _dnote[(s.label, labs[idx])] = _note
+                    _box = _soft if _mob else _hard
                     if _box[0] is None or _c[0] < _box[0][0]:
                         _box[0] = _c
         return aa, cc
@@ -4964,6 +5155,15 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
         except (OSError, UnicodeDecodeError, ValueError):
             _sv = {}
         _tot = _position_occupancies(st, _esd)
+        # v2.0.49: positions the file over-fills (#49), for CELL 2. The
+        # scan below cannot see a pair closer than dedup_tol.
+        try:
+            _POSITION_OVERFULL[str(cif_path)] = overfull_positions(
+                st, _esd, _anion_set)
+        except (ValueError, KeyError, IndexError, RuntimeError) as _e:
+            # no record, so the screen reads None: not assessed. TypeError
+            # and AttributeError are defects here and re-raise below.
+            _note_read_failure(cif_path, 'overfull_positions', _e)
         # v2.0.48: homopolar anion units (#10), before the scan reads them.
         # A failure here costs the units, not the packing gates.
         try:
@@ -4990,7 +5190,15 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
                   f'{os.path.basename(str(cif_path))}: {_ue}]')
             _units = {}
         _HOMOPOLAR_UNITS[str(cif_path)] = _units
-        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot, _units)
+        # v2.0.49 (#50): each position's monovalent and dopant occupancy
+        try:
+            _spc = _position_species(st, _esd, _sv, valences or {},
+                                     _anion_set)
+        except (ValueError, KeyError, IndexError, RuntimeError) as _e:
+            # TypeError and AttributeError are defects, and re-raise below
+            _spc = {}
+            _note_read_failure(cif_path, 'position_species', _e)
+        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot, _units, _spc)
 
         # v2.0.14: one widened retry, and only where a bucket that SHOULD
         # have a member came back empty. A structure with no cations has no
@@ -4998,7 +5206,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
         if ((_has_anion and aa is None) or (_has_cation and cc is None)) \
                 and rmax < ANION_CONTACT_RMAX_WIDE:
             aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd,
-                             _sv, _tot, _units)
+                             _sv, _tot, _units, _spc)
             aa = aa if aa is not None else aa2
             cc = cc if cc is not None else cc2
         _POLYANION_EDGE_MIN[str(cif_path)] = min(_edges) if _edges else None
@@ -5007,6 +5215,9 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
         _dec = (_hard[0] + (False,) if _hard[0] is not None and _hard[0][0] < 0
                 else _soft[0] + (True,) if _soft[0] is not None and _soft[0][0] < 0
                 else None if _gov[0] is None else _gov[0] + (False,))
+        # v2.0.49 (#50): a dopant pair set aside says why
+        if _dec is not None and _dec[7] and (_dec[2], _dec[3]) in _dnote:
+            _dec = _dec + (_dnote[(_dec[2], _dec[3])],)
         _CATION_CONTACT[str(cif_path)] = _dec
         return aa, cc
     except (NameError, TypeError, AttributeError):

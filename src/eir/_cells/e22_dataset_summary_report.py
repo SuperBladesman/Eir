@@ -97,7 +97,9 @@ def summarise_dataset(dfq, save_to=None, gii_threshold=0.20,
                 # including two perovskites that sat in the triage's
                 # UNEXPLAINED bucket.
                 ('cation-cation packing', 'cation_packing_plausible'),
-                ('coordination', 'structure_cn_plausible')]
+                ('coordination', 'structure_cn_plausible'),
+                # v2.0.49: labels that over-fill one position (#49)
+                ('position occupancy', 'position_occupancy_plausible')]
     _screens = [(n, c) for n, c in _screens if c in per.columns]
     if 'core_geometry_plausible' in per.columns and             'structure_core_geometry_plausible' not in per.columns:
         # older CSV: roll the per-site column up rather than reading row one
@@ -630,7 +632,8 @@ def summarise_dataset(dfq, save_to=None, gii_threshold=0.20,
         out("  bl_expected_mean is the mean bond length observed for this exact")
         out("  ion configuration across Gagne's survey of refined inorganic")
         out("  structures; bl_delta_mean is this site's mean minus that, in")
-        out("  angstroms, and bl_n_bonds is the sample it rests on.")
+        out("  angstroms, and bl_n_polyhedra is the number of coordination")
+        out("  polyhedra it rests on.")
         out()
         _lab = {1: 'measured', 2: 'interpolated', 3: 'extrapolated',
                 4: 'Shannon additive'}
@@ -650,7 +653,7 @@ def summarise_dataset(dfq, save_to=None, gii_threshold=0.20,
         out("  high-coordination entries are the small ones, and on the")
         out("  perovskites it condemned 224 sites in structures that pass")
         out("  every other test, some with GII below 0.02. Quote")
-        out("  bl_delta_mean with bl_n_bonds beside it and let the reader")
+        out("  bl_delta_mean with bl_n_polyhedra beside it and let the reader")
         out("  weigh it.")
         out()
         if _br.notna().any():
