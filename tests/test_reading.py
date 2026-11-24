@@ -404,13 +404,26 @@ def test_h_and_d_written_at_one_position_count_as_any_other_overfill(tmp_path):
     assert 'H1 and D1 written at one position, total occupancy 1.200' in r.evidence
 
 
+NO_SITES = 'No cation site could be assessed'
+
+
 def test_an_anion_only_on_the_cation_orbit_is_still_expunged(tmp_path):
     # O written on Mg's 4a orbit with 4b empty: no bond survives, and the
-    # file is condemned as P before any position is summed. Pinned here;
-    # that a folder run leaves it out of the table, as 2.0.48 did, is a
-    # separate fault.
+    # file is condemned as P before any position is summed, with the reason
+    # (#55)
     r = run(tmp_path, mgo([MG, ('O1', 'O2-', 0, 0.5, 0.5, 1)]))
     assert (r.tier, r.code) == ('EXPUNGE', 'P'), r.evidence
+    assert NO_SITES in str(r.failure), r.failure
+
+
+def test_a_file_with_no_assessable_site_is_counted_as_failed(tmp_path):
+    # #55: in a folder run it was in neither table and not counted as failed
+    (tmp_path / 'ok.cif').write_text(mgo([MG, OX]))
+    (tmp_path / 'empty.cif').write_text(mgo([MG, ('O1', 'O2-', 0, 0.5, 0.5, 1)]))
+    res = eir.check_folder(tmp_path, verbose=False)
+    assert list(res.structures['filename']) == ['ok.cif']
+    assert NO_SITES in res.failed.get('empty.cif', ''), res.failed
+    assert '1 unreadable' in repr(res)
 
 
 def test_the_summary_counts_an_overfilled_position_as_a_screen(tmp_path):

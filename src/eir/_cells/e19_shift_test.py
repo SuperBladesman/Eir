@@ -312,7 +312,11 @@ def test_proposed_shifts(dfq, cif_directory, output_dir=None, verbose=True):
                              'gii_ratio': None,
                              'gii_direction': None,
                              'screens_gii_disagree': False,
-                             'verdict': f"re-analysis failed: {res.get('error')}"})
+                             # v2.0.49 (#55): no site in the shifted copy
+                             # stays inconclusive, as before 2.0.49
+                             'verdict': ('inconclusive'
+                                         if res.get('error') == NO_SITE_REASON
+                                         else f"re-analysis failed: {res.get('error')}")})
                 continue
 
             # v2.0.3: an explicit None test throughout. `x or default` treats a

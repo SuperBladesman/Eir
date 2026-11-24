@@ -1843,6 +1843,14 @@ def VALIDATE_PARSING(verbose=True):
         return m is True and 'Ca2 at 0.100 set aside' in c, f'mobile {m}: {c}'
     _case(48, 'H on a mobile ion position counts with the mobile ions', _t48)
 
+    # ---- v2.0.49: a file with no assessable site (#55) -------------------
+    def _t49():
+        # O written on Mg's 4a orbit, 4b empty: no cation has a shell
+        r = _parsing_run(_mgo([_mg49, ('O1', 'O2-', 0, 0.5, 0.5, 1)]))
+        return (not r.get('success') and r.get('error') == NO_SITE_REASON,
+                f"success {r.get('success')}: {r.get('error')}")
+    _case(49, 'no cation site to assess: a failure, with the reason', _t49)
+
     ok = all(results)
     if verbose:
         print()

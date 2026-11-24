@@ -104,7 +104,7 @@ All results saved to ./outputs/ subfolder:
 - oxidation_states_used_YYYYMMDD_HHMMSS.json
 - eir_batch_results_v<version>_..._quality.csv            per site, screened
         - eir_batch_results_v<version>_..._structures.csv         per structure
-        - eir_batch_failed_v<version>_YYYYMMDD_HHMMSS.csv         parse failures
+        - eir_batch_failed_v<version>_YYYYMMDD_HHMMSS.csv         files not read or assessed
 
 CITATIONS:
 Gagné & Hawthorne (2015) Acta Cryst. B71, 561-578
@@ -4682,6 +4682,12 @@ def calculate_global_instability_index(calculated_results, cif_path=None, site_o
 # BATCH PROCESSING ENGINE
 # ============================================================================
 
+# v2.0.49 (#55): why a file with no assessable site fails. The shift test
+# reads a re-analysis that fails for this reason as inconclusive, as it did
+# before 2.0.49, when the same re-analysis came back with no index.
+NO_SITE_REASON = ('No cation site could be assessed: the analysis gave no '
+                  'cation a coordination shell')
+
 def process_single_cif(file_path, user_oxidation_states=None):
     """
     Process a single CIF file using validated Eir 1.0 logic.
@@ -5880,6 +5886,15 @@ def process_single_cif(file_path, user_oxidation_states=None):
                   f"weights that answer equally with the majority it sits among.")
             print(f"  Quote wagii or gii_site_averaged for this structure, not gii.")
 
+        # v2.0.49 (#55): a file whose cations all go without an analysed
+        # shell produced no site rows and, marked a success, vanished from
+        # a folder run's tables without being counted as failed: O written
+        # on the cation orbit with the anion position empty, or ICSD 156683
+        # (Sc2CO: C and O written on one position, every charge stated as
+        # 0). It is a failure, with the reason.
+        if not results['sites']:
+            results['error'] = NO_SITE_REASON
+            return results
         results['anion_sites'], results['anion_summary'] = anion_bvs_for_structure(
             file_path, results['sites'], cation_gii=results.get('gii'))
         results['success'] = True

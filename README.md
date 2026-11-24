@@ -112,7 +112,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 44 tests against structures whose answers are known by hand, the 14 gate tests, the 10 coordination-shell tests, the six tests of the two Fd-3m settings, the 51 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions, labels written at one position, dopants on mobile-ion positions) and the structural self-check. Run it again after changing anything.
+runs the 44 tests against structures whose answers are known by hand, the 14 gate tests, the 10 coordination-shell tests, the six tests of the two Fd-3m settings, the 52 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions, labels written at one position, dopants on mobile-ion positions, a file with no site to assess) and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 
@@ -148,7 +148,7 @@ outputs/
   eir_batch_results_v<version>_<stamp>.csv      per site, raw
   ..._quality.csv                               per site, screened
   ..._structures.csv                            one row per structure
-  eir_batch_failed_v<version>_<stamp>.csv       parse failures, with reasons
+  eir_batch_failed_v<version>_<stamp>.csv       files not read or assessed, with reasons
   eir_summary.txt                               the narrative summary
   eir_shift_test_<stamp>.csv + shifted_cifs/    the audit trail for proposed shifts
   eir_screens, eir_gii, eir_cation_anion,
