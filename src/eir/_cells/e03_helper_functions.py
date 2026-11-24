@@ -3787,7 +3787,7 @@ def econ_weighted_bvs(distances, r0, b, max_iter=25, tol=1e-9):
 #
 # apply_shell_correction (CELL 7) already repairs this where Gagne measured
 # the boundary for the configuration (n >= BL_MIN_SAMPLE). Os(5+) has four
-# bonds in the survey and Re(5+) three, so it never fired for them, and the
+# octahedra in the survey and Re(5+) three, so it never fired for them, and the
 # Lewis-acidity fallback is rightly not trusted to replace a shell alone.
 #
 # This guard needs no fitted boundary. A contact leaves the shell only if
