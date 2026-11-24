@@ -4299,12 +4299,12 @@ def _position_groups(st):
 # alone within its allowance) and 19992, 195182 and 196425 (c).
 def _position_species(st, esd=None, sv=None, ev=None, anion_set=()):
     """{label: (monovalent occupancy at its position, its standard
-    uncertainty, higher-charge cation occupancy at its position)}. H and D
-    count as monovalent. v2.0.49 (#50)."""
+    uncertainty, higher-charge cation occupancy at its position, the
+    position's index)}. H and D count as monovalent. v2.0.49 (#50)."""
     import math as _m
     esd, sv, ev = esd or {}, sv or {}, ev or {}
     out = {}
-    for g in _position_groups(st):
+    for gi, g in enumerate(_position_groups(st)):
         mono = var = high = 0.0
         for s in g:
             el = s.element.name
@@ -4318,7 +4318,7 @@ def _position_species(st, esd=None, sv=None, ev=None, anion_set=()):
             else:
                 high += o
         for s in g:
-            out[s.label] = (mono, _m.sqrt(var), high)
+            out[s.label] = (mono, _m.sqrt(var), high, gi)
     return out
 
 
@@ -4326,7 +4326,9 @@ def dopant_beside_mobile(dop_label, dop_occ, dop_sig, dop_pos, nb_label,
                          nb_pos, nb_pos_sig, spc):
     """The note that sets a dopant's contact with a monovalent neighbour
     aside, by (a), (b) and (c) above, or None. dop_pos and nb_pos are the
-    two positions' occupancies, all species together. v2.0.49 (#50)."""
+    two positions' occupancies, all species together. Where the two are
+    images of one position, their uncertainties add, as the alternatives
+    rule doubles them for two images of one label. v2.0.49 (#50)."""
     import math as _m
     if not spc or dop_label not in spc or nb_label not in spc:
         return None
@@ -4334,13 +4336,14 @@ def dopant_beside_mobile(dop_label, dop_occ, dop_sig, dop_pos, nb_label,
     if not (dop_pos < _full and nb_pos < _full):
         return None
     _base = ALTERNATIVE_OCC_SUM_MAX - 1.0
+    m0, s0, h0, g0 = spc[dop_label]
+    m1, s1, _, g1 = spc[nb_label]
+    _add = (lambda a, b: a + b) if g0 == g1 else _m.hypot
     if (dop_occ + nb_pos - 1.0
-            > max(_base, OCC_ESD_K * _m.hypot(dop_sig, nb_pos_sig)) + 1e-9):
+            > max(_base, OCC_ESD_K * _add(dop_sig, nb_pos_sig)) + 1e-9):
         return None                                                    # (a)
-    m0, s0, h0 = spc[dop_label]
-    m1, s1, _ = spc[nb_label]
     over = m0 + m1 - 1.0
-    if over <= max(_base, OCC_ESD_K * _m.hypot(s0, s1)) + 1e-9:
+    if over <= max(_base, OCC_ESD_K * _add(s0, s1)) + 1e-9:
         return None                                                    # (b)
     if h0 > over + 1e-9:
         return None                                                    # (c)
@@ -5191,7 +5194,8 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
         try:
             _spc = _position_species(st, _esd, _sv, valences or {},
                                      _anion_set)
-        except (ValueError, TypeError, AttributeError, RuntimeError) as _e:
+        except (ValueError, KeyError, IndexError, RuntimeError) as _e:
+            # TypeError and AttributeError are defects, and re-raise below
             _spc = {}
             _note_read_failure(cif_path, 'position_species', _e)
         aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot, _units, _spc)

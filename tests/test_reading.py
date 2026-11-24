@@ -317,13 +317,13 @@ def test_a_perchlorate_spread_over_four_orientations_keeps_plain_weights(tmp_pat
     assert pd.isna(cl['ligand_occupancy_conditional'])
 
 
-def p2(na1, na2, extra=()):
+def p2(na1, na2, extra=(), types=()):
     # P2-type NaCoO2: Na on 2b and 2d, a/sqrt(3) = 1.634 A apart
     return cif('p2', (2.83, 2.83, 10.9, 90, 90, 120), 'P 63/m m c',
                [('Co1', 'Co3+', 0, 0, 0, 1), ('O1', 'O2-', 0.33333, 0.66667, 0.0925, 1),
                 ('Na1', 'Na1+', 0, 0, 0.25, na1), ('Na2', 'Na1+', 0.66667, 0.33333, 0.25, na2)]
                + list(extra),
-               [('Na1+', 1), ('Co3+', 3), ('O2-', -2), ('Ca2+', 2)])
+               [('Na1+', 1), ('Co3+', 3), ('O2-', -2), ('Ca2+', 2)] + list(types))
 
 
 def test_mobile_ions_on_partly_filled_positions_are_flagged(tmp_path):
@@ -444,3 +444,57 @@ def test_a_dopant_on_a_mobile_ion_position_is_read_as_mobile(tmp_path):
 def test_more_dopant_than_the_mobile_over_fill_is_still_expunged(tmp_path):
     r = run(tmp_path, p2(0.50, 0.55, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.25)]))
     assert (r.tier, r.code) == ('EXPUNGE', 'G5'), r.evidence
+
+
+def test_the_dopant_reading_has_its_own_reason(tmp_path):
+    r = run(tmp_path, p2(0.60, 0.60, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10)]))
+    assert r.reason == 'dopant_beside_mobile_ions', r.reason
+    assert r.evidence.endswith('read as the dopant only where its neighbour is empty')
+
+
+@pytest.mark.parametrize('na1', [1.0, 0.95])
+def test_a_dopant_beside_a_full_or_nearly_full_position_is_expunged(tmp_path, na1):
+    # Na1 full, or at 0.95 with 0.10 of Ca beside it: the Ca cannot sit only
+    # where Na1 is absent, (a)
+    r = run(tmp_path, p2(na1, 0.30, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10)]))
+    assert (r.tier, r.code) == ('EXPUNGE', 'G5'), r.evidence
+    assert 'set aside' not in r.evidence
+
+
+def test_a_dopant_that_cannot_avoid_its_neighbour_is_expunged(tmp_path):
+    # (b) and (c) hold, (a) does not: Na1 0.90, and 0.15 of Ca with it is 1.05
+    r = run(tmp_path, p2(0.90, 0.40, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.15)]))
+    assert (r.tier, r.code) == ('EXPUNGE', 'G5'), r.evidence
+    assert 'set aside' not in r.evidence
+
+
+def test_h_beside_the_dopant_counts_with_the_mobile_ions(tmp_path):
+    # Na2 0.30, H2 0.30 and Ca2 0.10 on 2d beside Na1 0.60: with H the
+    # monovalent ions over-fill the pair by 0.20, without it they do not
+    r = run(tmp_path, p2(0.60, 0.30, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10),
+                                      ('H2', 'H1+', 0.66667, 0.33333, 0.25, 0.30)],
+                         [('H1+', 1)]))
+    assert (r.tier, r.code) == ('FLAG', 'M11'), r.evidence
+    assert 'over-fill of 0.200 against 0.100 of dopant' in r.evidence
+
+
+def test_h_on_the_neighbouring_position_counts_with_the_mobile_ions(tmp_path):
+    # the pytest twin of VALIDATE_PARSING test 48
+    r = run(tmp_path, p2(0.40, 0.50, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10),
+                                      ('H1', 'H1+', 0, 0, 0.25, 0.25)],
+                         [('H1+', 1)]))
+    assert (r.tier, r.code) == ('FLAG', 'M11'), r.evidence
+    assert 'Ca2 at 0.100 set aside' in r.evidence
+
+
+@pytest.mark.parametrize('sites, key, words', [
+    ('overfill', 'position_overfilled', 'cannot hold more than one atom'),
+    ('dopant', 'dopant_beside_mobile_ions', 'where its neighbour is empty')])
+def test_the_new_reasons_have_their_own_sentences(tmp_path, sites, key, words):
+    from eir.explain import explain
+    text = (mgo([MG, OX, ('O2', 'O2-', 0.5, 0.5, 0.5, 1)]) if sites == 'overfill'
+            else p2(0.60, 0.60, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10)]))
+    r = run(tmp_path, text)
+    e = explain(r)
+    assert e['reason_key'] == key
+    assert words in e['reason'], e['reason']

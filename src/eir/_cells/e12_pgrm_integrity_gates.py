@@ -572,6 +572,12 @@ def classify_site(row, struct):
     # v2.0.46: mobile ions on partly filled positions closer than their
     # floor, read as never filled together; see mobile_pair in CELL 1.
     if _mobile:
+        # v2.0.49 (#50): a dopant set aside beside a mobile ion's position
+        # is read by what (a) shows, not as a pair of mobile ions
+        if 'set aside' in _mobile:
+            return ('M11', 'dopant_beside_mobile_ions',
+                    _mobile + '; read as the dopant only where its neighbour '
+                    'is empty')
         return ('M11', 'mobile_ions_close',
                 _mobile + '; read as positions not filled together')
 
