@@ -7,8 +7,8 @@ authors:
     given-names: Nik
     affiliation: University of Sheffield
     orcid: "https://orcid.org/0000-0002-1061-1230"
-version: 2.0.48
-date-released: 2026-11-19
+version: 2.0.49
+date-released: 2026-11-24
 doi: 10.5281/zenodo.24138853
 identifiers:
   - type: doi
@@ -28,8 +28,8 @@ abstract: >-
   assessed at all and, if so, how well its bond valence sums agree with the
   formal valences. It returns an integrity verdict with the code that
   decided it, the bond valence sum of every site, the global instability
-  index, and the evidence for each. This release is engine 2.0.48,
-  packaged as eir-bvs 2.1.2.
+  index, and the evidence for each. This release is engine 2.0.49,
+  packaged as eir-bvs 2.1.3.
 license: MIT
 repository-code: "https://github.com/SuperBladesman/Eir"
 keywords:

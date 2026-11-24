@@ -4,6 +4,10 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## The eir-bvs package
 
+### eir-bvs 2.1.3 – 24 November 2026
+
+**The 2.0.49 engine.** The one-page report explains the two new reasons (`position_overfilled` and `dopant_beside_mobile_ions`), lists the position-occupancy screen with the others, and highlights no bond for an over-filled position. Nothing else in the package changed.
+
 ### eir-bvs 2.1.2 – 19 November 2026
 
 **The 2.0.48 engine.** The one-page report explains R8. Nothing else in the package changed.
@@ -34,7 +38,9 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
-### 2.0.49 – unreleased
+### 2.0.49 – 24 November 2026
+
+**Labels that over-fill one position are expunged; a dopant beside mobile ions is read as M11; a file with no site to assess is counted as failed; Gagné's sample sizes are named as polyhedra**
 
 - **A file that yields no cation site is counted as failed** (#55). A file whose cations all go without an analysed shell produced no site rows and was marked a success, so a folder run left it out of every table and counted it as read and not failed, as 2.0.48 did. Two cases: O written on the cation orbit with the anion position empty, and ICSD 156683 (Sc₂CO, with C and O written on one position and every charge stated as 0). It is now a failure, with the reason "No cation site could be assessed: the analysis gave no cation a coordination shell" (`NO_SITE_REASON`), in the failed-files CSV and the batch's failed count, and `eir.check` gives the same reason. The shift test still reads a shifted copy with no site as inconclusive, as before. In the 35 regression sets this was one file, ICSD 156683, which two of the sets hold. `VALIDATE_PARSING()` test 49.
 - **A dopant on a mobile ion's position is read as M11 when the mobile ions own the over-fill** (#50). Since 2.0.46 a close pair stands when its positions, all species together, sum to more than one, and M11 forgives only pairs of monovalent ions, so a higher-charge dopant sharing a partly filled mobile-ion position was G5 wherever the mobile ions over-filled the pair. ICSD 235896 (Al-doped Li₇La₃Zr₂O₁₂) was expunged for Al1–Li2 at 1.627 Å although Li alone fills that pair to 1.119, the over-fill M11 reads as positions not filled together. The pair is now set aside, as M11, when (a) the dopant's own occupancy plus the neighbour's position is within the alternatives allowance, (b) the monovalent ions alone over-fill the pair beyond it on positions M11 accepts, and (c) the dopant's occupancy is no more than that over-fill; H counts as monovalent in (b) and (c). The M11 evidence says why the dopant was set aside, under its own reason, `dopant_beside_mobile_ions`, and reads the dopant as sitting only where its neighbour is empty, which is what (a) shows; that holds where the mobile ions themselves sit above their floor. Where the dopant's position and its neighbour's are images of one position, (a) and (b) add the uncertainties, as the alternatives rule does for two images of one label. Across the regression sets, 15 verdicts change, all among 269 Li garnets: 13 EXPUNGE (G5) become FLAG (M11) (ICSD 19993, 140546, 235896 to 235900, 241475, 430574 and 431390 to 431393), and two become NOT_ASSESSED (R2; 136223 and 136227 give Zr²⁺). Those whose dopant position is full stay G5, as does parsing test 40, where the dopant makes the over-fill. `VALIDATE_PARSING()` tests 46 to 48.
