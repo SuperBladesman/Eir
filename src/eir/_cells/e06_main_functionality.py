@@ -5880,6 +5880,16 @@ def process_single_cif(file_path, user_oxidation_states=None):
                   f"weights that answer equally with the majority it sits among.")
             print(f"  Quote wagii or gii_site_averaged for this structure, not gii.")
 
+        # v2.0.49 (#55): a file whose cations all go without an analysed
+        # shell (O written on the cation orbit; every charge stated as 0)
+        # produced no site rows and, marked a success, vanished from a
+        # folder run's tables without being counted as failed. ICSD
+        # 156683 did. It is a failure, with the reason.
+        if not results['sites']:
+            results['error'] = ('No cation site could be assessed: the '
+                                'analysis gave no cation a coordination '
+                                'shell')
+            return results
         results['anion_sites'], results['anion_summary'] = anion_bvs_for_structure(
             file_path, results['sites'], cation_gii=results.get('gii'))
         results['success'] = True
