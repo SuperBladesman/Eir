@@ -3595,8 +3595,8 @@ def bv_shell_boundary(element, valence, cn, anion='O', r0=None, b=None,
     bl = db.load_bond_lengths() or {}
 
     hit = bl.get((element, v, anion, c))
-    if hit and (hit.get('n_bonds') or 0) >= BL_MIN_SAMPLE and hit.get('max'):
-        return float(hit['max']), f"measured_n{hit['n_bonds']}"
+    if hit and (hit.get('n_polyhedra') or 0) >= BL_MIN_SAMPLE and hit.get('max'):
+        return float(hit['max']), f"measured_n{hit['n_polyhedra']}"
 
     # v2.0.8: interpolate across coordination, as expected_bond_length already
     # does. Without this every configuration measured at CN 6 and 8 but not 7,
@@ -3605,7 +3605,7 @@ def bv_shell_boundary(element, valence, cn, anion='O', r0=None, b=None,
     # this that is out by 0.4 A on Li and 0.3 A on Zn.
     known = sorted(k[3] for k in bl
                    if k[:3] == (element, v, anion)
-                   and (bl[k].get('n_bonds') or 0) >= BL_MIN_SAMPLE
+                   and (bl[k].get('n_polyhedra') or 0) >= BL_MIN_SAMPLE
                    and bl[k].get('max'))
     if known:
         lo = max([x for x in known if x < c], default=None)
@@ -3822,11 +3822,12 @@ _gagne_longest_cache = {}
 def gagne_longest_bond(element, valence, anion='O', db=None):
     """
     The longest bond Gagne's survey records for this ion against this anion,
-    at any coordination number, and the number of bonds behind the survey.
+    at any coordination number, and the number of coordination polyhedra
+    behind it (v2.0.49: Gagne's tables count polyhedra, not bonds; #51).
 
     A fractional valence reads both neighbouring integers and keeps the
     larger, the generous direction for a value whose job is to PROTECT a
-    contact. Returns (distance, n_bonds), or (None, 0) with no data.
+    contact. Returns (distance, n_polyhedra), or (None, 0) with no data.
     """
     try:
         v = abs(float(valence))
@@ -3844,7 +3845,7 @@ def gagne_longest_bond(element, valence, anion='O', db=None):
     for k, rec in bl.items():
         if (k[0] == element and k[1] in vals and k[2] == anion
                 and rec.get('max')):
-            n += int(rec.get('n_bonds') or 0)
+            n += int(rec.get('n_polyhedra') or 0)
             if best is None or float(rec['max']) > best:
                 best = float(rec['max'])
     _gagne_longest_cache[key] = (best, n)
@@ -4229,7 +4230,7 @@ def _occupancy_esds(cif_path):
 #
 # v2.0.47: CHOSEN, and the first two sentences above are wrong. Gagne's
 # bond-length data record N(5+)-O bonds from 1.150 A (CN 3, mean 1.247, sd
-# 0.030, 468 bonds), C(4+)-O from 1.228 A and B(3+)-O from 1.298 A; leaving
+# 0.030, 468 NO3 groups), C(4+)-O from 1.228 A and B(3+)-O from 1.298 A; leaving
 # out H, which the floor skips, only N and C go below 1.20 A. Real N-O
 # bonds run shorter still where Gagne has no configuration: ICSD 210694, a
 # nitronium borosulfate (N(5+) at CN 2, N-O 1.114 A, GII 0.106), is

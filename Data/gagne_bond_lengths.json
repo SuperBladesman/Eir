@@ -7,20 +7,21 @@
   "references": {
    "a": "Gagne, O.C. & Hawthorne, F.C. (2016). Acta Cryst. B72, 602-625. Alkali and alkaline-earth metals.",
    "b": "Gagne, O.C. (2018). Acta Cryst. B74, 49-62. Lanthanides and actinides.",
-   "c": "Gagne, O.C. & Hawthorne, F.C. (2018a). Acta Cryst. B74, 63-78. Metalloids and post-transition metals.",
-   "d": "Gagne, O.C. & Hawthorne, F.C. (2018b). Acta Cryst. B74, 79-96. Non-metals.",
+   "c": "Gagne, O.C. & Hawthorne, F.C. (2018b). Acta Cryst. B74, 79-96. Non-metals.",
+   "d": "Gagne, O.C. & Hawthorne, F.C. (2018a). Acta Cryst. B74, 63-78. Metalloids and post-transition metals.",
    "e": "Gagne, O.C. & Hawthorne, F.C. (2020). IUCrJ 7, 581-629. Transition metals.",
-   "f": "Gagne, O.C. (2020). ChemRxiv 11626974. Inorganic nitrides."
+   "f": "Gagne, O.C. (2021). Chem. Sci. 12, 4599-4622, doi 10.1039/D0SC06028C (ChemRxiv 11626974). Inorganic nitrides."
   },
   "fields": {
    "mean": "mean bond length",
    "sd": "standard deviation",
    "min": "shortest single bond observed in the sample",
    "max": "longest single bond observed in the sample",
-   "n_bonds": "sample size, number of bonds",
+   "n_polyhedra": "sample size, the number of coordination polyhedra; the number of bonds is n_polyhedra times the coordination number",
    "ref": "source paper key"
   },
-  "note": "Measured, not derived. Gagne states these data are more accurate and comprehensive than values obtained by adding ionic radii and should be used in their stead wherever possible; G&H (2020) sec 7 makes the same point. Use mean as the expected distance and min as a measured floor for a short-contact screen."
+  "note": "Measured, not derived. Gagne states these data are more accurate and comprehensive than values obtained by adding ionic radii and should be used in their stead wherever possible; G&H (2020) sec 7 makes the same point. Use mean as the expected distance and min as a measured floor for a short-contact screen.",
+  "counts_checked": "Summed by source, n_polyhedra gives each paper's published number of coordination polyhedra and n_polyhedra x CN its number of bonds: a 4859 and 38 594 (alkali), 3038 and 24 487 (alkaline earth); b 1317 and 10 700 (lanthanides), 671 and 4754 (actinides); c 223 and 452 (H), 5826 and 22 784 (groups 14-16; the paper's text gives 5826 polyhedra, its abstract 5957), 248 and 1394 (group 17); d 5279 and 21 761 (metalloids), 1821 and 10 723 (post-transition metals); f 875 and 4048 (nitrides). e gives 7520 and 41 485 against the paper's 7522 and 41 488. Checked 24 November 2026 (Eir 2.0.49, #51)."
  },
  "H": {
   "1": {
@@ -30,7 +31,7 @@
      "sd": 0.4021,
      "min": 0.918,
      "max": 2.275,
-     "n_bonds": 219,
+     "n_polyhedra": 219,
      "ref": "c"
     },
     "3": {
@@ -38,7 +39,7 @@
      "sd": 0.6924,
      "min": 0.94,
      "max": 2.49,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "c"
     },
     "4": {
@@ -46,7 +47,7 @@
      "sd": 0.7456,
      "min": 0.94,
      "max": 2.663,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "c"
     }
    }
@@ -60,7 +61,7 @@
      "sd": 0.0395,
      "min": 1.871,
      "max": 1.984,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "a"
     },
     "4": {
@@ -68,7 +69,7 @@
      "sd": 0.0746,
      "min": 1.69,
      "max": 2.444,
-     "n_bonds": 419,
+     "n_polyhedra": 419,
      "ref": "a"
     },
     "5": {
@@ -76,7 +77,7 @@
      "sd": 0.1612,
      "min": 1.815,
      "max": 2.673,
-     "n_bonds": 91,
+     "n_polyhedra": 91,
      "ref": "a"
     },
     "6": {
@@ -84,7 +85,7 @@
      "sd": 0.1365,
      "min": 1.826,
      "max": 2.692,
-     "n_bonds": 173,
+     "n_polyhedra": 173,
      "ref": "a"
     },
     "7": {
@@ -92,7 +93,7 @@
      "sd": 0.2443,
      "min": 1.93,
      "max": 2.658,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "a"
     },
     "8": {
@@ -100,7 +101,7 @@
      "sd": 0,
      "min": 2.513,
      "max": 2.513,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "a"
     }
    },
@@ -110,7 +111,7 @@
      "sd": 0.0249,
      "min": 1.912,
      "max": 1.99,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "f"
     },
     "3": {
@@ -118,7 +119,7 @@
      "sd": 0.0288,
      "min": 2.056,
      "max": 2.181,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "f"
     },
     "4": {
@@ -126,7 +127,7 @@
      "sd": 0.1031,
      "min": 1.923,
      "max": 2.613,
-     "n_bonds": 43,
+     "n_polyhedra": 43,
      "ref": "f"
     },
     "5": {
@@ -134,7 +135,7 @@
      "sd": 0.1848,
      "min": 2.041,
      "max": 2.722,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "6": {
@@ -142,7 +143,7 @@
      "sd": 0.039,
      "min": 2.208,
      "max": 2.302,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     }
    }
@@ -156,7 +157,7 @@
      "sd": 0.0176,
      "min": 1.506,
      "max": 1.587,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "a"
     },
     "4": {
@@ -164,7 +165,7 @@
      "sd": 0.0396,
      "min": 1.541,
      "max": 1.887,
-     "n_bonds": 161,
+     "n_polyhedra": 161,
      "ref": "a"
     }
    },
@@ -174,7 +175,7 @@
      "sd": 0.026,
      "min": 1.624,
      "max": 1.683,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "4": {
@@ -182,7 +183,7 @@
      "sd": 0.0143,
      "min": 1.732,
      "max": 1.77,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -196,7 +197,7 @@
      "sd": 0.0215,
      "min": 1.298,
      "max": 1.464,
-     "n_bonds": 852,
+     "n_polyhedra": 852,
      "ref": "d"
     },
     "4": {
@@ -204,7 +205,7 @@
      "sd": 0.0283,
      "min": 1.38,
      "max": 1.616,
-     "n_bonds": 672,
+     "n_polyhedra": 672,
      "ref": "d"
     }
    },
@@ -214,7 +215,7 @@
      "sd": 0.0168,
      "min": 1.287,
      "max": 1.383,
-     "n_bonds": 31,
+     "n_polyhedra": 31,
      "ref": "f"
     },
     "3": {
@@ -222,7 +223,7 @@
      "sd": 0.029,
      "min": 1.402,
      "max": 1.545,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "f"
     },
     "4": {
@@ -230,7 +231,7 @@
      "sd": 0.0191,
      "min": 1.518,
      "max": 1.57,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "f"
     }
    }
@@ -244,7 +245,7 @@
      "sd": 0.02,
      "min": 1.228,
      "max": 1.384,
-     "n_bonds": 389,
+     "n_polyhedra": 389,
      "ref": "c"
     }
    },
@@ -254,7 +255,7 @@
      "sd": 0.0607,
      "min": 1.137,
      "max": 1.325,
-     "n_bonds": 33,
+     "n_polyhedra": 33,
      "ref": "f"
     },
     "3": {
@@ -262,7 +263,7 @@
      "sd": 0.0172,
      "min": 1.276,
      "max": 1.395,
-     "n_bonds": 103,
+     "n_polyhedra": 103,
      "ref": "f"
     }
    }
@@ -276,7 +277,7 @@
      "sd": 0.0295,
      "min": 1.15,
      "max": 1.371,
-     "n_bonds": 468,
+     "n_polyhedra": 468,
      "ref": "c"
     },
     "4": {
@@ -284,7 +285,7 @@
      "sd": 0.0053,
      "min": 1.377,
      "max": 1.397,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "c"
     }
    },
@@ -294,7 +295,7 @@
      "sd": 0,
      "min": 1.194,
      "max": 1.194,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     }
    }
@@ -308,7 +309,7 @@
      "sd": 0.0449,
      "min": 2.214,
      "max": 2.367,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "a"
     },
     "4": {
@@ -316,7 +317,7 @@
      "sd": 0.0761,
      "min": 2.189,
      "max": 2.775,
-     "n_bonds": 131,
+     "n_polyhedra": 131,
      "ref": "a"
     },
     "5": {
@@ -324,7 +325,7 @@
      "sd": 0.1078,
      "min": 2.16,
      "max": 2.968,
-     "n_bonds": 142,
+     "n_polyhedra": 142,
      "ref": "a"
     },
     "6": {
@@ -332,7 +333,7 @@
      "sd": 0.1117,
      "min": 2.129,
      "max": 3.055,
-     "n_bonds": 920,
+     "n_polyhedra": 920,
      "ref": "a"
     },
     "7": {
@@ -340,7 +341,7 @@
      "sd": 0.1802,
      "min": 2.178,
      "max": 3.18,
-     "n_bonds": 193,
+     "n_polyhedra": 193,
      "ref": "a"
     },
     "8": {
@@ -348,7 +349,7 @@
      "sd": 0.1922,
      "min": 2.142,
      "max": 3.211,
-     "n_bonds": 201,
+     "n_polyhedra": 201,
      "ref": "a"
     },
     "9": {
@@ -356,7 +357,7 @@
      "sd": 0.2238,
      "min": 2.16,
      "max": 3.204,
-     "n_bonds": 50,
+     "n_polyhedra": 50,
      "ref": "a"
     },
     "10": {
@@ -364,7 +365,7 @@
      "sd": 0.24,
      "min": 2.257,
      "max": 3.156,
-     "n_bonds": 17,
+     "n_polyhedra": 17,
      "ref": "a"
     },
     "12": {
@@ -372,7 +373,7 @@
      "sd": 0.1818,
      "min": 2.322,
      "max": 3.272,
-     "n_bonds": 21,
+     "n_polyhedra": 21,
      "ref": "a"
     }
    },
@@ -382,7 +383,7 @@
      "sd": 0.0521,
      "min": 2.338,
      "max": 2.538,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "f"
     },
     "5": {
@@ -390,7 +391,7 @@
      "sd": 0.1963,
      "min": 2.333,
      "max": 3.116,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "f"
     },
     "6": {
@@ -398,7 +399,7 @@
      "sd": 0.1132,
      "min": 2.382,
      "max": 3.022,
-     "n_bonds": 16,
+     "n_polyhedra": 16,
      "ref": "f"
     }
    }
@@ -412,7 +413,7 @@
      "sd": 0.0197,
      "min": 1.909,
      "max": 1.977,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "a"
     },
     "5": {
@@ -420,7 +421,7 @@
      "sd": 0.066,
      "min": 1.907,
      "max": 2.249,
-     "n_bonds": 24,
+     "n_polyhedra": 24,
      "ref": "a"
     },
     "6": {
@@ -428,7 +429,7 @@
      "sd": 0.0589,
      "min": 1.935,
      "max": 2.497,
-     "n_bonds": 426,
+     "n_polyhedra": 426,
      "ref": "a"
     },
     "8": {
@@ -436,7 +437,7 @@
      "sd": 0.1215,
      "min": 2.014,
      "max": 2.582,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "a"
     }
    },
@@ -446,7 +447,7 @@
      "sd": 0.0492,
      "min": 2.036,
      "max": 2.198,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "f"
     }
    }
@@ -460,7 +461,7 @@
      "sd": 0.022,
      "min": 1.685,
      "max": 1.827,
-     "n_bonds": 306,
+     "n_polyhedra": 306,
      "ref": "d"
     },
     "5": {
@@ -468,7 +469,7 @@
      "sd": 0.0473,
      "min": 1.748,
      "max": 1.938,
-     "n_bonds": 31,
+     "n_polyhedra": 31,
      "ref": "d"
     },
     "6": {
@@ -476,7 +477,7 @@
      "sd": 0.0404,
      "min": 1.792,
      "max": 2.054,
-     "n_bonds": 453,
+     "n_polyhedra": 453,
      "ref": "d"
     }
    },
@@ -486,7 +487,7 @@
      "sd": 0.0432,
      "min": 1.84,
      "max": 1.984,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "f"
     },
     "6": {
@@ -494,7 +495,7 @@
      "sd": 0.006,
      "min": 2.037,
      "max": 2.052,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -508,7 +509,7 @@
      "sd": 0.0238,
      "min": 1.56,
      "max": 1.726,
-     "n_bonds": 2282,
+     "n_polyhedra": 2282,
      "ref": "d"
     },
     "6": {
@@ -516,7 +517,7 @@
      "sd": 0.0276,
      "min": 1.706,
      "max": 1.903,
-     "n_bonds": 24,
+     "n_polyhedra": 24,
      "ref": "d"
     }
    },
@@ -526,7 +527,7 @@
      "sd": 0.0388,
      "min": 1.653,
      "max": 1.941,
-     "n_bonds": 46,
+     "n_polyhedra": 46,
      "ref": "f"
     },
     "5": {
@@ -534,7 +535,7 @@
      "sd": 0.2591,
      "min": 1.699,
      "max": 2.287,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -548,7 +549,7 @@
      "sd": 0.0428,
      "min": 1.455,
      "max": 1.675,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "c"
     }
    }
@@ -560,7 +561,7 @@
      "sd": 0.039,
      "min": 1.43,
      "max": 1.696,
-     "n_bonds": 3650,
+     "n_polyhedra": 3650,
      "ref": "c"
     }
    },
@@ -570,7 +571,7 @@
      "sd": 0.0303,
      "min": 1.56,
      "max": 1.711,
-     "n_bonds": 28,
+     "n_polyhedra": 28,
      "ref": "f"
     }
    }
@@ -584,7 +585,7 @@
      "sd": 0.0153,
      "min": 1.486,
      "max": 1.574,
-     "n_bonds": 30,
+     "n_polyhedra": 30,
      "ref": "c"
     }
    },
@@ -594,7 +595,7 @@
      "sd": 0.0195,
      "min": 1.527,
      "max": 1.596,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "f"
     }
    }
@@ -606,7 +607,7 @@
      "sd": 0.0271,
      "min": 1.392,
      "max": 1.652,
-     "n_bonds": 890,
+     "n_polyhedra": 890,
      "ref": "c"
     }
    }
@@ -620,7 +621,7 @@
      "sd": 0.0107,
      "min": 1.557,
      "max": 1.592,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "c"
     },
     "4": {
@@ -628,7 +629,7 @@
      "sd": 0.668,
      "min": 1.565,
      "max": 2.901,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "c"
     }
    }
@@ -640,7 +641,7 @@
      "sd": 0.0132,
      "min": 1.443,
      "max": 1.507,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "c"
     }
    }
@@ -652,7 +653,7 @@
      "sd": 0.0162,
      "min": 1.383,
      "max": 1.474,
-     "n_bonds": 58,
+     "n_polyhedra": 58,
      "ref": "c"
     }
    }
@@ -666,7 +667,7 @@
      "sd": 0.0779,
      "min": 2.527,
      "max": 2.892,
-     "n_bonds": 24,
+     "n_polyhedra": 24,
      "ref": "a"
     },
     "5": {
@@ -674,7 +675,7 @@
      "sd": 0.162,
      "min": 2.505,
      "max": 3.537,
-     "n_bonds": 59,
+     "n_polyhedra": 59,
      "ref": "a"
     },
     "6": {
@@ -682,7 +683,7 @@
      "sd": 0.1771,
      "min": 2.447,
      "max": 3.587,
-     "n_bonds": 119,
+     "n_polyhedra": 119,
      "ref": "a"
     },
     "7": {
@@ -690,7 +691,7 @@
      "sd": 0.1793,
      "min": 2.524,
      "max": 3.554,
-     "n_bonds": 67,
+     "n_polyhedra": 67,
      "ref": "a"
     },
     "8": {
@@ -698,7 +699,7 @@
      "sd": 0.1722,
      "min": 2.537,
      "max": 3.644,
-     "n_bonds": 284,
+     "n_polyhedra": 284,
      "ref": "a"
     },
     "9": {
@@ -706,7 +707,7 @@
      "sd": 0.214,
      "min": 2.491,
      "max": 3.797,
-     "n_bonds": 308,
+     "n_polyhedra": 308,
      "ref": "a"
     },
     "10": {
@@ -714,7 +715,7 @@
      "sd": 0.2462,
      "min": 2.525,
      "max": 3.773,
-     "n_bonds": 243,
+     "n_polyhedra": 243,
      "ref": "a"
     },
     "11": {
@@ -722,7 +723,7 @@
      "sd": 0.29,
      "min": 2.612,
      "max": 3.793,
-     "n_bonds": 87,
+     "n_polyhedra": 87,
      "ref": "a"
     },
     "12": {
@@ -730,7 +731,7 @@
      "sd": 0.2638,
      "min": 2.586,
      "max": 3.79,
-     "n_bonds": 194,
+     "n_polyhedra": 194,
      "ref": "a"
     },
     "13": {
@@ -738,7 +739,7 @@
      "sd": 0.2985,
      "min": 2.518,
      "max": 3.808,
-     "n_bonds": 35,
+     "n_polyhedra": 35,
      "ref": "a"
     },
     "14": {
@@ -746,7 +747,7 @@
      "sd": 0.2963,
      "min": 2.479,
      "max": 3.771,
-     "n_bonds": 24,
+     "n_polyhedra": 24,
      "ref": "a"
     },
     "15": {
@@ -754,7 +755,7 @@
      "sd": 0.2655,
      "min": 2.6,
      "max": 3.748,
-     "n_bonds": 35,
+     "n_polyhedra": 35,
      "ref": "a"
     }
    },
@@ -764,7 +765,7 @@
      "sd": 0.0249,
      "min": 2.648,
      "max": 2.709,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "5": {
@@ -772,7 +773,7 @@
      "sd": 0.1645,
      "min": 2.71,
      "max": 3.134,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "6": {
@@ -780,7 +781,7 @@
      "sd": 0.112,
      "min": 2.701,
      "max": 3.21,
-     "n_bonds": 19,
+     "n_polyhedra": 19,
      "ref": "f"
     },
     "8": {
@@ -788,7 +789,7 @@
      "sd": 0.2355,
      "min": 2.805,
      "max": 3.703,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "f"
     },
     "10": {
@@ -796,7 +797,7 @@
      "sd": 0.3051,
      "min": 2.794,
      "max": 3.638,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -810,7 +811,7 @@
      "sd": 0.0685,
      "min": 2.21,
      "max": 2.847,
-     "n_bonds": 211,
+     "n_polyhedra": 211,
      "ref": "a"
     },
     "7": {
@@ -818,7 +819,7 @@
      "sd": 0.1335,
      "min": 2.124,
      "max": 3.14,
-     "n_bonds": 287,
+     "n_polyhedra": 287,
      "ref": "a"
     },
     "8": {
@@ -826,7 +827,7 @@
      "sd": 0.151,
      "min": 2.149,
      "max": 3.176,
-     "n_bonds": 519,
+     "n_polyhedra": 519,
      "ref": "a"
     },
     "9": {
@@ -834,7 +835,7 @@
      "sd": 0.196,
      "min": 2.241,
      "max": 3.197,
-     "n_bonds": 115,
+     "n_polyhedra": 115,
      "ref": "a"
     },
     "10": {
@@ -842,7 +843,7 @@
      "sd": 0.2153,
      "min": 2.22,
      "max": 3.122,
-     "n_bonds": 16,
+     "n_polyhedra": 16,
      "ref": "a"
     },
     "11": {
@@ -850,7 +851,7 @@
      "sd": 0.1771,
      "min": 2.279,
      "max": 2.965,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "a"
     },
     "12": {
@@ -858,7 +859,7 @@
      "sd": 0.1747,
      "min": 2.326,
      "max": 3.117,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "a"
     }
    },
@@ -868,7 +869,7 @@
      "sd": 0.0309,
      "min": 2.411,
      "max": 2.526,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "f"
     },
     "5": {
@@ -876,7 +877,7 @@
      "sd": 0.1126,
      "min": 2.313,
      "max": 2.823,
-     "n_bonds": 16,
+     "n_polyhedra": 16,
      "ref": "f"
     },
     "6": {
@@ -884,7 +885,7 @@
      "sd": 0.1075,
      "min": 2.349,
      "max": 2.965,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "f"
     },
     "9": {
@@ -892,7 +893,7 @@
      "sd": 0.0724,
      "min": 2.668,
      "max": 2.823,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -906,7 +907,7 @@
      "sd": 0.0406,
      "min": 1.995,
      "max": 2.231,
-     "n_bonds": 75,
+     "n_polyhedra": 75,
      "ref": "e"
     },
     "7": {
@@ -914,7 +915,7 @@
      "sd": 0.0565,
      "min": 2.047,
      "max": 2.315,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "e"
     },
     "8": {
@@ -922,7 +923,7 @@
      "sd": 0.1008,
      "min": 2.057,
      "max": 2.554,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "e"
     }
    }
@@ -936,7 +937,7 @@
      "sd": 0.0515,
      "min": 1.904,
      "max": 2.167,
-     "n_bonds": 21,
+     "n_polyhedra": 21,
      "ref": "e"
     },
     "7": {
@@ -944,7 +945,7 @@
      "sd": 0.0224,
      "min": 2.057,
      "max": 2.134,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     },
     "8": {
@@ -952,7 +953,7 @@
      "sd": 0.0765,
      "min": 2.118,
      "max": 2.271,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    }
@@ -964,7 +965,7 @@
      "sd": 0.038,
      "min": 1.747,
      "max": 1.906,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "e"
     },
     "5": {
@@ -972,7 +973,7 @@
      "sd": 0.106,
      "min": 1.645,
      "max": 2.05,
-     "n_bonds": 17,
+     "n_polyhedra": 17,
      "ref": "e"
     },
     "6": {
@@ -980,7 +981,7 @@
      "sd": 0.1069,
      "min": 1.648,
      "max": 2.474,
-     "n_bonds": 293,
+     "n_polyhedra": 293,
      "ref": "e"
     },
     "7": {
@@ -988,7 +989,7 @@
      "sd": 0.1649,
      "min": 1.68,
      "max": 2.23,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    },
@@ -998,7 +999,7 @@
      "sd": 0,
      "min": 2.224,
      "max": 2.224,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1012,7 +1013,7 @@
      "sd": 0.0507,
      "min": 1.885,
      "max": 2.224,
-     "n_bonds": 67,
+     "n_polyhedra": 67,
      "ref": "e"
     }
    },
@@ -1022,7 +1023,7 @@
      "sd": 0.0071,
      "min": 1.808,
      "max": 1.825,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "6": {
@@ -1030,7 +1031,7 @@
      "sd": 0.0051,
      "min": 2.039,
      "max": 2.051,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1042,7 +1043,7 @@
      "sd": 0.1467,
      "min": 1.539,
      "max": 2.116,
-     "n_bonds": 95,
+     "n_polyhedra": 95,
      "ref": "e"
     },
     "6": {
@@ -1050,7 +1051,7 @@
      "sd": 0.2018,
      "min": 1.558,
      "max": 2.588,
-     "n_bonds": 128,
+     "n_polyhedra": 128,
      "ref": "e"
     }
    }
@@ -1062,7 +1063,7 @@
      "sd": 0.0557,
      "min": 1.563,
      "max": 1.917,
-     "n_bonds": 345,
+     "n_polyhedra": 345,
      "ref": "e"
     },
     "5": {
@@ -1070,7 +1071,7 @@
      "sd": 0.1469,
      "min": 1.551,
      "max": 2.352,
-     "n_bonds": 65,
+     "n_polyhedra": 65,
      "ref": "e"
     },
     "6": {
@@ -1078,7 +1079,7 @@
      "sd": 0.2132,
      "min": 1.554,
      "max": 2.547,
-     "n_bonds": 293,
+     "n_polyhedra": 293,
      "ref": "e"
     }
    },
@@ -1088,7 +1089,7 @@
      "sd": 0.0165,
      "min": 1.813,
      "max": 1.851,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1102,7 +1103,7 @@
      "sd": 0.0099,
      "min": 1.997,
      "max": 2.025,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "e"
     },
     "5": {
@@ -1110,7 +1111,7 @@
      "sd": 0.1441,
      "min": 1.994,
      "max": 2.426,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     },
     "6": {
@@ -1118,7 +1119,7 @@
      "sd": 0.1931,
      "min": 1.955,
      "max": 2.651,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "e"
     }
    },
@@ -1128,7 +1129,7 @@
      "sd": 0,
      "min": 2.224,
      "max": 2.224,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1140,7 +1141,7 @@
      "sd": 0.0257,
      "min": 1.884,
      "max": 2.074,
-     "n_bonds": 104,
+     "n_polyhedra": 104,
      "ref": "e"
     }
    },
@@ -1150,7 +1151,7 @@
      "sd": 0.0457,
      "min": 1.766,
      "max": 1.863,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "6": {
@@ -1158,7 +1159,7 @@
      "sd": 0.0255,
      "min": 1.965,
      "max": 2.158,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "f"
     }
    }
@@ -1170,7 +1171,7 @@
      "sd": 0.0352,
      "min": 1.758,
      "max": 1.844,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     },
     "6": {
@@ -1178,7 +1179,7 @@
      "sd": 0.0322,
      "min": 1.894,
      "max": 1.988,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "e"
     }
    }
@@ -1190,7 +1191,7 @@
      "sd": 0.006,
      "min": 1.687,
      "max": 1.699,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    },
@@ -1200,7 +1201,7 @@
      "sd": 0.002,
      "min": 1.753,
      "max": 1.757,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1212,7 +1213,7 @@
      "sd": 0.0589,
      "min": 1.535,
      "max": 1.892,
-     "n_bonds": 169,
+     "n_polyhedra": 169,
      "ref": "e"
     }
    },
@@ -1222,7 +1223,7 @@
      "sd": 0.0127,
      "min": 1.749,
      "max": 1.78,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     }
    }
@@ -1236,7 +1237,7 @@
      "sd": 0.0393,
      "min": 1.953,
      "max": 2.194,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "e"
     },
     "5": {
@@ -1244,7 +1245,7 @@
      "sd": 0.0531,
      "min": 2.024,
      "max": 2.267,
-     "n_bonds": 24,
+     "n_polyhedra": 24,
      "ref": "e"
     },
     "6": {
@@ -1252,7 +1253,7 @@
      "sd": 0.0849,
      "min": 1.968,
      "max": 2.798,
-     "n_bonds": 318,
+     "n_polyhedra": 318,
      "ref": "e"
     },
     "7": {
@@ -1260,7 +1261,7 @@
      "sd": 0.2405,
      "min": 2.119,
      "max": 2.782,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     },
     "8": {
@@ -1268,7 +1269,7 @@
      "sd": 0.1038,
      "min": 2.152,
      "max": 2.691,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "e"
     }
    },
@@ -1278,7 +1279,7 @@
      "sd": 0.0318,
      "min": 2.071,
      "max": 2.166,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     },
     "5": {
@@ -1286,7 +1287,7 @@
      "sd": 0.3259,
      "min": 2.131,
      "max": 2.958,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "6": {
@@ -1294,7 +1295,7 @@
      "sd": 0.0436,
      "min": 2.17,
      "max": 2.417,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "f"
     }
    }
@@ -1306,7 +1307,7 @@
      "sd": 0.0461,
      "min": 1.852,
      "max": 1.951,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     },
     "5": {
@@ -1314,7 +1315,7 @@
      "sd": 0.0749,
      "min": 1.854,
      "max": 2.109,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "e"
     },
     "6": {
@@ -1322,7 +1323,7 @@
      "sd": 0.1494,
      "min": 1.843,
      "max": 2.598,
-     "n_bonds": 82,
+     "n_polyhedra": 82,
      "ref": "e"
     }
    },
@@ -1332,7 +1333,7 @@
      "sd": 0.0253,
      "min": 1.739,
      "max": 1.798,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     }
    }
@@ -1344,7 +1345,7 @@
      "sd": 0,
      "min": 1.75,
      "max": 1.75,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     },
     "6": {
@@ -1352,7 +1353,7 @@
      "sd": 0.0298,
      "min": 1.841,
      "max": 2.008,
-     "n_bonds": 20,
+     "n_polyhedra": 20,
      "ref": "e"
     }
    }
@@ -1364,7 +1365,7 @@
      "sd": 0.0142,
      "min": 1.649,
      "max": 1.725,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "e"
     }
    },
@@ -1374,7 +1375,7 @@
      "sd": 0.0075,
      "min": 1.81,
      "max": 1.825,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     }
    }
@@ -1386,7 +1387,7 @@
      "sd": 0.0116,
      "min": 1.653,
      "max": 1.687,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     }
    }
@@ -1398,7 +1399,7 @@
      "sd": 0.009,
      "min": 1.592,
      "max": 1.633,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "e"
     }
    }
@@ -1412,7 +1413,7 @@
      "sd": 0.029,
      "min": 1.791,
      "max": 1.918,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "e"
     },
     "4": {
@@ -1420,7 +1421,7 @@
      "sd": 0.027,
      "min": 1.9,
      "max": 2.041,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "e"
     },
     "5": {
@@ -1428,7 +1429,7 @@
      "sd": 0.0994,
      "min": 1.921,
      "max": 2.493,
-     "n_bonds": 19,
+     "n_polyhedra": 19,
      "ref": "e"
     },
     "6": {
@@ -1436,7 +1437,7 @@
      "sd": 0.0886,
      "min": 1.933,
      "max": 2.646,
-     "n_bonds": 146,
+     "n_polyhedra": 146,
      "ref": "e"
     },
     "8": {
@@ -1444,7 +1445,7 @@
      "sd": 0.1875,
      "min": 2.038,
      "max": 2.722,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "e"
     }
    },
@@ -1454,7 +1455,7 @@
      "sd": 0.0257,
      "min": 1.861,
      "max": 1.941,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     },
     "4": {
@@ -1462,7 +1463,7 @@
      "sd": 0,
      "min": 2.008,
      "max": 2.008,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "6": {
@@ -1470,7 +1471,7 @@
      "sd": 0.032,
      "min": 2.146,
      "max": 2.274,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "f"
     }
    }
@@ -1482,7 +1483,7 @@
      "sd": 0.0333,
      "min": 1.764,
      "max": 1.965,
-     "n_bonds": 65,
+     "n_polyhedra": 65,
      "ref": "e"
     },
     "5": {
@@ -1490,7 +1491,7 @@
      "sd": 0.07,
      "min": 1.857,
      "max": 2.207,
-     "n_bonds": 21,
+     "n_polyhedra": 21,
      "ref": "e"
     },
     "6": {
@@ -1498,7 +1499,7 @@
      "sd": 0.0642,
      "min": 1.852,
      "max": 2.391,
-     "n_bonds": 378,
+     "n_polyhedra": 378,
      "ref": "e"
     },
     "8": {
@@ -1506,7 +1507,7 @@
      "sd": 0.0286,
      "min": 2.078,
      "max": 2.173,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     }
    },
@@ -1516,7 +1517,7 @@
      "sd": 0.0,
      "min": 1.73,
      "max": 1.73,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "4": {
@@ -1524,7 +1525,7 @@
      "sd": 0,
      "min": 1.957,
      "max": 1.957,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "6": {
@@ -1532,7 +1533,7 @@
      "sd": 0.0,
      "min": 2.207,
      "max": 2.207,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1546,7 +1547,7 @@
      "sd": 0,
      "min": 1.749,
      "max": 1.749,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1558,7 +1559,7 @@
      "sd": 0.0583,
      "min": 1.757,
      "max": 1.98,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "e"
     },
     "4": {
@@ -1566,7 +1567,7 @@
      "sd": 0.0225,
      "min": 1.892,
      "max": 2.081,
-     "n_bonds": 27,
+     "n_polyhedra": 27,
      "ref": "e"
     },
     "5": {
@@ -1574,7 +1575,7 @@
      "sd": 0.1167,
      "min": 1.946,
      "max": 2.574,
-     "n_bonds": 16,
+     "n_polyhedra": 16,
      "ref": "e"
     },
     "6": {
@@ -1582,7 +1583,7 @@
      "sd": 0.0622,
      "min": 1.945,
      "max": 2.516,
-     "n_bonds": 243,
+     "n_polyhedra": 243,
      "ref": "e"
     },
     "8": {
@@ -1590,7 +1591,7 @@
      "sd": 0.1853,
      "min": 2.056,
      "max": 2.573,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    },
@@ -1600,7 +1601,7 @@
      "sd": 0.0109,
      "min": 1.948,
      "max": 1.983,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "f"
     },
     "6": {
@@ -1608,7 +1609,7 @@
      "sd": 0.005,
      "min": 2.176,
      "max": 2.186,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     }
    }
@@ -1620,7 +1621,7 @@
      "sd": 0.0208,
      "min": 1.861,
      "max": 1.969,
-     "n_bonds": 15,
+     "n_polyhedra": 15,
      "ref": "e"
     }
    },
@@ -1630,7 +1631,7 @@
      "sd": 0.0134,
      "min": 1.892,
      "max": 2.007,
-     "n_bonds": 36,
+     "n_polyhedra": 36,
      "ref": "f"
     }
    }
@@ -1642,7 +1643,7 @@
      "sd": 0.0,
      "min": 1.874,
      "max": 1.874,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    }
@@ -1656,7 +1657,7 @@
      "sd": 0.001,
      "min": 1.685,
      "max": 1.687,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     },
     "4": {
@@ -1664,7 +1665,7 @@
      "sd": 0.0389,
      "min": 1.89,
      "max": 1.982,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     },
     "5": {
@@ -1672,7 +1673,7 @@
      "sd": 0.0407,
      "min": 1.963,
      "max": 2.149,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "e"
     },
     "6": {
@@ -1680,7 +1681,7 @@
      "sd": 0.0541,
      "min": 1.873,
      "max": 2.462,
-     "n_bonds": 242,
+     "n_polyhedra": 242,
      "ref": "e"
     }
    },
@@ -1690,7 +1691,7 @@
      "sd": 0.0251,
      "min": 1.873,
      "max": 2.014,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "f"
     },
     "6": {
@@ -1698,7 +1699,7 @@
      "sd": 0.0259,
      "min": 2.079,
      "max": 2.164,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "f"
     }
    }
@@ -1710,7 +1711,7 @@
      "sd": 0.0125,
      "min": 1.839,
      "max": 1.906,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "e"
     }
    }
@@ -1724,7 +1725,7 @@
      "sd": 0.0244,
      "min": 1.788,
      "max": 1.911,
-     "n_bonds": 42,
+     "n_polyhedra": 42,
      "ref": "e"
     },
     "3": {
@@ -1732,7 +1733,7 @@
      "sd": 0.0758,
      "min": 1.894,
      "max": 2.077,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     },
     "4": {
@@ -1740,7 +1741,7 @@
      "sd": 0.1101,
      "min": 1.897,
      "max": 2.438,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "e"
     }
    },
@@ -1750,7 +1751,7 @@
      "sd": 0.0222,
      "min": 1.847,
      "max": 1.931,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "f"
     },
     "4": {
@@ -1758,7 +1759,7 @@
      "sd": 0,
      "min": 1.977,
      "max": 1.977,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1770,7 +1771,7 @@
      "sd": 0.0287,
      "min": 1.875,
      "max": 2.055,
-     "n_bonds": 129,
+     "n_polyhedra": 129,
      "ref": "e"
     },
     "5": {
@@ -1778,7 +1779,7 @@
      "sd": 0.1551,
      "min": 1.835,
      "max": 2.7,
-     "n_bonds": 218,
+     "n_polyhedra": 218,
      "ref": "e"
     },
     "6": {
@@ -1786,7 +1787,7 @@
      "sd": 0.2319,
      "min": 1.855,
      "max": 2.748,
-     "n_bonds": 365,
+     "n_polyhedra": 365,
      "ref": "e"
     },
     "8": {
@@ -1794,7 +1795,7 @@
      "sd": 0.3042,
      "min": 1.949,
      "max": 2.743,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "e"
     }
    },
@@ -1804,7 +1805,7 @@
      "sd": 0.0122,
      "min": 1.921,
      "max": 1.953,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "6": {
@@ -1812,7 +1813,7 @@
      "sd": 0.288,
      "min": 1.879,
      "max": 2.722,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     }
    }
@@ -1824,7 +1825,7 @@
      "sd": 0.029,
      "min": 1.811,
      "max": 1.946,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "e"
     }
    }
@@ -1838,7 +1839,7 @@
      "sd": 0.0313,
      "min": 1.847,
      "max": 2.076,
-     "n_bonds": 227,
+     "n_polyhedra": 227,
      "ref": "e"
     },
     "5": {
@@ -1846,7 +1847,7 @@
      "sd": 0.0824,
      "min": 1.906,
      "max": 2.525,
-     "n_bonds": 36,
+     "n_polyhedra": 36,
      "ref": "e"
     },
     "6": {
@@ -1854,7 +1855,7 @@
      "sd": 0.086,
      "min": 1.886,
      "max": 2.696,
-     "n_bonds": 193,
+     "n_polyhedra": 193,
      "ref": "e"
     }
    },
@@ -1864,7 +1865,7 @@
      "sd": 0.0133,
      "min": 1.842,
      "max": 1.874,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     },
     "4": {
@@ -1872,7 +1873,7 @@
      "sd": 0.0384,
      "min": 1.906,
      "max": 2.086,
-     "n_bonds": 23,
+     "n_polyhedra": 23,
      "ref": "f"
     },
     "6": {
@@ -1880,7 +1881,7 @@
      "sd": 0.0,
      "min": 2.136,
      "max": 2.136,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1894,7 +1895,7 @@
      "sd": 0.0274,
      "min": 1.774,
      "max": 1.948,
-     "n_bonds": 133,
+     "n_polyhedra": 133,
      "ref": "d"
     },
     "5": {
@@ -1902,7 +1903,7 @@
      "sd": 0.0764,
      "min": 1.771,
      "max": 2.254,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "d"
     },
     "6": {
@@ -1910,7 +1911,7 @@
      "sd": 0.0397,
      "min": 1.893,
      "max": 2.13,
-     "n_bonds": 66,
+     "n_polyhedra": 66,
      "ref": "d"
     }
    },
@@ -1920,7 +1921,7 @@
      "sd": 0.0402,
      "min": 1.904,
      "max": 2.063,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     },
     "6": {
@@ -1928,7 +1929,7 @@
      "sd": 0.012,
      "min": 2.064,
      "max": 2.099,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -1942,7 +1943,7 @@
      "sd": 0.0267,
      "min": 1.68,
      "max": 1.859,
-     "n_bonds": 279,
+     "n_polyhedra": 279,
      "ref": "d"
     },
     "5": {
@@ -1950,7 +1951,7 @@
      "sd": 0.0799,
      "min": 1.719,
      "max": 2.117,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "d"
     },
     "6": {
@@ -1958,7 +1959,7 @@
      "sd": 0.0328,
      "min": 1.818,
      "max": 1.995,
-     "n_bonds": 44,
+     "n_polyhedra": 44,
      "ref": "d"
     }
    }
@@ -1972,7 +1973,7 @@
      "sd": 0.0446,
      "min": 1.671,
      "max": 1.845,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "d"
     },
     "4": {
@@ -1980,7 +1981,7 @@
      "sd": 0.4057,
      "min": 1.719,
      "max": 2.896,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "d"
     },
     "5": {
@@ -1988,7 +1989,7 @@
      "sd": 0.553,
      "min": 1.754,
      "max": 3.092,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "d"
     },
     "6": {
@@ -1996,7 +1997,7 @@
      "sd": 0.6195,
      "min": 1.72,
      "max": 3.212,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "d"
     },
     "8": {
@@ -2004,7 +2005,7 @@
      "sd": 0.507,
      "min": 1.804,
      "max": 3.005,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "d"
     }
    }
@@ -2016,7 +2017,7 @@
      "sd": 0.0274,
      "min": 1.61,
      "max": 1.806,
-     "n_bonds": 508,
+     "n_polyhedra": 508,
      "ref": "d"
     },
     "6": {
@@ -2024,7 +2025,7 @@
      "sd": 0.0276,
      "min": 1.767,
      "max": 1.888,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "d"
     }
    }
@@ -2038,7 +2039,7 @@
      "sd": 0.0294,
      "min": 1.639,
      "max": 1.752,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "c"
     },
     "4": {
@@ -2046,7 +2047,7 @@
      "sd": 0.5699,
      "min": 1.648,
      "max": 3.213,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "c"
     },
     "5": {
@@ -2054,7 +2055,7 @@
      "sd": 0.6635,
      "min": 1.625,
      "max": 3.425,
-     "n_bonds": 65,
+     "n_polyhedra": 65,
      "ref": "c"
     },
     "6": {
@@ -2062,7 +2063,7 @@
      "sd": 0.6923,
      "min": 1.623,
      "max": 3.394,
-     "n_bonds": 75,
+     "n_polyhedra": 75,
      "ref": "c"
     },
     "7": {
@@ -2070,7 +2071,7 @@
      "sd": 0.6991,
      "min": 1.614,
      "max": 3.539,
-     "n_bonds": 35,
+     "n_polyhedra": 35,
      "ref": "c"
     },
     "8": {
@@ -2078,7 +2079,7 @@
      "sd": 0.6462,
      "min": 1.657,
      "max": 3.364,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "c"
     },
     "9": {
@@ -2086,7 +2087,7 @@
      "sd": 0.74,
      "min": 1.674,
      "max": 3.57,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "c"
     },
     "10": {
@@ -2094,7 +2095,7 @@
      "sd": 0.7942,
      "min": 1.698,
      "max": 3.565,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "c"
     }
    }
@@ -2106,7 +2107,7 @@
      "sd": 0.0226,
      "min": 1.578,
      "max": 1.727,
-     "n_bonds": 187,
+     "n_polyhedra": 187,
      "ref": "c"
     }
    }
@@ -2120,7 +2121,7 @@
      "sd": 0.6291,
      "min": 1.635,
      "max": 3.131,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "c"
     },
     "7": {
@@ -2128,7 +2129,7 @@
      "sd": 0.8059,
      "min": 1.634,
      "max": 3.361,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "c"
     },
     "8": {
@@ -2136,7 +2137,7 @@
      "sd": 0.8054,
      "min": 1.655,
      "max": 3.552,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "c"
     }
    }
@@ -2148,7 +2149,7 @@
      "sd": 0.0072,
      "min": 1.603,
      "max": 1.623,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "c"
     }
    }
@@ -2162,7 +2163,7 @@
      "sd": 0.1603,
      "min": 2.654,
      "max": 3.36,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "a"
     },
     "5": {
@@ -2170,7 +2171,7 @@
      "sd": 0.0776,
      "min": 2.74,
      "max": 2.976,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "a"
     },
     "6": {
@@ -2178,7 +2179,7 @@
      "sd": 0.1482,
      "min": 2.754,
      "max": 3.488,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "a"
     },
     "7": {
@@ -2186,7 +2187,7 @@
      "sd": 0.1859,
      "min": 2.691,
      "max": 3.628,
-     "n_bonds": 20,
+     "n_polyhedra": 20,
      "ref": "a"
     },
     "8": {
@@ -2194,7 +2195,7 @@
      "sd": 0.1895,
      "min": 2.656,
      "max": 3.711,
-     "n_bonds": 60,
+     "n_polyhedra": 60,
      "ref": "a"
     },
     "9": {
@@ -2202,7 +2203,7 @@
      "sd": 0.2039,
      "min": 2.667,
      "max": 3.839,
-     "n_bonds": 75,
+     "n_polyhedra": 75,
      "ref": "a"
     },
     "10": {
@@ -2210,7 +2211,7 @@
      "sd": 0.2438,
      "min": 2.719,
      "max": 3.89,
-     "n_bonds": 108,
+     "n_polyhedra": 108,
      "ref": "a"
     },
     "11": {
@@ -2218,7 +2219,7 @@
      "sd": 0.2478,
      "min": 2.673,
      "max": 3.884,
-     "n_bonds": 44,
+     "n_polyhedra": 44,
      "ref": "a"
     },
     "12": {
@@ -2226,7 +2227,7 @@
      "sd": 0.288,
      "min": 2.715,
      "max": 3.896,
-     "n_bonds": 70,
+     "n_polyhedra": 70,
      "ref": "a"
     },
     "13": {
@@ -2234,7 +2235,7 @@
      "sd": 0.3137,
      "min": 2.784,
      "max": 3.932,
-     "n_bonds": 19,
+     "n_polyhedra": 19,
      "ref": "a"
     },
     "14": {
@@ -2242,7 +2243,7 @@
      "sd": 0.2913,
      "min": 2.744,
      "max": 3.895,
-     "n_bonds": 20,
+     "n_polyhedra": 20,
      "ref": "a"
     },
     "15": {
@@ -2250,7 +2251,7 @@
      "sd": 0.2778,
      "min": 2.88,
      "max": 3.945,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "a"
     },
     "17": {
@@ -2258,7 +2259,7 @@
      "sd": 0.3363,
      "min": 2.93,
      "max": 3.939,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "a"
     },
     "18": {
@@ -2266,7 +2267,7 @@
      "sd": 0.2389,
      "min": 3.076,
      "max": 3.771,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "a"
     }
    },
@@ -2276,7 +2277,7 @@
      "sd": 0.1042,
      "min": 2.906,
      "max": 3.347,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "f"
     },
     "7": {
@@ -2284,7 +2285,7 @@
      "sd": 0.0993,
      "min": 2.876,
      "max": 3.191,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "8": {
@@ -2292,7 +2293,7 @@
      "sd": 0.1926,
      "min": 2.958,
      "max": 3.764,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "f"
     },
     "10": {
@@ -2300,7 +2301,7 @@
      "sd": 0.3081,
      "min": 3.111,
      "max": 3.915,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "12": {
@@ -2308,7 +2309,7 @@
      "sd": 0.2826,
      "min": 3.168,
      "max": 3.773,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -2322,7 +2323,7 @@
      "sd": 0.0502,
      "min": 2.347,
      "max": 2.591,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "a"
     },
     "7": {
@@ -2330,7 +2331,7 @@
      "sd": 0.1505,
      "min": 2.369,
      "max": 3.306,
-     "n_bonds": 38,
+     "n_polyhedra": 38,
      "ref": "a"
     },
     "8": {
@@ -2338,7 +2339,7 @@
      "sd": 0.1626,
      "min": 2.349,
      "max": 3.368,
-     "n_bonds": 113,
+     "n_polyhedra": 113,
      "ref": "a"
     },
     "9": {
@@ -2346,7 +2347,7 @@
      "sd": 0.1779,
      "min": 2.309,
      "max": 3.397,
-     "n_bonds": 101,
+     "n_polyhedra": 101,
      "ref": "a"
     },
     "10": {
@@ -2354,7 +2355,7 @@
      "sd": 0.213,
      "min": 2.366,
      "max": 3.399,
-     "n_bonds": 50,
+     "n_polyhedra": 50,
      "ref": "a"
     },
     "11": {
@@ -2362,7 +2363,7 @@
      "sd": 0.1981,
      "min": 2.482,
      "max": 3.319,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "a"
     },
     "12": {
@@ -2370,7 +2371,7 @@
      "sd": 0.1814,
      "min": 2.405,
      "max": 3.358,
-     "n_bonds": 53,
+     "n_polyhedra": 53,
      "ref": "a"
     }
    },
@@ -2380,7 +2381,7 @@
      "sd": 0.0301,
      "min": 2.545,
      "max": 2.682,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "f"
     },
     "5": {
@@ -2388,7 +2389,7 @@
      "sd": 0.1225,
      "min": 2.48,
      "max": 2.94,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "f"
     },
     "6": {
@@ -2396,7 +2397,7 @@
      "sd": 0.1503,
      "min": 2.508,
      "max": 3.216,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "f"
     },
     "7": {
@@ -2404,7 +2405,7 @@
      "sd": 0.2287,
      "min": 2.62,
      "max": 3.221,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "8": {
@@ -2412,7 +2413,7 @@
      "sd": 0.2988,
      "min": 2.568,
      "max": 3.379,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "10": {
@@ -2420,7 +2421,7 @@
      "sd": 0.2478,
      "min": 2.57,
      "max": 3.38,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "13": {
@@ -2428,7 +2429,7 @@
      "sd": 0.3113,
      "min": 2.706,
      "max": 3.73,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -2442,7 +2443,7 @@
      "sd": 0.0407,
      "min": 2.174,
      "max": 2.4,
-     "n_bonds": 25,
+     "n_polyhedra": 25,
      "ref": "e"
     },
     "7": {
@@ -2450,7 +2451,7 @@
      "sd": 0.0817,
      "min": 2.162,
      "max": 2.661,
-     "n_bonds": 35,
+     "n_polyhedra": 35,
      "ref": "e"
     },
     "8": {
@@ -2458,7 +2459,7 @@
      "sd": 0.0654,
      "min": 2.222,
      "max": 2.729,
-     "n_bonds": 100,
+     "n_polyhedra": 100,
      "ref": "e"
     },
     "9": {
@@ -2466,7 +2467,7 @@
      "sd": 0.0916,
      "min": 2.214,
      "max": 2.799,
-     "n_bonds": 15,
+     "n_polyhedra": 15,
      "ref": "e"
     },
     "10": {
@@ -2474,7 +2475,7 @@
      "sd": 0.1865,
      "min": 2.253,
      "max": 2.857,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     },
     "12": {
@@ -2482,7 +2483,7 @@
      "sd": 0,
      "min": 2.541,
      "max": 2.541,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    },
@@ -2492,7 +2493,7 @@
      "sd": 0.0499,
      "min": 2.304,
      "max": 2.478,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "f"
     }
    }
@@ -2506,7 +2507,7 @@
      "sd": 0.0311,
      "min": 2.006,
      "max": 2.224,
-     "n_bonds": 73,
+     "n_polyhedra": 73,
      "ref": "e"
     },
     "7": {
@@ -2514,7 +2515,7 @@
      "sd": 0.0481,
      "min": 2.05,
      "max": 2.283,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "e"
     },
     "8": {
@@ -2522,7 +2523,7 @@
      "sd": 0.053,
      "min": 2.094,
      "max": 2.407,
-     "n_bonds": 21,
+     "n_polyhedra": 21,
      "ref": "e"
     },
     "9": {
@@ -2530,7 +2531,7 @@
      "sd": 0.1378,
      "min": 2.121,
      "max": 2.593,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     },
     "10": {
@@ -2538,7 +2539,7 @@
      "sd": 0.0457,
      "min": 2.211,
      "max": 2.415,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "e"
     }
    }
@@ -2552,7 +2553,7 @@
      "sd": 0.0796,
      "min": 1.922,
      "max": 2.163,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     }
    }
@@ -2564,7 +2565,7 @@
      "sd": 0.0675,
      "min": 1.742,
      "max": 1.926,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     },
     "5": {
@@ -2572,7 +2573,7 @@
      "sd": 0.0544,
      "min": 1.829,
      "max": 1.993,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "e"
     },
     "6": {
@@ -2580,7 +2581,7 @@
      "sd": 0.1149,
      "min": 1.702,
      "max": 2.444,
-     "n_bonds": 240,
+     "n_polyhedra": 240,
      "ref": "e"
     },
     "7": {
@@ -2588,7 +2589,7 @@
      "sd": 0.1627,
      "min": 1.767,
      "max": 2.435,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     },
     "8": {
@@ -2596,7 +2597,7 @@
      "sd": 0.001,
      "min": 2.079,
      "max": 2.081,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    },
@@ -2606,7 +2607,7 @@
      "sd": 0.0241,
      "min": 1.916,
      "max": 2.026,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "f"
     },
     "6": {
@@ -2614,7 +2615,7 @@
      "sd": 0.003,
      "min": 2.123,
      "max": 2.129,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     }
    }
@@ -2628,7 +2629,7 @@
      "sd": 0.024,
      "min": 2.051,
      "max": 2.163,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "e"
     }
    }
@@ -2640,7 +2641,7 @@
      "sd": 0.065,
      "min": 1.813,
      "max": 2.077,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "e"
     }
    }
@@ -2652,7 +2653,7 @@
      "sd": 0.1222,
      "min": 1.653,
      "max": 1.981,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     },
     "6": {
@@ -2660,7 +2661,7 @@
      "sd": 0.1666,
      "min": 1.623,
      "max": 2.429,
-     "n_bonds": 74,
+     "n_polyhedra": 74,
      "ref": "e"
     }
    }
@@ -2672,7 +2673,7 @@
      "sd": 0.0332,
      "min": 1.637,
      "max": 1.905,
-     "n_bonds": 434,
+     "n_polyhedra": 434,
      "ref": "e"
     },
     "5": {
@@ -2680,7 +2681,7 @@
      "sd": 0.1461,
      "min": 1.666,
      "max": 2.286,
-     "n_bonds": 15,
+     "n_polyhedra": 15,
      "ref": "e"
     },
     "6": {
@@ -2688,7 +2689,7 @@
      "sd": 0.232,
      "min": 1.603,
      "max": 2.608,
-     "n_bonds": 506,
+     "n_polyhedra": 506,
      "ref": "e"
     }
    },
@@ -2698,7 +2699,7 @@
      "sd": 0.0314,
      "min": 1.802,
      "max": 1.951,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "f"
     }
    }
@@ -2712,7 +2713,7 @@
      "sd": 0.0187,
      "min": 1.672,
      "max": 1.74,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "e"
     }
    }
@@ -2726,7 +2727,7 @@
      "sd": 0.0425,
      "min": 1.916,
      "max": 2.107,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     }
    },
@@ -2736,7 +2737,7 @@
      "sd": 0.0051,
      "min": 2.082,
      "max": 2.101,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "f"
     }
    }
@@ -2748,7 +2749,7 @@
      "sd": 0.025,
      "min": 1.936,
      "max": 2.07,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "e"
     }
    }
@@ -2760,7 +2761,7 @@
      "sd": 0.0761,
      "min": 1.84,
      "max": 2.113,
-     "n_bonds": 23,
+     "n_polyhedra": 23,
      "ref": "e"
     }
    }
@@ -2774,7 +2775,7 @@
      "sd": 0.0234,
      "min": 1.978,
      "max": 2.071,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "e"
     }
    },
@@ -2784,7 +2785,7 @@
      "sd": 0.0069,
      "min": 2.054,
      "max": 2.078,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     }
    }
@@ -2796,7 +2797,7 @@
      "sd": 0.0143,
      "min": 1.988,
      "max": 2.02,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     }
    }
@@ -2810,7 +2811,7 @@
      "sd": 0.0239,
      "min": 1.956,
      "max": 2.06,
-     "n_bonds": 29,
+     "n_polyhedra": 29,
      "ref": "e"
     }
    },
@@ -2820,7 +2821,7 @@
      "sd": 0.0147,
      "min": 2.019,
      "max": 2.079,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "f"
     }
    }
@@ -2832,7 +2833,7 @@
      "sd": 0.0272,
      "min": 1.965,
      "max": 2.059,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "e"
     }
    }
@@ -2846,7 +2847,7 @@
      "sd": 0.0181,
      "min": 2.111,
      "max": 2.164,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "e"
     },
     "3": {
@@ -2854,7 +2855,7 @@
      "sd": 0.1123,
      "min": 2.144,
      "max": 2.535,
-     "n_bonds": 15,
+     "n_polyhedra": 15,
      "ref": "e"
     },
     "4": {
@@ -2862,7 +2863,7 @@
      "sd": 0.1269,
      "min": 2.14,
      "max": 2.741,
-     "n_bonds": 37,
+     "n_polyhedra": 37,
      "ref": "e"
     },
     "5": {
@@ -2870,7 +2871,7 @@
      "sd": 0.1519,
      "min": 2.174,
      "max": 2.975,
-     "n_bonds": 45,
+     "n_polyhedra": 45,
      "ref": "e"
     },
     "6": {
@@ -2878,7 +2879,7 @@
      "sd": 0.1352,
      "min": 2.242,
      "max": 2.894,
-     "n_bonds": 63,
+     "n_polyhedra": 63,
      "ref": "e"
     },
     "7": {
@@ -2886,7 +2887,7 @@
      "sd": 0.1549,
      "min": 2.324,
      "max": 2.888,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "e"
     },
     "8": {
@@ -2894,7 +2895,7 @@
      "sd": 0.1745,
      "min": 2.375,
      "max": 3.083,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "e"
     },
     "9": {
@@ -2902,7 +2903,7 @@
      "sd": 0.1431,
      "min": 2.461,
      "max": 2.863,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     }
    },
@@ -2912,7 +2913,7 @@
      "sd": 0.0257,
      "min": 2.084,
      "max": 2.192,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "f"
     },
     "3": {
@@ -2920,7 +2921,7 @@
      "sd": 0.0993,
      "min": 2.15,
      "max": 2.445,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "4": {
@@ -2928,7 +2929,7 @@
      "sd": 0.0244,
      "min": 2.231,
      "max": 2.316,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     }
    }
@@ -2942,7 +2943,7 @@
      "sd": 0.078,
      "min": 2.144,
      "max": 2.486,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "e"
     },
     "6": {
@@ -2950,7 +2951,7 @@
      "sd": 0.0687,
      "min": 2.163,
      "max": 2.754,
-     "n_bonds": 135,
+     "n_polyhedra": 135,
      "ref": "e"
     },
     "7": {
@@ -2958,7 +2959,7 @@
      "sd": 0.1343,
      "min": 2.175,
      "max": 2.888,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "e"
     },
     "8": {
@@ -2966,7 +2967,7 @@
      "sd": 0.1177,
      "min": 2.193,
      "max": 2.724,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "e"
     },
     "9": {
@@ -2974,7 +2975,7 @@
      "sd": 0.2144,
      "min": 2.326,
      "max": 2.826,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    },
@@ -2984,7 +2985,7 @@
      "sd": 0.0444,
      "min": 2.239,
      "max": 2.466,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "f"
     }
    }
@@ -2998,7 +2999,7 @@
      "sd": 0.0419,
      "min": 2.023,
      "max": 2.324,
-     "n_bonds": 110,
+     "n_polyhedra": 110,
      "ref": "d"
     },
     "7": {
@@ -3006,7 +3007,7 @@
      "sd": 0.0708,
      "min": 2.085,
      "max": 2.45,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "d"
     },
     "8": {
@@ -3014,7 +3015,7 @@
      "sd": 0.0583,
      "min": 2.196,
      "max": 2.351,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "d"
     }
    }
@@ -3028,7 +3029,7 @@
      "sd": 0.0312,
      "min": 2.004,
      "max": 2.162,
-     "n_bonds": 21,
+     "n_polyhedra": 21,
      "ref": "d"
     },
     "4": {
@@ -3036,7 +3037,7 @@
      "sd": 0.2245,
      "min": 2.063,
      "max": 2.881,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "d"
     },
     "5": {
@@ -3044,7 +3045,7 @@
      "sd": 0.4017,
      "min": 2.062,
      "max": 3.228,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "d"
     },
     "6": {
@@ -3052,7 +3053,7 @@
      "sd": 0.3105,
      "min": 2.068,
      "max": 3.251,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "d"
     },
     "7": {
@@ -3060,7 +3061,7 @@
      "sd": 0.4883,
      "min": 2.062,
      "max": 3.407,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "d"
     },
     "8": {
@@ -3068,7 +3069,7 @@
      "sd": 0.4231,
      "min": 2.115,
      "max": 3.327,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "d"
     },
     "9": {
@@ -3076,7 +3077,7 @@
      "sd": 0.4896,
      "min": 2.157,
      "max": 3.312,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "d"
     }
    },
@@ -3086,7 +3087,7 @@
      "sd": 0.0189,
      "min": 2.128,
      "max": 2.17,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -3098,7 +3099,7 @@
      "sd": 0.0093,
      "min": 1.935,
      "max": 1.97,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "d"
     },
     "6": {
@@ -3106,7 +3107,7 @@
      "sd": 0.0242,
      "min": 1.996,
      "max": 2.13,
-     "n_bonds": 32,
+     "n_polyhedra": 32,
      "ref": "d"
     },
     "7": {
@@ -3114,7 +3115,7 @@
      "sd": 0.0275,
      "min": 2.072,
      "max": 2.142,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "d"
     }
    },
@@ -3124,7 +3125,7 @@
      "sd": 0.0004,
      "min": 2.177,
      "max": 2.178,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "f"
     }
    }
@@ -3138,7 +3139,7 @@
      "sd": 0.0244,
      "min": 1.899,
      "max": 1.982,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "d"
     },
     "4": {
@@ -3146,7 +3147,7 @@
      "sd": 0.1783,
      "min": 1.898,
      "max": 2.596,
-     "n_bonds": 15,
+     "n_polyhedra": 15,
      "ref": "d"
     },
     "5": {
@@ -3154,7 +3155,7 @@
      "sd": 0.3086,
      "min": 1.945,
      "max": 2.963,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "d"
     },
     "6": {
@@ -3162,7 +3163,7 @@
      "sd": 0.4855,
      "min": 1.917,
      "max": 3.391,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "d"
     },
     "7": {
@@ -3170,7 +3171,7 @@
      "sd": 0.4508,
      "min": 1.958,
      "max": 3.266,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "d"
     },
     "8": {
@@ -3178,7 +3179,7 @@
      "sd": 0.4768,
      "min": 1.976,
      "max": 3.362,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "d"
     },
     "9": {
@@ -3186,7 +3187,7 @@
      "sd": 0.583,
      "min": 1.981,
      "max": 3.385,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "d"
     }
    }
@@ -3198,7 +3199,7 @@
      "sd": 0.0338,
      "min": 1.894,
      "max": 2.102,
-     "n_bonds": 158,
+     "n_polyhedra": 158,
      "ref": "d"
     }
    }
@@ -3212,7 +3213,7 @@
      "sd": 0.0148,
      "min": 1.819,
      "max": 1.862,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "d"
     },
     "4": {
@@ -3220,7 +3221,7 @@
      "sd": 0.1234,
      "min": 1.847,
      "max": 2.176,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "d"
     },
     "5": {
@@ -3228,7 +3229,7 @@
      "sd": 0.511,
      "min": 1.813,
      "max": 3.586,
-     "n_bonds": 16,
+     "n_polyhedra": 16,
      "ref": "d"
     },
     "6": {
@@ -3236,7 +3237,7 @@
      "sd": 0.5516,
      "min": 1.809,
      "max": 3.595,
-     "n_bonds": 60,
+     "n_polyhedra": 60,
      "ref": "d"
     },
     "7": {
@@ -3244,7 +3245,7 @@
      "sd": 0.5377,
      "min": 1.809,
      "max": 3.556,
-     "n_bonds": 35,
+     "n_polyhedra": 35,
      "ref": "d"
     },
     "8": {
@@ -3252,7 +3253,7 @@
      "sd": 0.608,
      "min": 1.81,
      "max": 3.615,
-     "n_bonds": 64,
+     "n_polyhedra": 64,
      "ref": "d"
     },
     "9": {
@@ -3260,7 +3261,7 @@
      "sd": 0.6114,
      "min": 1.844,
      "max": 3.674,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "d"
     },
     "10": {
@@ -3268,7 +3269,7 @@
      "sd": 0.6918,
      "min": 1.863,
      "max": 3.736,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "d"
     },
     "11": {
@@ -3276,7 +3277,7 @@
      "sd": 0.6681,
      "min": 1.882,
      "max": 3.581,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "d"
     },
     "12": {
@@ -3284,7 +3285,7 @@
      "sd": 0.6425,
      "min": 1.844,
      "max": 3.697,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "d"
     }
    }
@@ -3296,7 +3297,7 @@
      "sd": 0.0297,
      "min": 1.817,
      "max": 2.048,
-     "n_bonds": 144,
+     "n_polyhedra": 144,
      "ref": "d"
     }
    }
@@ -3310,7 +3311,7 @@
      "sd": 0.4915,
      "min": 1.734,
      "max": 3.126,
-     "n_bonds": 75,
+     "n_polyhedra": 75,
      "ref": "c"
     },
     "7": {
@@ -3318,7 +3319,7 @@
      "sd": 0.5628,
      "min": 1.771,
      "max": 3.385,
-     "n_bonds": 39,
+     "n_polyhedra": 39,
      "ref": "c"
     },
     "8": {
@@ -3326,7 +3327,7 @@
      "sd": 0.6322,
      "min": 1.786,
      "max": 3.542,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "c"
     },
     "9": {
@@ -3334,7 +3335,7 @@
      "sd": 0.6535,
      "min": 1.783,
      "max": 3.586,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "c"
     }
    }
@@ -3346,7 +3347,7 @@
      "sd": 0.0039,
      "min": 1.757,
      "max": 1.769,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "c"
     },
     "6": {
@@ -3354,7 +3355,7 @@
      "sd": 0.0711,
      "min": 1.77,
      "max": 2.056,
-     "n_bonds": 34,
+     "n_polyhedra": 34,
      "ref": "c"
     }
    }
@@ -3368,7 +3369,7 @@
      "sd": 0.1394,
      "min": 2.866,
      "max": 3.568,
-     "n_bonds": 17,
+     "n_polyhedra": 17,
      "ref": "a"
     },
     "7": {
@@ -3376,7 +3377,7 @@
      "sd": 0.1658,
      "min": 2.948,
      "max": 3.806,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "a"
     },
     "8": {
@@ -3384,7 +3385,7 @@
      "sd": 0.1888,
      "min": 2.894,
      "max": 3.911,
-     "n_bonds": 25,
+     "n_polyhedra": 25,
      "ref": "a"
     },
     "9": {
@@ -3392,7 +3393,7 @@
      "sd": 0.1813,
      "min": 2.83,
      "max": 3.882,
-     "n_bonds": 48,
+     "n_polyhedra": 48,
      "ref": "a"
     },
     "10": {
@@ -3400,7 +3401,7 @@
      "sd": 0.2077,
      "min": 2.729,
      "max": 3.986,
-     "n_bonds": 93,
+     "n_polyhedra": 93,
      "ref": "a"
     },
     "11": {
@@ -3408,7 +3409,7 @@
      "sd": 0.2262,
      "min": 2.887,
      "max": 4.023,
-     "n_bonds": 68,
+     "n_polyhedra": 68,
      "ref": "a"
     },
     "12": {
@@ -3416,7 +3417,7 @@
      "sd": 0.2501,
      "min": 2.91,
      "max": 4.072,
-     "n_bonds": 90,
+     "n_polyhedra": 90,
      "ref": "a"
     },
     "13": {
@@ -3424,7 +3425,7 @@
      "sd": 0.2757,
      "min": 2.874,
      "max": 4.13,
-     "n_bonds": 40,
+     "n_polyhedra": 40,
      "ref": "a"
     },
     "14": {
@@ -3432,7 +3433,7 @@
      "sd": 0.297,
      "min": 2.927,
      "max": 4.169,
-     "n_bonds": 51,
+     "n_polyhedra": 51,
      "ref": "a"
     },
     "15": {
@@ -3440,7 +3441,7 @@
      "sd": 0.3007,
      "min": 2.904,
      "max": 4.157,
-     "n_bonds": 47,
+     "n_polyhedra": 47,
      "ref": "a"
     },
     "16": {
@@ -3448,7 +3449,7 @@
      "sd": 0.3207,
      "min": 2.923,
      "max": 4.199,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "a"
     },
     "17": {
@@ -3456,7 +3457,7 @@
      "sd": 0.3257,
      "min": 2.991,
      "max": 4.06,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "a"
     },
     "18": {
@@ -3464,7 +3465,7 @@
      "sd": 0.2768,
      "min": 2.952,
      "max": 4.195,
-     "n_bonds": 36,
+     "n_polyhedra": 36,
      "ref": "a"
     },
     "20": {
@@ -3472,7 +3473,7 @@
      "sd": 0.4185,
      "min": 3.21,
      "max": 4.065,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "a"
     }
    },
@@ -3482,7 +3483,7 @@
      "sd": 0,
      "min": 3.187,
      "max": 3.187,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "7": {
@@ -3490,7 +3491,7 @@
      "sd": 0.1346,
      "min": 3.156,
      "max": 3.549,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "8": {
@@ -3498,7 +3499,7 @@
      "sd": 0.1462,
      "min": 3.177,
      "max": 3.818,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "f"
     },
     "9": {
@@ -3506,7 +3507,7 @@
      "sd": 0.242,
      "min": 3.101,
      "max": 3.94,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "10": {
@@ -3514,7 +3515,7 @@
      "sd": 0.1847,
      "min": 3.198,
      "max": 4.034,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "f"
     },
     "11": {
@@ -3522,7 +3523,7 @@
      "sd": 0.2424,
      "min": 3.37,
      "max": 4.068,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "12": {
@@ -3530,7 +3531,7 @@
      "sd": 0.1446,
      "min": 3.379,
      "max": 3.827,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "f"
     }
    }
@@ -3544,7 +3545,7 @@
      "sd": 0.0937,
      "min": 2.466,
      "max": 2.866,
-     "n_bonds": 21,
+     "n_polyhedra": 21,
      "ref": "a"
     },
     "7": {
@@ -3552,7 +3553,7 @@
      "sd": 0.1351,
      "min": 2.514,
      "max": 3.369,
-     "n_bonds": 21,
+     "n_polyhedra": 21,
      "ref": "a"
     },
     "8": {
@@ -3560,7 +3561,7 @@
      "sd": 0.1288,
      "min": 2.53,
      "max": 3.376,
-     "n_bonds": 88,
+     "n_polyhedra": 88,
      "ref": "a"
     },
     "9": {
@@ -3568,7 +3569,7 @@
      "sd": 0.1542,
      "min": 2.48,
      "max": 3.554,
-     "n_bonds": 142,
+     "n_polyhedra": 142,
      "ref": "a"
     },
     "10": {
@@ -3576,7 +3577,7 @@
      "sd": 0.1546,
      "min": 2.484,
      "max": 3.498,
-     "n_bonds": 193,
+     "n_polyhedra": 193,
      "ref": "a"
     },
     "11": {
@@ -3584,7 +3585,7 @@
      "sd": 0.1808,
      "min": 2.589,
      "max": 3.612,
-     "n_bonds": 82,
+     "n_polyhedra": 82,
      "ref": "a"
     },
     "12": {
@@ -3592,7 +3593,7 @@
      "sd": 0.1518,
      "min": 2.636,
      "max": 3.624,
-     "n_bonds": 302,
+     "n_polyhedra": 302,
      "ref": "a"
     },
     "13": {
@@ -3600,7 +3601,7 @@
      "sd": 0.206,
      "min": 2.541,
      "max": 3.463,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "a"
     },
     "14": {
@@ -3608,7 +3609,7 @@
      "sd": 0.242,
      "min": 2.674,
      "max": 3.553,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "a"
     }
    },
@@ -3618,7 +3619,7 @@
      "sd": 0.0649,
      "min": 2.643,
      "max": 2.798,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "5": {
@@ -3626,7 +3627,7 @@
      "sd": 0.0885,
      "min": 2.653,
      "max": 3.041,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "f"
     },
     "6": {
@@ -3634,7 +3635,7 @@
      "sd": 0.1555,
      "min": 2.607,
      "max": 3.375,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "f"
     },
     "7": {
@@ -3642,7 +3643,7 @@
      "sd": 0.1771,
      "min": 2.676,
      "max": 3.447,
-     "n_bonds": 16,
+     "n_polyhedra": 16,
      "ref": "f"
     },
     "8": {
@@ -3650,7 +3651,7 @@
      "sd": 0.2336,
      "min": 2.673,
      "max": 3.519,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "f"
     },
     "14": {
@@ -3658,7 +3659,7 @@
      "sd": 0.2263,
      "min": 2.825,
      "max": 3.49,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -3672,7 +3673,7 @@
      "sd": 0.1141,
      "min": 2.276,
      "max": 2.572,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     },
     "7": {
@@ -3680,7 +3681,7 @@
      "sd": 0.1117,
      "min": 2.324,
      "max": 2.825,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "b"
     },
     "8": {
@@ -3688,7 +3689,7 @@
      "sd": 0.1212,
      "min": 2.318,
      "max": 2.99,
-     "n_bonds": 78,
+     "n_polyhedra": 78,
      "ref": "b"
     },
     "9": {
@@ -3696,7 +3697,7 @@
      "sd": 0.124,
      "min": 2.336,
      "max": 2.977,
-     "n_bonds": 51,
+     "n_polyhedra": 51,
      "ref": "b"
     },
     "10": {
@@ -3704,7 +3705,7 @@
      "sd": 0.1271,
      "min": 2.298,
      "max": 3.065,
-     "n_bonds": 15,
+     "n_polyhedra": 15,
      "ref": "b"
     },
     "11": {
@@ -3712,7 +3713,7 @@
      "sd": 0.1084,
      "min": 2.527,
      "max": 2.875,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     },
     "12": {
@@ -3720,7 +3721,7 @@
      "sd": 0.1527,
      "min": 2.415,
      "max": 3.133,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "b"
     }
    },
@@ -3730,7 +3731,7 @@
      "sd": 0.0061,
      "min": 2.522,
      "max": 2.535,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "7": {
@@ -3738,7 +3739,7 @@
      "sd": 0.1514,
      "min": 2.437,
      "max": 2.834,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "8": {
@@ -3746,7 +3747,7 @@
      "sd": 0.1043,
      "min": 2.412,
      "max": 2.965,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "f"
     },
     "9": {
@@ -3754,7 +3755,7 @@
      "sd": 0.154,
      "min": 2.477,
      "max": 3.098,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     }
    }
@@ -3768,7 +3769,7 @@
      "sd": 0.0632,
      "min": 2.362,
      "max": 2.62,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     },
     "8": {
@@ -3776,7 +3777,7 @@
      "sd": 0.0732,
      "min": 2.334,
      "max": 2.818,
-     "n_bonds": 20,
+     "n_polyhedra": 20,
      "ref": "b"
     },
     "9": {
@@ -3784,7 +3785,7 @@
      "sd": 0.1013,
      "min": 2.297,
      "max": 2.916,
-     "n_bonds": 26,
+     "n_polyhedra": 26,
      "ref": "b"
     },
     "10": {
@@ -3792,7 +3793,7 @@
      "sd": 0.0977,
      "min": 2.343,
      "max": 2.929,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "b"
     },
     "11": {
@@ -3800,7 +3801,7 @@
      "sd": 0.2025,
      "min": 2.257,
      "max": 3.155,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "b"
     },
     "12": {
@@ -3808,7 +3809,7 @@
      "sd": 0.0504,
      "min": 2.53,
      "max": 2.763,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "b"
     }
    },
@@ -3818,7 +3819,7 @@
      "sd": 0.1198,
      "min": 2.363,
      "max": 2.849,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "f"
     },
     "9": {
@@ -3826,7 +3827,7 @@
      "sd": 0.1918,
      "min": 2.42,
      "max": 3.133,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     }
    }
@@ -3838,7 +3839,7 @@
      "sd": 0.0243,
      "min": 2.189,
      "max": 2.25,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     },
     "8": {
@@ -3846,7 +3847,7 @@
      "sd": 0.0752,
      "min": 2.172,
      "max": 2.64,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "b"
     },
     "9": {
@@ -3854,7 +3855,7 @@
      "sd": 0.0642,
      "min": 2.273,
      "max": 2.516,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "b"
     },
     "10": {
@@ -3862,7 +3863,7 @@
      "sd": 0.1253,
      "min": 2.045,
      "max": 2.652,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     },
     "12": {
@@ -3870,7 +3871,7 @@
      "sd": 0.0182,
      "min": 2.467,
      "max": 2.534,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "b"
     }
    },
@@ -3880,7 +3881,7 @@
      "sd": 0,
      "min": 2.427,
      "max": 2.427,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -3894,7 +3895,7 @@
      "sd": 0.0993,
      "min": 2.281,
      "max": 2.777,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "b"
     },
     "8": {
@@ -3902,7 +3903,7 @@
      "sd": 0.0958,
      "min": 2.3,
      "max": 2.871,
-     "n_bonds": 29,
+     "n_polyhedra": 29,
      "ref": "b"
     },
     "9": {
@@ -3910,7 +3911,7 @@
      "sd": 0.0767,
      "min": 2.34,
      "max": 2.864,
-     "n_bonds": 25,
+     "n_polyhedra": 25,
      "ref": "b"
     },
     "10": {
@@ -3918,7 +3919,7 @@
      "sd": 0.1919,
      "min": 2.282,
      "max": 3.329,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "b"
     },
     "11": {
@@ -3926,7 +3927,7 @@
      "sd": 0.2571,
      "min": 2.306,
      "max": 3.218,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     },
     "12": {
@@ -3934,7 +3935,7 @@
      "sd": 0.2059,
      "min": 2.376,
      "max": 3.312,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "b"
     }
    },
@@ -3944,7 +3945,7 @@
      "sd": 0.0806,
      "min": 2.455,
      "max": 2.691,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -3958,7 +3959,7 @@
      "sd": 0.0422,
      "min": 2.294,
      "max": 2.559,
-     "n_bonds": 16,
+     "n_polyhedra": 16,
      "ref": "b"
     },
     "7": {
@@ -3966,7 +3967,7 @@
      "sd": 0.1222,
      "min": 2.183,
      "max": 2.917,
-     "n_bonds": 26,
+     "n_polyhedra": 26,
      "ref": "b"
     },
     "8": {
@@ -3974,7 +3975,7 @@
      "sd": 0.1049,
      "min": 2.266,
      "max": 2.891,
-     "n_bonds": 84,
+     "n_polyhedra": 84,
      "ref": "b"
     },
     "9": {
@@ -3982,7 +3983,7 @@
      "sd": 0.0864,
      "min": 2.329,
      "max": 2.992,
-     "n_bonds": 50,
+     "n_polyhedra": 50,
      "ref": "b"
     },
     "10": {
@@ -3990,7 +3991,7 @@
      "sd": 0.153,
      "min": 2.34,
      "max": 2.937,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "b"
     },
     "12": {
@@ -3998,7 +3999,7 @@
      "sd": 0.0542,
      "min": 2.516,
      "max": 2.737,
-     "n_bonds": 13,
+     "n_polyhedra": 13,
      "ref": "b"
     }
    },
@@ -4008,7 +4009,7 @@
      "sd": 0.0618,
      "min": 2.407,
      "max": 2.571,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "8": {
@@ -4016,7 +4017,7 @@
      "sd": 0.005,
      "min": 2.584,
      "max": 2.594,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4030,7 +4031,7 @@
      "sd": 0.0751,
      "min": 2.242,
      "max": 2.509,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "b"
     },
     "7": {
@@ -4038,7 +4039,7 @@
      "sd": 0.094,
      "min": 2.248,
      "max": 2.761,
-     "n_bonds": 29,
+     "n_polyhedra": 29,
      "ref": "b"
     },
     "8": {
@@ -4046,7 +4047,7 @@
      "sd": 0.1031,
      "min": 2.212,
      "max": 2.853,
-     "n_bonds": 43,
+     "n_polyhedra": 43,
      "ref": "b"
     },
     "9": {
@@ -4054,7 +4055,7 @@
      "sd": 0.0953,
      "min": 2.282,
      "max": 2.864,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "b"
     },
     "10": {
@@ -4062,7 +4063,7 @@
      "sd": 0.1612,
      "min": 2.313,
      "max": 3.067,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "b"
     },
     "12": {
@@ -4070,7 +4071,7 @@
      "sd": 0.2847,
      "min": 2.316,
      "max": 3.159,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     }
    },
@@ -4080,7 +4081,7 @@
      "sd": 0.0458,
      "min": 2.382,
      "max": 2.544,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4094,7 +4095,7 @@
      "sd": 0.0705,
      "min": 2.519,
      "max": 2.738,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     },
     "9": {
@@ -4102,7 +4103,7 @@
      "sd": 0.1107,
      "min": 2.533,
      "max": 2.841,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     }
    },
@@ -4112,7 +4113,7 @@
      "sd": 0.1056,
      "min": 2.436,
      "max": 2.715,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "8": {
@@ -4120,7 +4121,7 @@
      "sd": 0.2563,
      "min": 2.554,
      "max": 3.235,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "10": {
@@ -4128,7 +4129,7 @@
      "sd": 0.2136,
      "min": 2.529,
      "max": 3.246,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "12": {
@@ -4136,7 +4137,7 @@
      "sd": 0.0478,
      "min": 2.924,
      "max": 3.059,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4148,7 +4149,7 @@
      "sd": 0.1123,
      "min": 2.215,
      "max": 2.704,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "b"
     },
     "8": {
@@ -4156,7 +4157,7 @@
      "sd": 0.1001,
      "min": 2.256,
      "max": 2.859,
-     "n_bonds": 27,
+     "n_polyhedra": 27,
      "ref": "b"
     },
     "9": {
@@ -4164,7 +4165,7 @@
      "sd": 0.0754,
      "min": 2.299,
      "max": 2.783,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "b"
     },
     "10": {
@@ -4172,7 +4173,7 @@
      "sd": 0.1468,
      "min": 2.305,
      "max": 2.829,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     }
    },
@@ -4182,7 +4183,7 @@
      "sd": 0.0015,
      "min": 2.461,
      "max": 2.464,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4196,7 +4197,7 @@
      "sd": 0.0383,
      "min": 2.254,
      "max": 2.408,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "b"
     },
     "7": {
@@ -4204,7 +4205,7 @@
      "sd": 0.0877,
      "min": 2.224,
      "max": 2.707,
-     "n_bonds": 19,
+     "n_polyhedra": 19,
      "ref": "b"
     },
     "8": {
@@ -4212,7 +4213,7 @@
      "sd": 0.106,
      "min": 2.223,
      "max": 2.837,
-     "n_bonds": 58,
+     "n_polyhedra": 58,
      "ref": "b"
     },
     "9": {
@@ -4220,7 +4221,7 @@
      "sd": 0.1142,
      "min": 2.284,
      "max": 2.928,
-     "n_bonds": 15,
+     "n_polyhedra": 15,
      "ref": "b"
     },
     "10": {
@@ -4228,7 +4229,7 @@
      "sd": 0.1413,
      "min": 2.293,
      "max": 2.996,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "b"
     },
     "11": {
@@ -4236,7 +4237,7 @@
      "sd": 0.196,
      "min": 2.293,
      "max": 3.061,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     }
    }
@@ -4250,7 +4251,7 @@
      "sd": 0.0368,
      "min": 2.204,
      "max": 2.403,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "b"
     },
     "7": {
@@ -4258,7 +4259,7 @@
      "sd": 0.1167,
      "min": 2.232,
      "max": 2.676,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "b"
     },
     "8": {
@@ -4266,7 +4267,7 @@
      "sd": 0.0929,
      "min": 2.26,
      "max": 2.867,
-     "n_bonds": 25,
+     "n_polyhedra": 25,
      "ref": "b"
     },
     "9": {
@@ -4274,7 +4275,7 @@
      "sd": 0.0698,
      "min": 2.286,
      "max": 2.614,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "b"
     },
     "10": {
@@ -4282,7 +4283,7 @@
      "sd": 0.1718,
      "min": 2.281,
      "max": 2.991,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "b"
     }
    }
@@ -4294,7 +4295,7 @@
      "sd": 0.049,
      "min": 2.111,
      "max": 2.324,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "b"
     }
    }
@@ -4308,7 +4309,7 @@
      "sd": 0.056,
      "min": 2.18,
      "max": 2.42,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "b"
     },
     "7": {
@@ -4316,7 +4317,7 @@
      "sd": 0.1046,
      "min": 2.187,
      "max": 2.748,
-     "n_bonds": 17,
+     "n_polyhedra": 17,
      "ref": "b"
     },
     "8": {
@@ -4324,7 +4325,7 @@
      "sd": 0.0921,
      "min": 2.227,
      "max": 2.723,
-     "n_bonds": 34,
+     "n_polyhedra": 34,
      "ref": "b"
     },
     "9": {
@@ -4332,7 +4333,7 @@
      "sd": 0.0908,
      "min": 2.297,
      "max": 2.652,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "b"
     },
     "10": {
@@ -4340,7 +4341,7 @@
      "sd": 0.1338,
      "min": 2.263,
      "max": 2.88,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "b"
     }
    }
@@ -4354,7 +4355,7 @@
      "sd": 0.0471,
      "min": 2.172,
      "max": 2.385,
-     "n_bonds": 15,
+     "n_polyhedra": 15,
      "ref": "b"
     },
     "7": {
@@ -4362,7 +4363,7 @@
      "sd": 0.0774,
      "min": 2.206,
      "max": 2.752,
-     "n_bonds": 22,
+     "n_polyhedra": 22,
      "ref": "b"
     },
     "8": {
@@ -4370,7 +4371,7 @@
      "sd": 0.1113,
      "min": 2.222,
      "max": 2.936,
-     "n_bonds": 39,
+     "n_polyhedra": 39,
      "ref": "b"
     },
     "9": {
@@ -4378,7 +4379,7 @@
      "sd": 0.0563,
      "min": 2.341,
      "max": 2.527,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "b"
     },
     "10": {
@@ -4386,7 +4387,7 @@
      "sd": 0.1852,
      "min": 2.252,
      "max": 2.935,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     }
    },
@@ -4396,7 +4397,7 @@
      "sd": 0.1044,
      "min": 2.335,
      "max": 2.609,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4410,7 +4411,7 @@
      "sd": 0.0255,
      "min": 2.197,
      "max": 2.31,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "b"
     },
     "7": {
@@ -4418,7 +4419,7 @@
      "sd": 0.0962,
      "min": 2.126,
      "max": 2.772,
-     "n_bonds": 33,
+     "n_polyhedra": 33,
      "ref": "b"
     },
     "8": {
@@ -4426,7 +4427,7 @@
      "sd": 0.0885,
      "min": 2.157,
      "max": 2.734,
-     "n_bonds": 49,
+     "n_polyhedra": 49,
      "ref": "b"
     },
     "9": {
@@ -4434,7 +4435,7 @@
      "sd": 0.0782,
      "min": 2.268,
      "max": 2.684,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "b"
     },
     "10": {
@@ -4442,7 +4443,7 @@
      "sd": 0.0311,
      "min": 2.39,
      "max": 2.492,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     }
    },
@@ -4452,7 +4453,7 @@
      "sd": 0.0562,
      "min": 2.36,
      "max": 2.525,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4466,7 +4467,7 @@
      "sd": 0.0621,
      "min": 2.157,
      "max": 2.386,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "b"
     },
     "7": {
@@ -4474,7 +4475,7 @@
      "sd": 0.1211,
      "min": 2.152,
      "max": 2.651,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "b"
     },
     "8": {
@@ -4482,7 +4483,7 @@
      "sd": 0.109,
      "min": 2.15,
      "max": 2.743,
-     "n_bonds": 19,
+     "n_polyhedra": 19,
      "ref": "b"
     },
     "9": {
@@ -4490,7 +4491,7 @@
      "sd": 0.0926,
      "min": 2.232,
      "max": 2.625,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     },
     "10": {
@@ -4498,7 +4499,7 @@
      "sd": 0.075,
      "min": 2.293,
      "max": 2.541,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     }
    }
@@ -4512,7 +4513,7 @@
      "sd": 0.0429,
      "min": 2.141,
      "max": 2.356,
-     "n_bonds": 27,
+     "n_polyhedra": 27,
      "ref": "b"
     },
     "7": {
@@ -4520,7 +4521,7 @@
      "sd": 0.0664,
      "min": 2.145,
      "max": 2.635,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "b"
     },
     "8": {
@@ -4528,7 +4529,7 @@
      "sd": 0.0856,
      "min": 2.128,
      "max": 2.71,
-     "n_bonds": 31,
+     "n_polyhedra": 31,
      "ref": "b"
     },
     "9": {
@@ -4536,7 +4537,7 @@
      "sd": 0.043,
      "min": 2.319,
      "max": 2.489,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "b"
     },
     "10": {
@@ -4544,7 +4545,7 @@
      "sd": 0.1583,
      "min": 2.239,
      "max": 2.852,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     }
    },
@@ -4554,7 +4555,7 @@
      "sd": 0.0461,
      "min": 2.293,
      "max": 2.417,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "7": {
@@ -4562,7 +4563,7 @@
      "sd": 0.138,
      "min": 2.261,
      "max": 2.664,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4576,7 +4577,7 @@
      "sd": 0.0365,
      "min": 2.116,
      "max": 2.317,
-     "n_bonds": 22,
+     "n_polyhedra": 22,
      "ref": "b"
     },
     "7": {
@@ -4584,7 +4585,7 @@
      "sd": 0.0755,
      "min": 2.131,
      "max": 2.614,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "b"
     },
     "8": {
@@ -4592,7 +4593,7 @@
      "sd": 0.1032,
      "min": 2.195,
      "max": 2.778,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "b"
     },
     "9": {
@@ -4600,7 +4601,7 @@
      "sd": 0.0653,
      "min": 2.232,
      "max": 2.476,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "b"
     },
     "10": {
@@ -4608,7 +4609,7 @@
      "sd": 0.276,
      "min": 2.26,
      "max": 3.007,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     }
    },
@@ -4618,7 +4619,7 @@
      "sd": 0.021,
      "min": 2.283,
      "max": 2.325,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4632,7 +4633,7 @@
      "sd": 0.0508,
      "min": 1.919,
      "max": 2.241,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "e"
     },
     "7": {
@@ -4640,7 +4641,7 @@
      "sd": 0.0189,
      "min": 2.095,
      "max": 2.167,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "e"
     },
     "8": {
@@ -4648,7 +4649,7 @@
      "sd": 0.0635,
      "min": 2.068,
      "max": 2.324,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "e"
     }
    },
@@ -4658,7 +4659,7 @@
      "sd": 0.1475,
      "min": 2.179,
      "max": 2.474,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -4672,7 +4673,7 @@
      "sd": 0.0763,
      "min": 1.801,
      "max": 2.386,
-     "n_bonds": 138,
+     "n_polyhedra": 138,
      "ref": "e"
     },
     "7": {
@@ -4680,7 +4681,7 @@
      "sd": 0.1546,
      "min": 1.867,
      "max": 2.486,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "e"
     }
    },
@@ -4690,7 +4691,7 @@
      "sd": 0.0272,
      "min": 1.902,
      "max": 2.008,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "f"
     }
    }
@@ -4704,7 +4705,7 @@
      "sd": 0.0955,
      "min": 1.692,
      "max": 2.14,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "e"
     }
    }
@@ -4716,7 +4717,7 @@
      "sd": 0.0274,
      "min": 1.705,
      "max": 1.846,
-     "n_bonds": 35,
+     "n_polyhedra": 35,
      "ref": "e"
     },
     "5": {
@@ -4724,7 +4725,7 @@
      "sd": 0.0723,
      "min": 1.699,
      "max": 2.166,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "e"
     },
     "6": {
@@ -4732,7 +4733,7 @@
      "sd": 0.182,
      "min": 1.638,
      "max": 2.557,
-     "n_bonds": 363,
+     "n_polyhedra": 363,
      "ref": "e"
     }
    },
@@ -4742,7 +4743,7 @@
      "sd": 0.0545,
      "min": 1.754,
      "max": 1.972,
-     "n_bonds": 26,
+     "n_polyhedra": 26,
      "ref": "f"
     }
    }
@@ -4756,7 +4757,7 @@
      "sd": 0.0677,
      "min": 1.844,
      "max": 2.027,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     }
    }
@@ -4768,7 +4769,7 @@
      "sd": 0.0214,
      "min": 1.64,
      "max": 1.79,
-     "n_bonds": 41,
+     "n_polyhedra": 41,
      "ref": "e"
     },
     "5": {
@@ -4776,7 +4777,7 @@
      "sd": 0.0518,
      "min": 1.629,
      "max": 1.904,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "e"
     },
     "6": {
@@ -4784,7 +4785,7 @@
      "sd": 0.0462,
      "min": 1.787,
      "max": 1.982,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "e"
     }
    }
@@ -4798,7 +4799,7 @@
      "sd": 0.0436,
      "min": 1.864,
      "max": 2.044,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "e"
     }
    }
@@ -4810,7 +4811,7 @@
      "sd": 0.1249,
      "min": 1.749,
      "max": 2.015,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    }
@@ -4822,7 +4823,7 @@
      "sd": 0.0336,
      "min": 1.763,
      "max": 1.855,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     },
     "6": {
@@ -4830,7 +4831,7 @@
      "sd": 0.0209,
      "min": 1.865,
      "max": 1.923,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     }
    }
@@ -4842,7 +4843,7 @@
      "sd": 0.0135,
      "min": 1.684,
      "max": 1.711,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     },
     "5": {
@@ -4850,7 +4851,7 @@
      "sd": 0.1622,
      "min": 1.658,
      "max": 2.227,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     },
     "6": {
@@ -4858,7 +4859,7 @@
      "sd": 0.1701,
      "min": 1.727,
      "max": 2.169,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "e"
     }
    }
@@ -4872,7 +4873,7 @@
      "sd": 0,
      "min": 2.042,
      "max": 2.042,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     }
    }
@@ -4884,7 +4885,7 @@
      "sd": 0.0084,
      "min": 1.897,
      "max": 1.929,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "e"
     },
     "6": {
@@ -4892,7 +4893,7 @@
      "sd": 0.0238,
      "min": 1.92,
      "max": 2.096,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "e"
     }
    }
@@ -4904,7 +4905,7 @@
      "sd": 0.0132,
      "min": 1.971,
      "max": 2.01,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "e"
     }
    }
@@ -4918,7 +4919,7 @@
      "sd": 0.0092,
      "min": 1.995,
      "max": 2.017,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     }
    },
@@ -4928,7 +4929,7 @@
      "sd": 0.0081,
      "min": 2.035,
      "max": 2.065,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "f"
     }
    }
@@ -4940,7 +4941,7 @@
      "sd": 0.0198,
      "min": 1.945,
      "max": 2.087,
-     "n_bonds": 33,
+     "n_polyhedra": 33,
      "ref": "e"
     }
    },
@@ -4950,7 +4951,7 @@
      "sd": 0.0057,
      "min": 2.012,
      "max": 2.025,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     }
    }
@@ -4964,7 +4965,7 @@
      "sd": 0.0228,
      "min": 1.929,
      "max": 2.082,
-     "n_bonds": 24,
+     "n_polyhedra": 24,
      "ref": "e"
     }
    }
@@ -4978,7 +4979,7 @@
      "sd": 0,
      "min": 1.955,
      "max": 1.955,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "e"
     },
     "4": {
@@ -4986,7 +4987,7 @@
      "sd": 0.3114,
      "min": 1.972,
      "max": 2.834,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "e"
     },
     "5": {
@@ -4994,7 +4995,7 @@
      "sd": 0.2707,
      "min": 2.038,
      "max": 2.726,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "e"
     },
     "6": {
@@ -5002,7 +5003,7 @@
      "sd": 0.2485,
      "min": 2.02,
      "max": 2.932,
-     "n_bonds": 25,
+     "n_polyhedra": 25,
      "ref": "e"
     },
     "7": {
@@ -5010,7 +5011,7 @@
      "sd": 0.2667,
      "min": 1.99,
      "max": 2.988,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "e"
     },
     "8": {
@@ -5018,7 +5019,7 @@
      "sd": 0.1631,
      "min": 2.221,
      "max": 2.906,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "e"
     }
    }
@@ -5032,15 +5033,15 @@
      "sd": 0.0507,
      "min": 2.412,
      "max": 2.569,
-     "n_bonds": 3,
-     "ref": "e"
+     "n_polyhedra": 3,
+     "ref": "d"
     },
     "4": {
      "mean": 2.7264,
      "sd": 0.2308,
      "min": 2.378,
      "max": 3.245,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "d"
     },
     "5": {
@@ -5048,7 +5049,7 @@
      "sd": 0.2959,
      "min": 2.492,
      "max": 3.356,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "d"
     },
     "6": {
@@ -5056,7 +5057,7 @@
      "sd": 0.1944,
      "min": 2.455,
      "max": 3.271,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "d"
     },
     "7": {
@@ -5064,7 +5065,7 @@
      "sd": 0.2264,
      "min": 2.576,
      "max": 3.366,
-     "n_bonds": 8,
+     "n_polyhedra": 8,
      "ref": "d"
     },
     "8": {
@@ -5072,7 +5073,7 @@
      "sd": 0.1917,
      "min": 2.559,
      "max": 3.363,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "d"
     },
     "9": {
@@ -5080,7 +5081,7 @@
      "sd": 0.192,
      "min": 2.558,
      "max": 3.404,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "d"
     },
     "10": {
@@ -5088,7 +5089,7 @@
      "sd": 0.2202,
      "min": 2.647,
      "max": 3.626,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "d"
     },
     "11": {
@@ -5096,7 +5097,7 @@
      "sd": 0.2584,
      "min": 2.676,
      "max": 3.674,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "d"
     },
     "12": {
@@ -5104,7 +5105,7 @@
      "sd": 0.2847,
      "min": 2.722,
      "max": 4.012,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "d"
     }
    },
@@ -5114,7 +5115,7 @@
      "sd": 0.1673,
      "min": 2.814,
      "max": 3.385,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "f"
     },
     "7": {
@@ -5122,7 +5123,7 @@
      "sd": 0.2402,
      "min": 2.751,
      "max": 3.664,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "f"
     },
     "8": {
@@ -5130,7 +5131,7 @@
      "sd": 0.2385,
      "min": 2.78,
      "max": 3.542,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -5142,7 +5143,7 @@
      "sd": 0.0758,
      "min": 2.074,
      "max": 2.481,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "d"
     },
     "7": {
@@ -5150,7 +5151,7 @@
      "sd": 0.1565,
      "min": 2.12,
      "max": 2.624,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "d"
     },
     "8": {
@@ -5158,7 +5159,7 @@
      "sd": 0.1375,
      "min": 2.186,
      "max": 2.804,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "d"
     }
    }
@@ -5172,7 +5173,7 @@
      "sd": 0.0468,
      "min": 2.149,
      "max": 2.291,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "d"
     },
     "4": {
@@ -5180,7 +5181,7 @@
      "sd": 0.1079,
      "min": 2.174,
      "max": 2.638,
-     "n_bonds": 17,
+     "n_polyhedra": 17,
      "ref": "d"
     },
     "5": {
@@ -5188,7 +5189,7 @@
      "sd": 0.2121,
      "min": 2.147,
      "max": 2.99,
-     "n_bonds": 26,
+     "n_polyhedra": 26,
      "ref": "d"
     },
     "6": {
@@ -5196,7 +5197,7 @@
      "sd": 0.2374,
      "min": 2.169,
      "max": 3.153,
-     "n_bonds": 32,
+     "n_polyhedra": 32,
      "ref": "d"
     },
     "7": {
@@ -5204,7 +5205,7 @@
      "sd": 0.2046,
      "min": 2.125,
      "max": 3.214,
-     "n_bonds": 46,
+     "n_polyhedra": 46,
      "ref": "d"
     },
     "8": {
@@ -5212,7 +5213,7 @@
      "sd": 0.2098,
      "min": 2.232,
      "max": 3.28,
-     "n_bonds": 74,
+     "n_polyhedra": 74,
      "ref": "d"
     },
     "9": {
@@ -5220,7 +5221,7 @@
      "sd": 0.2173,
      "min": 2.281,
      "max": 3.231,
-     "n_bonds": 40,
+     "n_polyhedra": 40,
      "ref": "d"
     },
     "10": {
@@ -5228,7 +5229,7 @@
      "sd": 0.2116,
      "min": 2.291,
      "max": 3.261,
-     "n_bonds": 14,
+     "n_polyhedra": 14,
      "ref": "d"
     },
     "11": {
@@ -5236,7 +5237,7 @@
      "sd": 0.2052,
      "min": 2.401,
      "max": 3.168,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "d"
     },
     "12": {
@@ -5244,7 +5245,7 @@
      "sd": 0.113,
      "min": 2.478,
      "max": 3.2,
-     "n_bonds": 17,
+     "n_polyhedra": 17,
      "ref": "d"
     }
    },
@@ -5254,7 +5255,7 @@
      "sd": 0.1248,
      "min": 2.309,
      "max": 2.622,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     },
     "7": {
@@ -5262,7 +5263,7 @@
      "sd": 0.0636,
      "min": 2.667,
      "max": 2.822,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -5274,7 +5275,7 @@
      "sd": 0.0223,
      "min": 1.998,
      "max": 2.074,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "d"
     },
     "5": {
@@ -5282,7 +5283,7 @@
      "sd": 0.0996,
      "min": 2.048,
      "max": 2.324,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "d"
     },
     "6": {
@@ -5290,7 +5291,7 @@
      "sd": 0.0377,
      "min": 2.069,
      "max": 2.237,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "d"
     }
    }
@@ -5304,7 +5305,7 @@
      "sd": 0.0369,
      "min": 2.021,
      "max": 2.151,
-     "n_bonds": 9,
+     "n_polyhedra": 9,
      "ref": "d"
     },
     "4": {
@@ -5312,7 +5313,7 @@
      "sd": 0.163,
      "min": 1.985,
      "max": 2.79,
-     "n_bonds": 21,
+     "n_polyhedra": 21,
      "ref": "d"
     },
     "5": {
@@ -5320,7 +5321,7 @@
      "sd": 0.1952,
      "min": 2.053,
      "max": 2.785,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "d"
     },
     "6": {
@@ -5328,7 +5329,7 @@
      "sd": 0.2293,
      "min": 2.077,
      "max": 2.981,
-     "n_bonds": 37,
+     "n_polyhedra": 37,
      "ref": "d"
     },
     "7": {
@@ -5336,7 +5337,7 @@
      "sd": 0.3029,
      "min": 2.057,
      "max": 3.154,
-     "n_bonds": 37,
+     "n_polyhedra": 37,
      "ref": "d"
     },
     "8": {
@@ -5344,7 +5345,7 @@
      "sd": 0.2519,
      "min": 2.096,
      "max": 3.165,
-     "n_bonds": 83,
+     "n_polyhedra": 83,
      "ref": "d"
     },
     "9": {
@@ -5352,7 +5353,7 @@
      "sd": 0.3023,
      "min": 2.077,
      "max": 3.158,
-     "n_bonds": 18,
+     "n_polyhedra": 18,
      "ref": "d"
     },
     "10": {
@@ -5360,7 +5361,7 @@
      "sd": 0.3129,
      "min": 2.126,
      "max": 3.219,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "d"
     },
     "12": {
@@ -5368,7 +5369,7 @@
      "sd": 0.2636,
      "min": 2.286,
      "max": 3.183,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "d"
     }
    }
@@ -5380,7 +5381,7 @@
      "sd": 0.0154,
      "min": 1.964,
      "max": 2.002,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "d"
     },
     "6": {
@@ -5388,7 +5389,7 @@
      "sd": 0.0335,
      "min": 2.009,
      "max": 2.174,
-     "n_bonds": 10,
+     "n_polyhedra": 10,
      "ref": "d"
     }
    }
@@ -5402,7 +5403,7 @@
      "sd": 0.0711,
      "min": 2.247,
      "max": 2.691,
-     "n_bonds": 12,
+     "n_polyhedra": 12,
      "ref": "b"
     },
     "9": {
@@ -5410,7 +5411,7 @@
      "sd": 0.1103,
      "min": 2.201,
      "max": 2.836,
-     "n_bonds": 11,
+     "n_polyhedra": 11,
      "ref": "b"
     },
     "10": {
@@ -5418,7 +5419,7 @@
      "sd": 0.0401,
      "min": 2.452,
      "max": 2.56,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     },
     "12": {
@@ -5426,7 +5427,7 @@
      "sd": 0.0416,
      "min": 2.474,
      "max": 2.642,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "b"
     }
    }
@@ -5440,7 +5441,7 @@
      "sd": 0.1032,
      "min": 2.08,
      "max": 2.514,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     },
     "8": {
@@ -5448,7 +5449,7 @@
      "sd": 0.1458,
      "min": 2.216,
      "max": 2.824,
-     "n_bonds": 5,
+     "n_polyhedra": 5,
      "ref": "b"
     },
     "9": {
@@ -5456,7 +5457,7 @@
      "sd": 0.0907,
      "min": 2.279,
      "max": 2.604,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     },
     "10": {
@@ -5464,7 +5465,7 @@
      "sd": 0.0561,
      "min": 2.369,
      "max": 2.642,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "b"
     },
     "12": {
@@ -5472,7 +5473,7 @@
      "sd": 0.0209,
      "min": 2.459,
      "max": 2.545,
-     "n_bonds": 7,
+     "n_polyhedra": 7,
      "ref": "b"
     }
    },
@@ -5482,7 +5483,7 @@
      "sd": 0.04,
      "min": 2.384,
      "max": 2.464,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "f"
     }
    }
@@ -5494,7 +5495,7 @@
      "sd": 0.047,
      "min": 2.059,
      "max": 2.164,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     },
     "7": {
@@ -5502,7 +5503,7 @@
      "sd": 0.1601,
      "min": 2.062,
      "max": 2.538,
-     "n_bonds": 3,
+     "n_polyhedra": 3,
      "ref": "b"
     }
    }
@@ -5514,7 +5515,7 @@
      "sd": 0.2187,
      "min": 1.731,
      "max": 2.359,
-     "n_bonds": 93,
+     "n_polyhedra": 93,
      "ref": "b"
     },
     "7": {
@@ -5522,7 +5523,7 @@
      "sd": 0.2738,
      "min": 1.692,
      "max": 2.775,
-     "n_bonds": 445,
+     "n_polyhedra": 445,
      "ref": "b"
     },
     "8": {
@@ -5530,7 +5531,7 @@
      "sd": 0.3075,
      "min": 1.728,
      "max": 2.797,
-     "n_bonds": 42,
+     "n_polyhedra": 42,
      "ref": "b"
     }
    }
@@ -5544,7 +5545,7 @@
      "sd": 0.2588,
      "min": 1.845,
      "max": 2.395,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     },
     "7": {
@@ -5552,7 +5553,7 @@
      "sd": 0.2841,
      "min": 1.812,
      "max": 2.591,
-     "n_bonds": 26,
+     "n_polyhedra": 26,
      "ref": "b"
     },
     "8": {
@@ -5560,7 +5561,7 @@
      "sd": 0.3167,
      "min": 1.825,
      "max": 2.77,
-     "n_bonds": 4,
+     "n_polyhedra": 4,
      "ref": "b"
     }
    }
@@ -5572,7 +5573,7 @@
      "sd": 0.2847,
      "min": 1.726,
      "max": 2.486,
-     "n_bonds": 6,
+     "n_polyhedra": 6,
      "ref": "b"
     },
     "8": {
@@ -5580,7 +5581,7 @@
      "sd": 0.2822,
      "min": 1.773,
      "max": 2.442,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     }
    }
@@ -5592,7 +5593,7 @@
      "sd": 0.2296,
      "min": 1.879,
      "max": 2.409,
-     "n_bonds": 2,
+     "n_polyhedra": 2,
      "ref": "b"
     }
    }
@@ -5606,7 +5607,7 @@
      "sd": 0.0565,
      "min": 2.465,
      "max": 2.578,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     }
    }
@@ -5620,7 +5621,7 @@
      "sd": 0.0555,
      "min": 2.453,
      "max": 2.564,
-     "n_bonds": 1,
+     "n_polyhedra": 1,
      "ref": "b"
     }
    }

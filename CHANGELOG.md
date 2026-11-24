@@ -34,6 +34,10 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
+### 2.0.49 – unreleased
+
+- **Gagné's sample sizes are counted in coordination polyhedra, and say so** (#51). The bond-length table's `n_bonds` was the number of polyhedra: summed by source, it gives each paper's published totals of polyhedra, and times the coordination number its totals of bonds ([6]Ni²⁺: 242 octahedra, 1,452 bonds). The field is now `n_polyhedra`, the per-site column `bl_n_polyhedra` (was `bl_n_bonds`), and G6 and M10 say "polyhedra" in their evidence. G6 compares one polyhedron's shortest bond with the shortest Gagné found across n polyhedra, so the reason given for `MEASURED_MIN_SAMPLE` holds once the unit is the polyhedron, and 50 stays. The same check found references c and d attached to each other's paper (the non-metals were cited as the metalloids paper) and [3]Tl⁺ cited to the transition-metal paper; both are corrected, and the nitride reference gives its published version. No verdict changes. `tests/test_bond_lengths.py` checks the totals against each paper.
+
 ### 2.0.48 – 19 November 2026
 
 **Homopolar anion units are not assessed rather than expunged (R8); M12 says what the file holds as written**
