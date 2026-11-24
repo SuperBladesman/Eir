@@ -3787,7 +3787,7 @@ def econ_weighted_bvs(distances, r0, b, max_iter=25, tol=1e-9):
 #
 # apply_shell_correction (CELL 7) already repairs this where Gagne measured
 # the boundary for the configuration (n >= BL_MIN_SAMPLE). Os(5+) has four
-# bonds in the survey and Re(5+) three, so it never fired for them, and the
+# octahedra in the survey and Re(5+) three, so it never fired for them, and the
 # Lewis-acidity fallback is rightly not trusted to replace a shell alone.
 #
 # This guard needs no fitted boundary. A contact leaves the shell only if
@@ -4972,6 +4972,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
     _gov = [None]       # v2.0.46: the cation contact nearest its floor
     _hard = [None]      # ... of those not between mobile ions (mobile_pair)
     _soft = [None]      # ... of those that are
+    _POSITION_OVERFULL.pop(str(cif_path), None)   # v2.0.49: never stale
     _dnote = {}         # v2.0.49 (#50): (label, label) -> dopant note
 
     def _scan(st, anion_set, rmax, esd=None, sv=None, tot=None,
@@ -5156,8 +5157,9 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
         try:
             _POSITION_OVERFULL[str(cif_path)] = overfull_positions(
                 st, _esd, _anion_set)
-        except (ValueError, TypeError, AttributeError, RuntimeError) as _e:
-            _POSITION_OVERFULL[str(cif_path)] = []
+        except (ValueError, KeyError, IndexError, RuntimeError) as _e:
+            # no record, so the screen reads None: not assessed. TypeError
+            # and AttributeError are defects here and re-raise below.
             _note_read_failure(cif_path, 'overfull_positions', _e)
         # v2.0.48: homopolar anion units (#10), before the scan reads them.
         # A failure here costs the units, not the packing gates.

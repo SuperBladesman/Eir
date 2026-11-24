@@ -79,10 +79,6 @@ PGRM_SUPPRESS = False
 # and counting each polyhedron's bonds as independent draws would overstate
 # the sample by up to CN times. 50 stays; no verdict moves.
 MEASURED_MIN_RATIO = 0.90
-# v2.0.49 (#49): the reason each over-filled position reports, by gate
-_OVERFULL_REASON = {'G1': 'contact_below_physical_floor',
-                    'G2': 'anion_packing_impossible',
-                    'G5': 'cation_packing_impossible'}
 MEASURED_MIN_SAMPLE = 50
 
 # v2.0.36. THE POLYHEDRON IS THE WRONG SIZE FOR THE ION IN IT.
@@ -321,6 +317,18 @@ def _pgrm_has_value(x):
     # and as the empty string from a CSV.
     return str(x).strip().lower() not in ('', 'nan', 'none', '<na>')
 
+
+def _bl_sample(row):
+    """The bond-length sample behind a site: bl_n_polyhedra, or bl_n_bonds
+    in output written before 2.0.49, which held the same number (#51)."""
+    try:
+        has_new = 'bl_n_polyhedra' in row
+    except TypeError:
+        has_new = False
+    return _pgrm_f(row.get('bl_n_polyhedra') if has_new
+                   else row.get('bl_n_bonds'), 0.0)
+
+
 def classify_site(row, struct):
     """
     Return (code, reason, evidence) for the most severe gate this site fails.
@@ -389,7 +397,7 @@ def classify_site(row, struct):
     # behind it. Both are statements about a distance rather than about a fit,
     # which is what keeps them in G.
     _blr = _pgrm_f(row.get('bl_ratio_min'))
-    _bln = _pgrm_f(row.get('bl_n_polyhedra'), 0.0)
+    _bln = _bl_sample(row)
     _blt = _pgrm_f(row.get('bl_tier'))
     if (_blr == _blr and _blr < MEASURED_MIN_RATIO
             and _bln >= MEASURED_MIN_SAMPLE
@@ -481,9 +489,9 @@ def classify_site(row, struct):
     # so it is asked with them, under the gate the pair would meet.
     _pov = struct.get('position_overfull')
     if _pgrm_has_value(_pov):
-        _pc = str(struct.get('position_overfull_code') or 'G5')
-        return (_pc, _OVERFULL_REASON.get(_pc, 'cation_packing_impossible'),
-                str(_pov))
+        _pc = struct.get('position_overfull_code')
+        _pc = _pc if _pc in ('G1', 'G2', 'G5') else 'G5'
+        return (_pc, 'position_overfilled', str(_pov))
     aa = _pgrm_f(struct.get('anion_anion_min'))
     if aa == aa and aa < _PGRM_ANION_FLOOR:
         return ('G2', 'anion_packing_impossible',
@@ -659,7 +667,7 @@ def classify_site(row, struct):
     # Coverage is 1610 of 9685 sites. Where any rule fails, M10 says nothing;
     # bond_size_z is exported either way, so the evidence is on the row.
     _bz = _pgrm_f(row.get('bond_size_z'))
-    _bzn = _pgrm_f(row.get('bl_n_polyhedra'), 0.0)
+    _bzn = _bl_sample(row)
     if (_bz == _bz and abs(_bz) > BOND_SIZE_Z
             and _bzn >= BL_MIN_SAMPLE
             and _pgrm_is_true(row.get('is_dominant_species'))

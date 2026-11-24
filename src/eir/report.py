@@ -463,7 +463,9 @@ def _polyhedra_section(result, x, limit=12):
             continue
         hl = None
         lab = _str(row.get('site_label'))
-        if lab == head_lab and result.code in ('G1', 'G6', 'M8'):
+        if result.reason == 'position_overfilled':
+            hl = None     # v2.0.49: the fault is the labels, not a bond
+        elif lab == head_lab and result.code in ('G1', 'G6', 'M8'):
             hl = 'shortest_bond'
         elif result.code == 'G2':
             hl = 'anion_pair'
