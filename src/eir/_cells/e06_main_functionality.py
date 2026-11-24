@@ -5335,11 +5335,15 @@ def process_single_cif(file_path, user_oxidation_states=None):
                         # v2.0.50 (#11): for an estimate, its band and how
                         # far this site's mean bond sits from it, as a
                         # fraction; null where the expectation is measured
-                        site_result['bl_estimate_band'] = _bl.get('band')
+                        # (and not for a shell of mixed ligands, whose
+                        # expectation is for the first ligand listed)
+                        _mixed = ',' in str(site_result.get('ligand_types') or '')
+                        site_result['bl_estimate_band'] = (
+                            None if _mixed else _bl.get('band'))
                         site_result['bl_estimate_deviation'] = (
                             round((_obs_mean - _bl['mean']) / _bl['mean'], 4)
-                            if _bl.get('band') and _obs_mean is not None
-                            and _bl['mean'] else None)
+                            if _bl.get('band') and not _mixed
+                            and _obs_mean is not None and _bl['mean'] else None)
 
 
                     # ========================================================================

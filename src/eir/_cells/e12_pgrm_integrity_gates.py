@@ -329,9 +329,16 @@ def _bl_sample(row):
                    else row.get('bl_n_bonds'), 0.0)
 
 
+def _bl_ligands(row):
+    v = row.get('ligand_types')
+    if v is None or v != v:
+        return []
+    return [x.strip() for x in str(v).split(',') if x.strip()]
+
+
 def _bl_ligand(row):
-    lig = str(row.get('ligand_types') or '').split(',')[0].strip()
-    return lig or 'the ligand'
+    ligs = _bl_ligands(row)
+    return ligs[0] if ligs else 'the ligand'
 
 
 def _bl_estimate(row):
@@ -341,7 +348,7 @@ def _bl_estimate(row):
     or absent. Read from bl_delta_mean, so output written before 2.0.50 is
     judged the same way."""
     t = _pgrm_f(row.get('bl_tier'))
-    if t != t or int(t) not in ESTIMATED_TIERS:
+    if t != t or int(t) not in ESTIMATED_TIERS or len(_bl_ligands(row)) > 1:
         return None
     m = _pgrm_f(row.get('bl_expected_mean'))
     d = _pgrm_f(row.get('bl_delta_mean'))
@@ -575,6 +582,17 @@ def classify_site(row, struct):
                 f'{row.get("element")}({row.get("valence")}) to '
                 f'{_bl_ligand(row)}: no measured bond lengths, and no radius '
                 f'to estimate them from')
+    # ... nor for a shell of mixed ligands, whose expectation is taken for
+    # the first ligand listed (alphabetically: Cl before O in a perchlorate
+    # with chloride beside it) and so does not describe the shell. Kept at
+    # R3 until the expectation follows the ligands actually bonded.
+    _ligs = _bl_ligands(row)
+    if int(_blt3) in ESTIMATED_TIERS and len(_ligs) > 1:
+        return ('R3', 'no_measured_bond_lengths',
+                f'{row.get("element")}({row.get("valence")}) bonded to '
+                f'{" and ".join(_ligs)}: no measured bond lengths for '
+                f'{_ligs[0]}, and no estimate is made for a shell of mixed '
+                f'ligands')
 
     # v2.0.37: THE INDEX THE TIER TELLS A READER TO QUOTE MUST EXIST.
     #
@@ -1233,9 +1251,14 @@ def VALIDATE_GATES(verbose=True):
            f'at +19.3%: {_c16[0]} ({_c16[2]}); as a minority species: {_m16[0]}')
     _c17 = classify_site(dict(_e15, bl_tier=float('nan'), bl_source=None,
                               bl_expected_mean=float('nan')), _g15)
-    report('17. R3: no measurement and no estimate is not assessed',
-           _c17[0] == 'R3' and 'no radius to estimate them from' in str(_c17[2]),
-           f'{_c17[0]} ({_c17[2]})')
+    _x17 = classify_site(dict(_e15, element='S', valence=6, cn=5,
+                              ligand_types='N,O', avg_bond_length=3.585,
+                              bl_expected_mean=1.58, bl_delta_mean=2.005),
+                         _g15)
+    report('17. R3: no measurement and no estimate is not assessed, nor a mixed shell',
+           _c17[0] == 'R3' and 'no radius to estimate them from' in str(_c17[2])
+           and _x17[0] == 'R3' and 'mixed ligands' in str(_x17[2]),
+           f'{_c17[0]} ({_c17[2]}); S(6) bonded to N and O: {_x17[0]} ({_x17[2]})')
 
     ok = all(results)
     if verbose:
