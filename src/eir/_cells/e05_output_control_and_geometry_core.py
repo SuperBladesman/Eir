@@ -745,7 +745,7 @@ class BatchReporter:
                 lines.append(f'    {_os.path.basename(p)}')
         if failed_path:
             lines.append(f'    {_os.path.basename(failed_path)}'
-                         f'   the files that could not be read')
+                         f'   the files that could not be read or assessed')
         if self.log_path:
             lines.append(f'    {_os.path.basename(self.log_path)}'
                          f'   this feed, at full detail')
