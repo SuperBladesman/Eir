@@ -112,7 +112,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 44 tests against structures whose answers are known by hand, the 14 gate tests, the 10 coordination-shell tests, the six tests of the two Fd-3m settings, the 48 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions, labels written at one position) and the structural self-check. Run it again after changing anything.
+runs the 44 tests against structures whose answers are known by hand, the 14 gate tests, the 10 coordination-shell tests, the six tests of the two Fd-3m settings, the 51 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions, labels written at one position, dopants on mobile-ion positions) and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 

@@ -5546,7 +5546,8 @@ def process_single_cif(file_path, user_oxidation_states=None):
             None if _gv is None else
             f'{_gv[2]}-{_gv[3]} {_gv[1]:.3f} A, floor {_gv[4]:.2f} A'
             + (f'; positions {_gv[5]:.3f} and {_gv[6]:.3f} filled'
-               if _gv[7] else ''))
+               if _gv[7] else '')
+            + (f'; {_gv[8]}' if len(_gv) > 8 and _gv[8] else ''))   # v2.0.49
         # v2.0.46: below the floor, but between mobile ions (mobile_pair)
         results['cation_contact_partly_occupied'] = (
             None if _gv is None else bool(_gv[7]))

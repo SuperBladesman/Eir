@@ -179,6 +179,14 @@ def _reason_sentence(code, reason, site):
         'cation_packing_impossible':
             'Two cations are closer together than is credible for any sound '
             'structure.',
+        'dopant_beside_mobile_ions':
+            'A higher-charge ion shares a partly filled position of '
+            'monovalent cations and lies closer to the next such position '
+            'than the two can be together. The monovalent ions alone sum to '
+            'more than one over the two positions, by at least as much as '
+            'the dopant present, so the dopant can sit where its neighbour '
+            'is empty, and is read that way; treat the occupancies with '
+            'care.',
         'mobile_ions_close':
             'Two partly filled positions of monovalent cations lie closer '
             'together than two such ions can be, as the mobile ion of an '
