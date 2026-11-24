@@ -79,10 +79,6 @@ PGRM_SUPPRESS = False
 # and counting each polyhedron's bonds as independent draws would overstate
 # the sample by up to CN times. 50 stays; no verdict moves.
 MEASURED_MIN_RATIO = 0.90
-# v2.0.49 (#49): the reason each over-filled position reports, by gate
-_OVERFULL_REASON = {'G1': 'contact_below_physical_floor',
-                    'G2': 'anion_packing_impossible',
-                    'G5': 'cation_packing_impossible'}
 MEASURED_MIN_SAMPLE = 50
 
 # v2.0.36. THE POLYHEDRON IS THE WRONG SIZE FOR THE ION IN IT.
@@ -493,9 +489,9 @@ def classify_site(row, struct):
     # so it is asked with them, under the gate the pair would meet.
     _pov = struct.get('position_overfull')
     if _pgrm_has_value(_pov):
-        _pc = str(struct.get('position_overfull_code') or 'G5')
-        return (_pc, _OVERFULL_REASON.get(_pc, 'cation_packing_impossible'),
-                str(_pov))
+        _pc = struct.get('position_overfull_code')
+        _pc = _pc if _pc in ('G1', 'G2', 'G5') else 'G5'
+        return (_pc, 'position_overfilled', str(_pov))
     aa = _pgrm_f(struct.get('anion_anion_min'))
     if aa == aa and aa < _PGRM_ANION_FLOOR:
         return ('G2', 'anion_packing_impossible',

@@ -129,6 +129,7 @@ def build_structure_table(df):
               'structure_core_geometry_plausible',
               'structure_bvs_geometry_plausible', 'anion_packing_plausible',
               'cation_packing_plausible', 'structure_cn_plausible',
+              'position_occupancy_plausible',          # v2.0.49
               'u_parameter', 'u_deviation', 'pyrochlore_48f_x',
               'pyrochlore_fluorite_limit', 'origin_choice',
               # v2.0.30: the propagated uncertainty and the basis it belongs
@@ -261,7 +262,8 @@ def build_structure_table(df):
     # consumer was rebuilding it, and they did not all use the same five.
     _screens = ['structure_core_geometry_plausible',
                'structure_bvs_geometry_plausible', 'anion_packing_plausible',
-               'cation_packing_plausible', 'structure_cn_plausible']
+               'cation_packing_plausible', 'structure_cn_plausible',
+               'position_occupancy_plausible']         # v2.0.49 (#49)
     _have = [c for c in _screens if c in out.columns]
     if _have:
         _fail = sum(out[c].astype(str).str.lower().eq('false').astype(int)
