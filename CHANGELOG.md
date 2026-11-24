@@ -38,6 +38,10 @@ Every surviving version of Eir, newest first, with UK dates. Each released versi
 
 ## Eir 2.0 series
 
+### 2.0.50 – unreleased
+
+- **The one-page report lists the seventh geometry screen** (#60). 2.0.49 (#49) added position occupancy to the dataset summary, `n_screens_failed` and the screens figure, but the report's screen table kept six rows and said six; it now has the row, with the over-fill as its measure. The README, the notebook's introduction and the JOSS paper and its facets figure say seven, and the paper's test counts, platforms and AI disclosure are brought up to 2.0.49. No result changes.
+
 ### 2.0.49 – 24 November 2026
 
 **Labels that over-fill one position are expunged; a dopant beside mobile ions is read as M11; a file with no site to assess is counted as failed; Gagné's sample sizes are named as polyhedra**
