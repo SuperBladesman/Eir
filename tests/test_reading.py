@@ -464,6 +464,21 @@ def test_the_dopant_reading_has_its_own_reason(tmp_path):
     assert r.evidence.endswith('read as the dopant only where its neighbour is empty')
 
 
+def test_a_dopant_is_released_where_the_mobile_ions_clear_their_own_floor(tmp_path):
+    # decided for 2.0.49: with a = 3.81 A the Na pair is 2.20 A apart, above
+    # the 2.00 A monovalent floor, and Ca2-Na1 below the 2.40 A Ca floor.
+    # (a), (b) and (c) hold, so the Ca is read as sitting only where Na1 is
+    # empty, although the Na themselves are never M11 here
+    txt = cif('p2w', (3.81, 3.81, 10.9, 90, 90, 120), 'P 63/m m c',
+              [('Co1', 'Co3+', 0, 0, 0, 1), ('O1', 'O2-', 0.33333, 0.66667, 0.0925, 1),
+               ('Na1', 'Na1+', 0, 0, 0.25, 0.6), ('Na2', 'Na1+', 0.66667, 0.33333, 0.25, 0.6),
+               ('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10)],
+              [('Na1+', 1), ('Co3+', 3), ('O2-', -2), ('Ca2+', 2)])
+    r = run(tmp_path, txt)
+    assert (r.tier, r.code, r.reason) == ('FLAG', 'M11', 'dopant_beside_mobile_ions'), r.evidence
+    assert 'Ca2-Na1 2.200 A, floor 2.40 A' in r.evidence
+
+
 @pytest.mark.parametrize('na1', [1.0, 0.95])
 def test_a_dopant_beside_a_full_or_nearly_full_position_is_expunged(tmp_path, na1):
     # Na1 full, or at 0.95 with 0.10 of Ca beside it: the Ca cannot sit only
