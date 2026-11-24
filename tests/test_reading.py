@@ -401,3 +401,17 @@ def test_refined_occupancies_get_three_esds_and_fixed_ones_rounding(tmp_path):
                              ('Ca1', 'Ca2+', 0, 0, 0, 0.13), OX]), name='b.cif')
     assert ok.tier != 'EXPUNGE', (ok.code, ok.evidence)
     assert (bad.tier, bad.code) == ('EXPUNGE', 'G5'), bad.evidence
+
+
+# ---- 2.0.49: a dopant on a mobile ion's position (#50) ----------------------
+def test_a_dopant_on_a_mobile_ion_position_is_read_as_mobile(tmp_path):
+    # Na1 0.60 beside 2d shared by Na2 0.60 and Ca2 0.10: the Na alone
+    # over-fill the pair, and the Ca is less than that over-fill
+    r = run(tmp_path, p2(0.60, 0.60, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10)]))
+    assert (r.tier, r.code) == ('FLAG', 'M11'), r.evidence
+    assert 'Ca2 at 0.100 set aside' in r.evidence
+
+
+def test_more_dopant_than_the_mobile_over_fill_is_still_expunged(tmp_path):
+    r = run(tmp_path, p2(0.50, 0.55, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.25)]))
+    assert (r.tier, r.code) == ('EXPUNGE', 'G5'), r.evidence

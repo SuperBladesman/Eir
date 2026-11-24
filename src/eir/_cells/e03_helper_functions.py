@@ -4217,31 +4217,10 @@ def overfull_positions(st, esd=None, anion_set=()):
     refined to zero occupancy hold no atom and are left out."""
     import math as _m
     esd = esd or {}
-    sites = [s for s in st.sites
-             if getattr(s, 'occ', None) is None or float(s.occ) > 0]
-    ops = list(st.spacegroup.operations()) if st.spacegroup is not None else []
-
-    def _same(a, b):
-        fa = (a.fract.x, a.fract.y, a.fract.z)
-        for op in ops or [None]:
-            fb = ((b.fract.x, b.fract.y, b.fract.z) if op is None else
-                  op.apply_to_xyz([b.fract.x, b.fract.y, b.fract.z]))
-            df = [x - y - round(x - y) for x, y in zip(fa, fb)]
-            c = st.cell.orthogonalize(gemmi.Fractional(*df))
-            if c.x * c.x + c.y * c.y + c.z * c.z < POSITION_TOL ** 2:
-                return True
-        return False
-
-    groups = []
-    for a in sites:
-        for g in groups:
-            if _same(g[0], a):
-                g.append(a)
-                break
-        else:
-            groups.append([a])
     out = []
-    for g in groups:
+    for g in _position_groups(st):
+        g = [s for s in g
+             if getattr(s, 'occ', None) is None or float(s.occ) > 0]
         if len(g) < 2:
             continue
         tot = sum(1.0 if getattr(s, 'occ', None) is None else float(s.occ)
@@ -4258,6 +4237,116 @@ def overfull_positions(st, esd=None, anion_set=()):
     out.sort(key=lambda r: (_OVERFULL_RANK[r['code']],
                             -(r['total'] - r['limit'])))
     return out
+
+
+def _position_groups(st):
+    """[[site, ...]]: the sites at each position, found as
+    _position_occupancies finds them (within POSITION_TOL, at any symmetry
+    image), in file order. v2.0.49."""
+    ops = list(st.spacegroup.operations()) if st.spacegroup is not None else []
+
+    def _same(a, b):
+        fa = (a.fract.x, a.fract.y, a.fract.z)
+        for op in ops or [None]:
+            fb = ((b.fract.x, b.fract.y, b.fract.z) if op is None else
+                  op.apply_to_xyz([b.fract.x, b.fract.y, b.fract.z]))
+            df = [x - y - round(x - y) for x, y in zip(fa, fb)]
+            c = st.cell.orthogonalize(gemmi.Fractional(*df))
+            if c.x * c.x + c.y * c.y + c.z * c.z < POSITION_TOL ** 2:
+                return True
+        return False
+
+    groups = []
+    for a in st.sites:
+        for g in groups:
+            if _same(g[0], a):
+                g.append(a)
+                break
+        else:
+            groups.append([a])
+    return groups
+
+
+# v2.0.49 (#50): A DOPANT ON A MOBILE ION'S POSITION.
+#
+# The packing scan judges a close pair by its POSITIONS' occupancies, all
+# species together (2.0.46, after ICSD 164286), and mobile_pair forgives a
+# pair only between two monovalent ions. A dopant of higher charge sharing a
+# partly filled mobile-ion position met neither rule, so wherever the mobile
+# ions over-filled the pair the dopant's own contact was G5. In Al-doped
+# Li7La3Zr2O12 (ICSD 235896) 24d holds Li1 0.713(11) and Al1 0.11 beside Li2
+# on 96h at 0.406(11), 1.627 A away: the positions sum to 1.229 and the
+# entry was EXPUNGE for Al1-Li2, although Li alone fills the pair to 1.119,
+# the case mobile_pair reads as not filled together, and Al1 with Li2's
+# position is 0.516. Of the 56 garnet EXPUNGEs in the 23 November 2026
+# screen, 28 were a dopant beside part-filled Li on G5.
+#
+# Such a pair is set aside, and read as M11, when all three hold:
+#   (a) the dopant's own occupancy plus the neighbour's position is within
+#       the alternatives rule's allowance;
+#   (b) the monovalent ions alone on the two positions over-fill the pair
+#       beyond that allowance, on positions mobile_pair would accept (each
+#       partly filled), so the over-fill is the one M11 already forgives;
+#   (c) the dopant's occupancy (every higher-charge cation on its position)
+#       is no more than that over-fill, so the dopant cannot be what
+#       over-fills it.
+# H counts as a monovalent ion in (b) and (c), though the scan leaves it
+# out (NRM, 23 November 2026). Without (b) the Na/Ca case of parsing test
+# 40, where the Ca makes the over-fill, would be forgiven; without (c) an
+# Al at 0.40 beside Li at 0.47 would be, by 0.02 of Li. On the screen this
+# releases 13 of the 28 to M11 (and 136223, 136227, whose files give Zr(2+),
+# to R2); the nine whose dopant position is full stay G5, as do 36943 (Li
+# alone within its allowance) and 19992, 195182 and 196425 (c).
+def _position_species(st, esd=None, sv=None, ev=None, anion_set=()):
+    """{label: (monovalent occupancy at its position, its standard
+    uncertainty, higher-charge cation occupancy at its position)}. H and D
+    count as monovalent. v2.0.49 (#50)."""
+    import math as _m
+    esd, sv, ev = esd or {}, sv or {}, ev or {}
+    out = {}
+    for g in _position_groups(st):
+        mono = var = high = 0.0
+        for s in g:
+            el = s.element.name
+            o = 1.0 if getattr(s, 'occ', None) is None else float(s.occ)
+            if o <= 0 or el in anion_set:
+                continue
+            if (el in CATION_FLOOR_EXCLUDED_ELEMENTS
+                    or monovalent(el, sv.get(s.label, ev.get(el)))):
+                mono += o
+                var += esd.get(s.label, 0.0) ** 2
+            else:
+                high += o
+        for s in g:
+            out[s.label] = (mono, _m.sqrt(var), high)
+    return out
+
+
+def dopant_beside_mobile(dop_label, dop_occ, dop_sig, dop_pos, nb_label,
+                         nb_pos, nb_pos_sig, spc):
+    """The note that sets a dopant's contact with a monovalent neighbour
+    aside, by (a), (b) and (c) above, or None. dop_pos and nb_pos are the
+    two positions' occupancies, all species together. v2.0.49 (#50)."""
+    import math as _m
+    if not spc or dop_label not in spc or nb_label not in spc:
+        return None
+    _full = 1.0 - (ALTERNATIVE_OCC_SUM_MAX - 1.0)
+    if not (dop_pos < _full and nb_pos < _full):
+        return None
+    _base = ALTERNATIVE_OCC_SUM_MAX - 1.0
+    if (dop_occ + nb_pos - 1.0
+            > max(_base, OCC_ESD_K * _m.hypot(dop_sig, nb_pos_sig)) + 1e-9):
+        return None                                                    # (a)
+    m0, s0, h0 = spc[dop_label]
+    m1, s1, _ = spc[nb_label]
+    over = m0 + m1 - 1.0
+    if over <= max(_base, OCC_ESD_K * _m.hypot(s0, s1)) + 1e-9:
+        return None                                                    # (b)
+    if h0 > over + 1e-9:
+        return None                                                    # (c)
+    return (f'{dop_label} at {dop_occ:.3f} set aside: the monovalent ions '
+            f'alone fill the pair to {m0 + m1:.3f}, an over-fill of '
+            f'{over:.3f} against {h0:.3f} of dopant')
 
 
 def _are_alternatives(s1, s2, esd=None, totals=None):
@@ -4883,9 +4972,10 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
     _gov = [None]       # v2.0.46: the cation contact nearest its floor
     _hard = [None]      # ... of those not between mobile ions (mobile_pair)
     _soft = [None]      # ... of those that are
+    _dnote = {}         # v2.0.49 (#50): (label, label) -> dopant note
 
     def _scan(st, anion_set, rmax, esd=None, sv=None, tot=None,
-              units=None):
+              units=None, spc=None):
         # v2.0.14: the image range follows the search radius. At one image a
         # 6.5 A search in a 5 A cell cannot reach the neighbour it is looking
         # for, so widening rmax alone would have been a half fix.
@@ -5018,9 +5108,26 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
                     if _gov[0] is None or _c[0] < _gov[0][0]:
                         _gov[0] = _c
                     # v2.0.46: see mobile_pair
-                    _box = (_soft if mobile_pair(el, v0, pocc0, els[idx],
-                                                 vals[idx], float(poccs[idx]))
-                            else _hard)
+                    _mob = mobile_pair(el, v0, pocc0, els[idx], vals[idx],
+                                       float(poccs[idx]))
+                    # v2.0.49 (#50): a dopant beside a mobile ion, see
+                    # dopant_beside_mobile
+                    if not _mob and dist < _fl and spc:
+                        _mv0 = monovalent(el, v0)
+                        _mv1 = monovalent(els[idx], vals[idx])
+                        _note = None
+                        if _mv1 and not _mv0:
+                            _note = dopant_beside_mobile(
+                                s.label, occ0, sig0, pocc0, labs[idx],
+                                float(poccs[idx]), float(psigs[idx]), spc)
+                        elif _mv0 and not _mv1:
+                            _note = dopant_beside_mobile(
+                                labs[idx], float(occs[idx]), float(sigs[idx]),
+                                float(poccs[idx]), s.label, pocc0, psig0, spc)
+                        if _note:
+                            _mob = True
+                            _dnote[(s.label, labs[idx])] = _note
+                    _box = _soft if _mob else _hard
                     if _box[0] is None or _c[0] < _box[0][0]:
                         _box[0] = _c
         return aa, cc
@@ -5078,7 +5185,14 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
                   f'{os.path.basename(str(cif_path))}: {_ue}]')
             _units = {}
         _HOMOPOLAR_UNITS[str(cif_path)] = _units
-        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot, _units)
+        # v2.0.49 (#50): each position's monovalent and dopant occupancy
+        try:
+            _spc = _position_species(st, _esd, _sv, valences or {},
+                                     _anion_set)
+        except (ValueError, TypeError, AttributeError, RuntimeError) as _e:
+            _spc = {}
+            _note_read_failure(cif_path, 'position_species', _e)
+        aa, cc = _scan(st, _anion_set, rmax, _esd, _sv, _tot, _units, _spc)
 
         # v2.0.14: one widened retry, and only where a bucket that SHOULD
         # have a member came back empty. A structure with no cations has no
@@ -5086,7 +5200,7 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
         if ((_has_anion and aa is None) or (_has_cation and cc is None)) \
                 and rmax < ANION_CONTACT_RMAX_WIDE:
             aa2, cc2 = _scan(st, _anion_set, ANION_CONTACT_RMAX_WIDE, _esd,
-                             _sv, _tot, _units)
+                             _sv, _tot, _units, _spc)
             aa = aa if aa is not None else aa2
             cc = cc if cc is not None else cc2
         _POLYANION_EDGE_MIN[str(cif_path)] = min(_edges) if _edges else None
@@ -5095,6 +5209,9 @@ def anion_anion_contacts(cif_path, rmax=4.0, dedup_tol=0.02, valences=None,
         _dec = (_hard[0] + (False,) if _hard[0] is not None and _hard[0][0] < 0
                 else _soft[0] + (True,) if _soft[0] is not None and _soft[0][0] < 0
                 else None if _gov[0] is None else _gov[0] + (False,))
+        # v2.0.49 (#50): a dopant pair set aside says why
+        if _dec is not None and _dec[7] and (_dec[2], _dec[3]) in _dnote:
+            _dec = _dec + (_dnote[(_dec[2], _dec[3])],)
         _CATION_CONTACT[str(cif_path)] = _dec
         return aa, cc
     except (NameError, TypeError, AttributeError):

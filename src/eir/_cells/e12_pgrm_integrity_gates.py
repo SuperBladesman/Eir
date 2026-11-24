@@ -1800,6 +1800,35 @@ def VALIDATE_PARSING(verbose=True):
                 f'refined {ok}: {e1}; fixed {bad}: {e2}')
     _case(45, 'over by 0.03: within 3 esd of refined values, beyond fixed rounding', _t45)
 
+    # ---- v2.0.49: a dopant on a mobile ion's position (#50) ----------------
+    def _dop(r):
+        c = str(r.get('cation_cation_contact'))
+        return r.get('cation_contact_partly_occupied'), c
+
+    def _t46():
+        # Na1 0.60 beside 2d shared by Na2 0.60 and Ca2 0.10: the Na alone
+        # over-fill the pair (1.20), Ca2 with Na1's position is 0.70, and
+        # 0.10 of Ca is less than the 0.20 over-fill: M11
+        m, c = _dop(_parsing_run(_p2(0.60, 0.60, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10)])))
+        return (m is True and 'Ca2 at 0.100 set aside' in c
+                and 'over-fill of 0.200 against 0.100 of dopant' in c), f'mobile {m}: {c}'
+    _case(46, 'a dopant on a mobile ion position, the over-fill the mobile ions own: M11', _t46)
+
+    def _t47():
+        # the same with Na2 0.55, Ca2 0.25, Na1 0.50: 0.25 of Ca against an
+        # over-fill of 0.05 by the Na alone, so the Ca makes it: G5
+        m, c = _dop(_parsing_run(_p2(0.50, 0.55, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.25)])))
+        return m is False and 'Ca2' in c and 'set aside' not in c, f'mobile {m}: {c}'
+    _case(47, 'more dopant than the mobile ions over-fill by: G5', _t47)
+
+    def _t48():
+        # Na1 0.40 and H1 0.25 on 2b beside Na2 0.50 and Ca2 0.10 on 2d: the
+        # Na alone fill 0.90, with H 1.15; H counts, so M11
+        m, c = _dop(_parsing_run(_p2(0.40, 0.50, [('Ca2', 'Ca2+', 0.66667, 0.33333, 0.25, 0.10),
+                                                  ('H1', 'H1+', 0, 0, 0.25, 0.25)])))
+        return m is True and 'Ca2 at 0.100 set aside' in c, f'mobile {m}: {c}'
+    _case(48, 'H on a mobile ion position counts with the mobile ions', _t48)
+
     ok = all(results)
     if verbose:
         print()
