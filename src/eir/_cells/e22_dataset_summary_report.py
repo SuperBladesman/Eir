@@ -630,7 +630,8 @@ def summarise_dataset(dfq, save_to=None, gii_threshold=0.20,
         out("  bl_expected_mean is the mean bond length observed for this exact")
         out("  ion configuration across Gagne's survey of refined inorganic")
         out("  structures; bl_delta_mean is this site's mean minus that, in")
-        out("  angstroms, and bl_n_bonds is the sample it rests on.")
+        out("  angstroms, and bl_n_polyhedra is the number of coordination")
+        out("  polyhedra it rests on.")
         out()
         _lab = {1: 'measured', 2: 'interpolated', 3: 'extrapolated',
                 4: 'Shannon additive'}
@@ -650,7 +651,7 @@ def summarise_dataset(dfq, save_to=None, gii_threshold=0.20,
         out("  high-coordination entries are the small ones, and on the")
         out("  perovskites it condemned 224 sites in structures that pass")
         out("  every other test, some with GII below 0.02. Quote")
-        out("  bl_delta_mean with bl_n_bonds beside it and let the reader")
+        out("  bl_delta_mean with bl_n_polyhedra beside it and let the reader")
         out("  weigh it.")
         out()
         if _br.notna().any():

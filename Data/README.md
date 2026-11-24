@@ -19,7 +19,7 @@ The values are published measurements and fits. If you use them, please cite the
 - H. Diwu *et al.*, *Inorg. Chem.*, 2010, **49**, 3337–3342 (Pu⁴⁺–O, as listed by Brown).
 - I. D. Brown, *Chem. Rev.*, 2009, **109**, 6858–6919.
 - I. D. Brown, bond valence parameter compilation (bvparm2020), International Union of Crystallography.
-- The bond length surveys: O. C. Gagné and F. C. Hawthorne, *Acta Cryst.*, 2016, **B72**, 602–625; O. C. Gagné, *Acta Cryst.*, 2018, **B74**, 49–62; O. C. Gagné and F. C. Hawthorne, *Acta Cryst.*, 2018, **B74**, 63–78 and 79–96; O. C. Gagné and F. C. Hawthorne, *IUCrJ*, 2020, **7**, 581–629; O. C. Gagné, *ChemRxiv*, 2020, 11626974.
+- The bond length surveys: O. C. Gagné and F. C. Hawthorne, *Acta Cryst.*, 2016, **B72**, 602–625; O. C. Gagné, *Acta Cryst.*, 2018, **B74**, 49–62; O. C. Gagné and F. C. Hawthorne, *Acta Cryst.*, 2018, **B74**, 63–78 and 79–96; O. C. Gagné and F. C. Hawthorne, *IUCrJ*, 2020, **7**, 581–629; O. C. Gagné, *Chem. Sci.*, 2021, **12**, 4599–4622 (*ChemRxiv*, 2020, 11626974). The tables' sample sizes count coordination polyhedra (`n_polyhedra`); the bonds are that times the coordination number.
 - R. D. Shannon, *Acta Cryst.*, 1976, **A32**, 751–767.
 
 Eir uses Gagné and Hawthorne (2015) first and Brown (2020) as fallback, not Brown and Altermatt (1985). This matters for any comparison with published GII values.

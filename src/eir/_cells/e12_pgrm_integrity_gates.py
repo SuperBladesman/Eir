@@ -68,9 +68,16 @@ PGRM_SUPPRESS = False
 # and 0.862, a Cu(2+) site at 0.878); the 0.1st percentile is 0.917.
 # Below 1.00 sit 4.9% of all such sites and 4.2% of those in sound
 # structures, which is why the minimum alone could not be the test. For
-# the sample size, a reason rather than a measurement: the chance that one
-# more bond from the same population falls below the shortest of n is
-# 1/(n+1), 2% at n = 50.
+# the sample size, a reason rather than a measurement: G6 sets one
+# polyhedron's shortest bond against the shortest Gagne found in n
+# polyhedra, and the chance that one more polyhedron from the same
+# population falls below the shortest of n is 1/(n+1), 2% at n = 50.
+#
+# v2.0.49 (#51): n counts coordination polyhedra. The table called it
+# n_bonds, and this paragraph said "bond"; the reasoning holds as it stands
+# once the unit is the polyhedron, which is also the unit of the comparison,
+# and counting each polyhedron's bonds as independent draws would overstate
+# the sample by up to CN times. 50 stays; no verdict moves.
 MEASURED_MIN_RATIO = 0.90
 MEASURED_MIN_SAMPLE = 50
 
@@ -310,6 +317,18 @@ def _pgrm_has_value(x):
     # and as the empty string from a CSV.
     return str(x).strip().lower() not in ('', 'nan', 'none', '<na>')
 
+
+def _bl_sample(row):
+    """The bond-length sample behind a site: bl_n_polyhedra, or bl_n_bonds
+    in output written before 2.0.49, which held the same number (#51)."""
+    try:
+        has_new = 'bl_n_polyhedra' in row
+    except TypeError:
+        has_new = False
+    return _pgrm_f(row.get('bl_n_polyhedra') if has_new
+                   else row.get('bl_n_bonds'), 0.0)
+
+
 def classify_site(row, struct):
     """
     Return (code, reason, evidence) for the most severe gate this site fails.
@@ -378,7 +397,7 @@ def classify_site(row, struct):
     # behind it. Both are statements about a distance rather than about a fit,
     # which is what keeps them in G.
     _blr = _pgrm_f(row.get('bl_ratio_min'))
-    _bln = _pgrm_f(row.get('bl_n_bonds'), 0.0)
+    _bln = _bl_sample(row)
     _blt = _pgrm_f(row.get('bl_tier'))
     if (_blr == _blr and _blr < MEASURED_MIN_RATIO
             and _bln >= MEASURED_MIN_SAMPLE
@@ -387,7 +406,7 @@ def classify_site(row, struct):
                 f'{row.get("element")}({row.get("valence")}) at CN {row.get("cn")}: '
                 f'{_pgrm_f(row.get("min_bond_length")):.3f} A against a measured '
                 f'minimum of {_pgrm_f(row.get("bl_expected_min")):.3f} A over '
-                f'{int(_bln)} bonds, a ratio of {_blr:.3f}')
+                f'{int(_bln)} polyhedra, a ratio of {_blr:.3f}')
 
     cn = _pgrm_f(row.get('cn'))
     if cn == 0 or str(row.get('cn_fault')) == 'no_shell_found':
@@ -639,7 +658,7 @@ def classify_site(row, struct):
     # Coverage is 1610 of 9685 sites. Where any rule fails, M10 says nothing;
     # bond_size_z is exported either way, so the evidence is on the row.
     _bz = _pgrm_f(row.get('bond_size_z'))
-    _bzn = _pgrm_f(row.get('bl_n_bonds'), 0.0)
+    _bzn = _bl_sample(row)
     if (_bz == _bz and abs(_bz) > BOND_SIZE_Z
             and _bzn >= BL_MIN_SAMPLE
             and _pgrm_is_true(row.get('is_dominant_species'))
@@ -654,7 +673,7 @@ def classify_site(row, struct):
                 f'{_pgrm_f(row.get("avg_bond_length")):.3f} A against '
                 f'{_pgrm_f(row.get("bl_expected_mean")):.3f} +/- '
                 f'{_pgrm_f(row.get("bl_expected_sd")):.3f} A over '
-                f'{int(_bzn)} measured bonds, {_bz:+.1f} sd')
+                f'{int(_bzn)} measured polyhedra, {_bz:+.1f} sd')
 
     # v2.0.25: A CAVEAT MUST NOT MASK A DEFECT.
     #

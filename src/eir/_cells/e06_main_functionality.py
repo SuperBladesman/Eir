@@ -252,13 +252,19 @@ class DatabaseManager:
         Sources, by the ref key on each entry:
           a  G&H (2016) Acta Cryst B72, 602-625   alkali and alkaline earths
           b  Gagne (2018) Acta Cryst B74, 49-62   lanthanides and actinides
-          c  G&H (2018a) Acta Cryst B74, 63-78    metalloids, post-transition
-          d  G&H (2018b) Acta Cryst B74, 79-96    non-metals
+          c  G&H (2018b) Acta Cryst B74, 79-96    non-metals
+          d  G&H (2018a) Acta Cryst B74, 63-78    metalloids, post-transition
           e  G&H (2020) IUCrJ 7, 581-629          transition metals
           f  Gagne (2021) Chem. Sci. 12           nitrides
              doi 10.1039/D0SC06028C  (was ChemRxiv 11626974)
 
         Keyed (element, valence, anion, cn) to match the other two databases.
+
+        v2.0.49 (#51): each entry's sample size is n_polyhedra, the number of
+        coordination polyhedra; the bonds are that times the CN. The field was
+        called n_bonds, and c and d had each other's reference; summed by
+        source, the counts give each paper's published totals of polyhedra
+        (see the file's _metadata).
         """
         if getattr(self, 'bond_lengths', None) is not None:
             return self.bond_lengths
@@ -495,7 +501,7 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
     The distance a bond from this ion, at this coordination, to this anion is
     expected to have. MEASURED where possible, derived where not.
 
-    Returns a dict with mean, sd, min, n_bonds, source and tier, or None if
+    Returns a dict with mean, sd, min, n_polyhedra, source and tier, or None if
     nothing can be said. Never returns a number without saying where it came
     from: a verdict that cannot be traced to its source cannot be checked.
 
@@ -524,9 +530,9 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
     hit = bl.get((element, v, anion, c))
     if hit:
         return {'mean': hit['mean'], 'sd': hit['sd'],
-                'min': hit['min'] if (hit.get('n_bonds') or 0) >= BL_MIN_SAMPLE
+                'min': hit['min'] if (hit.get('n_polyhedra') or 0) >= BL_MIN_SAMPLE
                        else None,
-                'n_bonds': hit.get('n_bonds'), 'ref': hit.get('ref'),
+                'n_polyhedra': hit.get('n_polyhedra'), 'ref': hit.get('ref'),
                 'source': 'measured', 'tier': 1, 'cn_used': c}
 
     known = sorted(k[3] for k in bl if k[:3] == (element, v, anion))
@@ -538,14 +544,15 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
             f = (c - lo) / (hi - lo)
             return {'mean': round(a['mean'] + f * (b['mean'] - a['mean']), 4),
                     'sd': None, 'min': None,
-                    'n_bonds': (a.get('n_bonds') or 0) + (b.get('n_bonds') or 0),
+                    'n_polyhedra': ((a.get('n_polyhedra') or 0)
+                                    + (b.get('n_polyhedra') or 0)),
                     'ref': a.get('ref'),
                     'source': f'measured_interpolated_CN{lo}_{hi}',
                     'tier': 2, 'cn_used': c}
         near = min(known, key=lambda x: abs(x - c))
         a = bl[(element, v, anion, near)]
         return {'mean': a['mean'], 'sd': a['sd'], 'min': None,
-                'n_bonds': a.get('n_bonds'), 'ref': a.get('ref'),
+                'n_polyhedra': a.get('n_polyhedra'), 'ref': a.get('ref'),
                 'source': f'measured_extrapolated_from_CN{near}',
                 'tier': 3, 'cn_used': near}
 
@@ -554,7 +561,7 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
     if r_cat is None or r_an is None:
         return None
     return {'mean': round(r_cat + r_an, 4), 'sd': None, 'min': None,
-            'n_bonds': None, 'ref': 'Shannon (1976) Acta Cryst A32, 751',
+            'n_polyhedra': None, 'ref': 'Shannon (1976) Acta Cryst A32, 751',
             'source': 'shannon_additive', 'tier': 4, 'cn_used': c}
 
 
@@ -5239,7 +5246,7 @@ def process_single_cif(file_path, user_oxidation_states=None):
                         site_result['bl_expected_mean'] = _bl['mean']
                         site_result['bl_expected_sd'] = _bl['sd']
                         site_result['bl_expected_min'] = _bl['min']
-                        site_result['bl_n_bonds'] = _bl['n_bonds']
+                        site_result['bl_n_polyhedra'] = _bl['n_polyhedra']
                         site_result['bl_source'] = _bl['source']
                         site_result['bl_tier'] = _bl['tier']
                         # v2.0.46: always present, null where not computable.
