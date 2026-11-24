@@ -35,7 +35,8 @@ GROUPS = {
 # abstract gives 5957; Gagné (2021) Chem. Sci. 12, 4599, as counted by
 # Hawthorne & Gagné (2024) Acta Cryst. B80. Gagné & Hawthorne (2020) IUCrJ 7,
 # 581 gives 7522 and 41 488 for the transition metals, where the table sums
-# to 7520 and 41 485, so they are left out.
+# to 7523 and 41 494 (one six-coordinate polyhedron more), so they are left
+# out.
 PUBLISHED = {
     ('a', 'alkali'): (4859, 38594),
     ('a', 'alkaline earth'): (3038, 24487),
@@ -116,3 +117,15 @@ def test_g6_states_its_sample_in_polyhedra():
     code, reason, evidence = e.classify_site(row, {})
     assert code == 'G6', (code, evidence)
     assert evidence.endswith('over 65 polyhedra, a ratio of 0.800'), evidence
+
+
+def test_output_written_before_the_rename_still_gates():
+    # Re-classifying a 2.0.48 table, whose column is bl_n_bonds, must not
+    # switch G6 off for want of a sample size.
+    e = eir.engine
+    row = {'element': 'Fe', 'valence': 3, 'cn': 4, 'min_bond_length': 1.5,
+           'coords': '(0.125, 0.125, 0.125)',
+           'bl_ratio_min': 0.80, 'bl_n_bonds': 65, 'bl_tier': 1,
+           'bl_expected_min': 1.83, 'contact_above_floor': True}
+    code, reason, evidence = e.classify_site(row, {})
+    assert code == 'G6', (code, evidence)

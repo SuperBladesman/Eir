@@ -321,6 +321,18 @@ def _pgrm_has_value(x):
     # and as the empty string from a CSV.
     return str(x).strip().lower() not in ('', 'nan', 'none', '<na>')
 
+
+def _bl_sample(row):
+    """The bond-length sample behind a site: bl_n_polyhedra, or bl_n_bonds
+    in output written before 2.0.49, which held the same number (#51)."""
+    try:
+        has_new = 'bl_n_polyhedra' in row
+    except TypeError:
+        has_new = False
+    return _pgrm_f(row.get('bl_n_polyhedra') if has_new
+                   else row.get('bl_n_bonds'), 0.0)
+
+
 def classify_site(row, struct):
     """
     Return (code, reason, evidence) for the most severe gate this site fails.
@@ -389,7 +401,7 @@ def classify_site(row, struct):
     # behind it. Both are statements about a distance rather than about a fit,
     # which is what keeps them in G.
     _blr = _pgrm_f(row.get('bl_ratio_min'))
-    _bln = _pgrm_f(row.get('bl_n_polyhedra'), 0.0)
+    _bln = _bl_sample(row)
     _blt = _pgrm_f(row.get('bl_tier'))
     if (_blr == _blr and _blr < MEASURED_MIN_RATIO
             and _bln >= MEASURED_MIN_SAMPLE
@@ -659,7 +671,7 @@ def classify_site(row, struct):
     # Coverage is 1610 of 9685 sites. Where any rule fails, M10 says nothing;
     # bond_size_z is exported either way, so the evidence is on the row.
     _bz = _pgrm_f(row.get('bond_size_z'))
-    _bzn = _pgrm_f(row.get('bl_n_polyhedra'), 0.0)
+    _bzn = _bl_sample(row)
     if (_bz == _bz and abs(_bz) > BOND_SIZE_Z
             and _bzn >= BL_MIN_SAMPLE
             and _pgrm_is_true(row.get('is_dominant_species'))
