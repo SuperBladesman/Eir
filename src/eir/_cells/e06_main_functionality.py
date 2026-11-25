@@ -504,7 +504,8 @@ BL_MIN_SAMPLE = 30
 # 95th percentile of |Shannon sum - Gagne's mean| / Gagne's mean over every
 # configuration both cover: 15.66% on the 593 bonded to O (457, 15.7%) and to
 # N (136, 15.5%), median miss 0.05 and 0.07 A, with Shannon's own anion radii
-# (#64; with the radii the file held before, 15.6%). Interpolating in valence between two of
+# (#64; with the radii the file held before, 15.6%). Interpolating in
+# valence between two of
 # Gagne's valences of the same ion, each measured or interpolated in CN at
 # this CN (tiers 1 and 2), misses by 4.4% at the 95th percentile on the 19
 # configurations it can be tested on, so the band covers it too; with an end
@@ -543,7 +544,12 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
                                fallback because it is the construction G&H's
                                own data argues against. An ESTIMATE. Asked
                                after tier 5, which misses Gagne's means by
-                               4.4% at the 95th percentile where it applies.
+                               4.4% at the 95th percentile where it applies
+                               (median 0.8%; the Shannon sum's tail on the
+                               same 19 is no worse, its median is). The
+                               cation radius is Shannon's at the nearest
+                               tabulated CN where he gives none at this one:
+                               Ni(3+) at CN 4 takes its CN 6 radius.
 
     An estimate (tiers 4 and 5) carries 'band', ESTIMATE_BAND: it can flag an
     entry (M13, M14) but never expunge one, and never decide G6 or M10.

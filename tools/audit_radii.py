@@ -9,8 +9,10 @@ pymatgen-core is used.
 
 Every anion entry (a negative charge) must be one of Shannon's ionic radii
 for that ion and coordination number, and every one Shannon gives must be in
-the file. Exits 1 if any differs. Cation entries are compared and listed but
-do not fail the check: they are reviewed separately (#64).
+the file. Exits 1 if any differs. Cation entries are compared too, and those
+that differ or are not in Shannon's table are printed, but do not fail the
+check: they are reviewed separately (#64). pymatgen labels square-planar and
+pyramidal coordinations IVSQ, IIIPY and IVPY; they count as IV and III.
 """
 import gzip
 import json
@@ -40,7 +42,7 @@ def reference(path=None):
             if not isinstance(cns, dict) or not q.lstrip('+-').isdigit():
                 continue
             for cn, spins in cns.items():
-                c = ROMAN.get(cn.replace('sq', '').replace('py', ''))
+                c = ROMAN.get(cn.upper().replace('SQ', '').replace('PY', ''))
                 if c is None or not isinstance(spins, dict):
                     continue
                 for v in spins.values():
@@ -67,8 +69,12 @@ def main(argv):
             fails.append(((el, q, c), None, sorted(ref[(el, q, c)])))
     for k, r, want in fails:
         print(f'ANION  {k[0]}{k[1]:+d} CN {k[2]}: file {r}, Shannon {want or "none"}')
-    print(f'{len(cations)} cation entries differ from Shannon or are not in '
-          f'his table; reviewed separately.')
+    for k, r, want in sorted(cations):
+        print(f'cation {k[0]}{k[1]:+d} CN {k[2]}: file {r}, Shannon '
+              f'{want or "not tabulated"}')
+    ndiff = sum(1 for _, _, w in cations if w)
+    print(f'{len(cations)} cation entries differ from Shannon ({ndiff}) or are '
+          f'not in his table ({len(cations) - ndiff}); reviewed separately.')
     print('anion entries: ' + ('all match Shannon (1976)' if not fails
                                else f'{len(fails)} differ'))
     return 1 if fails else 0
