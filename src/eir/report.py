@@ -345,6 +345,7 @@ def _screens_section(result):
 
     nshift = int(_num(_sv(result, 'n_sites_shift_proposed')) or 0)
     ncn = _num(_sv(result, 'n_sites_cn_implausible'))
+    pocc = state(_sv(result, 'position_occupancy_plausible'))
     rows = [
         ('Radii ratio', 'Shortest cation–anion contact against the '
          'Shannon radii', state(_sv(result, 'structure_core_geometry_plausible')),
@@ -370,6 +371,12 @@ def _screens_section(result):
          'fail' if nshift else 'pass',
          (pretty(_sv(result, 'shift_evidence')) or f'{nshift} site(s) proposed')
          if nshift else 'no cation proposed for a shift'),
+        # engine 2.0.49 (#49): labels written at one position
+        ('Position occupancy', 'Labels written at one position that '
+         'together fill it more than once', pocc,
+         (pretty(_sv(result, 'position_overfull')) if pocc == 'fail'
+          else 'no position over-filled' if pocc == 'pass'
+          else 'not read')),
     ]
     body = ''.join(
         f'<tr class="{st}"><td><span class="dot" aria-hidden="true"></span>'
@@ -380,7 +387,7 @@ def _screens_section(result):
     return f'''
 <section>
   <h3>Geometry screens</h3>
-  <p class="small muted">Six independent screens, reported separately
+  <p class="small muted">Seven independent screens, reported separately
   because they see different things. They feed the G and M facets; a failed
   screen is not by itself a verdict.</p>
   <table class="screens"><tbody>{body}</tbody></table>
