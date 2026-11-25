@@ -221,10 +221,11 @@ def _reason_sentence(code, reason, site):
         'polyhedron_size_off_estimate':
             f'The bonds of {ion}{at} are, on average, further from the '
             f'estimated bond length than the band in the evidence allows: '
-            f'the 95th percentile of how far estimates miss measured bond '
-            f'lengths to O and N, applied as chosen to other anions. There '
-            f'are no measurements for this ion to judge it by, so it is '
-            f'flagged rather than expunged.',
+            f'the 95th percentile of how far estimates of this kind miss '
+            f'measured bond lengths to O and N, wider where Shannon gives '
+            f'the ion\u2019s radius only at another coordination, and applied '
+            f'as chosen to other anions. There are no measurements for this '
+            f'ion to judge it by, so it is flagged rather than expunged.',
         'no_index':
             'The recommended instability index could not be calculated.',
         'symmetry_not_read':

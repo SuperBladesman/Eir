@@ -141,3 +141,15 @@ def test_gdn_is_assessed_with_brese_and_okeeffe(tmp_path):
     assert r.code != 'R1', r.evidence
     gd = r.sites[r.sites['element'] == 'Gd'].iloc[0]
     assert abs(float(gd['bvs']) - 3.0) < 0.3
+
+
+def test_the_estimate_bands_are_measured():
+    # #68: tools/measure_bands.py re-measures ESTIMATE_BAND_AT_CN and
+    # ESTIMATE_BAND_BORROWED from the Data folder; they must match it
+    import importlib.util
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[1] / 'tools' / 'measure_bands.py'
+    spec = importlib.util.spec_from_file_location('measure_bands', path)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    assert m.main(['--check']) == 0

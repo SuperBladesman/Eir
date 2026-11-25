@@ -356,6 +356,11 @@ def _bl_estimate(row):
     d = _pgrm_f(row.get('bl_delta_mean'))
     obs = _pgrm_f(row.get('avg_bond_length'))
     dev = d / m if (m == m and m > 0 and d == d) else float('nan')
+    # v2.0.50 (#68): the band the estimate carries; output written before
+    # #68 carries #11's single band, 15.7%, which is ESTIMATE_BAND_VALENCE
+    band = _pgrm_f(row.get('bl_estimate_band'))
+    if band != band or band <= 0:
+        band = ESTIMATE_BAND_VALENCE
     src = str(row.get('bl_source') or '')
     el, v = row.get('element'), row.get('valence')
     mv = re.match(r'valence_interpolated_(-?\d+)_(-?\d+)$', src)
@@ -365,7 +370,7 @@ def _bl_estimate(row):
             f'measured bond lengths; mean bond '
             + (f'{obs:.3f} A' if obs == obs else 'not measured')
             + (f' against {m:.3f} A estimated {how}' if m == m else ''))
-    return {'deviation': dev, 'head': head}
+    return {'deviation': dev, 'band': band, 'head': head}
 
 
 def classify_site(row, struct):
@@ -751,13 +756,13 @@ def classify_site(row, struct):
                 f'{int(_bzn)} measured polyhedra, {_bz:+.1f} sd')
 
     # v2.0.50 (#11): M14, THE POLYHEDRON IS OFF ITS ESTIMATE. An estimate
-    # (tiers 4 and 5; see ESTIMATE_BAND, CELL 2) can flag but never expunge.
+    # (tiers 4 and 5; see the bands in CELL 2) can flag but never expunge.
     # Asked where M10 is, with M10's eligibility rules except the sample,
     # which an estimate does not have; where they fail, M13 below says the
     # expectation was estimated and nothing more.
     _est = _bl_estimate(row)
     if (_est is not None and _est['deviation'] == _est['deviation']
-            and abs(_est['deviation']) > ESTIMATE_BAND
+            and abs(_est['deviation']) > _est['band']
             and _pgrm_is_true(row.get('is_dominant_species'))
             and not _pgrm_has_value(row.get('cn_fault'))
             and not _pgrm_is_true(row.get('has_mixed_occupancy'))
@@ -766,7 +771,7 @@ def classify_site(row, struct):
             not in BOND_SIZE_NON_AMBIENT):
         return ('M14', 'polyhedron_size_off_estimate',
                 f'{_est["head"]}, {100 * _est["deviation"]:+.1f}%, beyond '
-                f'the {100 * ESTIMATE_BAND:.1f}% band')
+                f'the {100 * _est["band"]:.1f}% band')
 
     # v2.0.25: A CAVEAT MUST NOT MASK A DEFECT.
     #
@@ -1246,13 +1251,14 @@ def VALIDATE_GATES(verbose=True):
            _c15[0] == 'M13' and _s15[0] == 'M13'
            and 'estimated from Shannon radii, +1.9%' in str(_c15[2]),
            f'Zn(2)S4 at +1.9%: {_c15[0]} ({_c15[2]}); shared: {_s15[0]}')
-    _f16 = dict(_e15, avg_bond_length=2.743, bl_delta_mean=0.443)
+    _f16 = dict(_e15, avg_bond_length=2.943, bl_delta_mean=0.643,
+                bl_estimate_band=ESTIMATE_BAND_BORROWED)
     _c16 = classify_site(_f16, _g15)
     _m16 = classify_site(dict(_f16, is_dominant_species=False), _g15)
     report('16. M14: a polyhedron off its estimate is FLAG, not expunged',
            _c16[0] == 'M14' and _m16[0] == 'M13'
-           and 'beyond the 15.7% band' in str(_c16[2]),
-           f'at +19.3%: {_c16[0]} ({_c16[2]}); as a minority species: {_m16[0]}')
+           and 'beyond the 23.1% band' in str(_c16[2]),
+           f'at +28.0%: {_c16[0]} ({_c16[2]}); as a minority species: {_m16[0]}')
     _c17 = classify_site(dict(_e15, bl_tier=float('nan'), bl_source=None,
                               bl_expected_mean=float('nan')), _g15)
     _x17 = classify_site(dict(_e15, element='S', valence=6, cn=5,
@@ -1263,6 +1269,28 @@ def VALIDATE_GATES(verbose=True):
            _c17[0] == 'R3' and 'no radius to estimate them from' in str(_c17[2])
            and _x17[0] == 'R3' and 'mixed ligands' in str(_x17[2]),
            f'{_c17[0]} ({_c17[2]}); S(6) bonded to N and O: {_x17[0]} ({_x17[2]})')
+
+    # v2.0.50 (#68). M14 reads the band the site's estimate carries. A CN 2
+    # nitrite, whose N(3+) radius is borrowed from CN 6: 1.240 A against a
+    # sum of 1.510 A is inside the borrowed band, 1.141 A is beyond it; the
+    # same -17.9% against a radius Shannon gives at the CN is beyond 7.7%,
+    # and a row written before #68, with no band, is judged on 15.7%.
+    _n18 = dict(_e15, element='N', valence=3, cn=2, cn_shannon_min=2,
+                ligand_types='O', bl_expected_mean=1.510,
+                bl_estimate_band=ESTIMATE_BAND_BORROWED,
+                avg_bond_length=1.240, bl_delta_mean=-0.270)
+    _c18 = classify_site(_n18, _g15)
+    _s18 = classify_site(dict(_n18, avg_bond_length=1.141,
+                              bl_delta_mean=-0.369), _g15)
+    _t18 = classify_site(dict(_n18, bl_estimate_band=ESTIMATE_BAND_AT_CN), _g15)
+    _o18 = classify_site(dict(_n18, bl_estimate_band=None), _g15)
+    report('18. M14: each estimate is judged on its own band',
+           _c18[0] == 'M13' and _s18[0] == 'M14'
+           and 'beyond the 23.1% band' in str(_s18[2])
+           and _t18[0] == 'M14' and 'beyond the 7.7% band' in str(_t18[2])
+           and _o18[0] == 'M14' and 'beyond the 15.7% band' in str(_o18[2]),
+           f'nitrite at -17.9%: {_c18[0]}; at -24.4%: {_s18[0]}; on 7.7%: '
+           f'{_t18[0]}; no band: {_o18[0]}')
 
     ok = all(results)
     if verbose:
@@ -2014,6 +2042,20 @@ def VALIDATE_PARSING(verbose=True):
         return (b is not None and abs(b - 3.0) < 0.3,
                 f'Gd(3) in GdN: bond valence sum {b}')
     _case(52, "Gd-N from Brese and O'Keeffe, valence unstated", _t52)
+
+    # ---- v2.0.50: the bands (#68) ----------------------------------------
+    def _t53():
+        b = {k: (expected_bond_length(*k) or {}).get('band') for k in
+             (('N', 3, 2, 'O'), ('Fe', 6, 4, 'O'), ('Zn', 2, 4, 'S'),
+              ('Ni', 3, 6, 'O'))}
+        return (b[('N', 3, 2, 'O')] == ESTIMATE_BAND_BORROWED
+                and b[('Fe', 6, 4, 'O')] == ESTIMATE_BAND_AT_CN
+                and b[('Zn', 2, 4, 'S')] == ESTIMATE_BAND_BORROWED
+                and b[('Ni', 3, 6, 'O')] == ESTIMATE_BAND_VALENCE,
+                f'N(3) CN 2 to O {b[("N", 3, 2, "O")]}, Fe(6) CN 4 to O '
+                f'{b[("Fe", 6, 4, "O")]}, Zn(2) CN 4 to S {b[("Zn", 2, 4, "S")]}, '
+                f'Ni(3) CN 6 to O {b[("Ni", 3, 6, "O")]}')
+    _case(53, 'each kind of estimate carries its own band', _t53)
 
     ok = all(results)
     if verbose:
