@@ -504,7 +504,8 @@ BL_MIN_SAMPLE = 30
 # 95th percentile of |Shannon sum - Gagne's mean| / Gagne's mean over every
 # configuration both cover: 15.66% on the 593 bonded to O (457, 15.7%) and to
 # N (136, 15.5%), median miss 0.05 and 0.07 A, with Shannon's own anion radii
-# (#64; with the radii the file held before, 15.6%). Interpolating in valence between two of
+# (#64; with the radii the file held before, 15.6%). Interpolating in
+# valence between two of
 # Gagne's valences of the same ion, each measured or interpolated in CN at
 # this CN (tiers 1 and 2), misses by 4.4% at the 95th percentile on the 19
 # configurations it can be tested on, so the band covers it too; with an end
