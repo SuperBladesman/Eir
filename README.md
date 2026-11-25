@@ -5,7 +5,7 @@
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![Paper: Dalton Trans. 2026](https://img.shields.io/badge/paper-Dalton%20Trans.%202026%2C%2055%2C%202868-informational.svg)](https://doi.org/10.1039/D5DT03003J)
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)
-![Version 2.0.49](https://img.shields.io/badge/version-2.0.49-green.svg)
+![Version 2.0.50](https://img.shields.io/badge/version-2.0.50-green.svg)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24138853.svg)](https://doi.org/10.5281/zenodo.24138853)
 
 Eir reads a folder of CIF files and asks two questions of each structure:
@@ -15,7 +15,7 @@ Eir reads a folder of CIF files and asks two questions of each structure:
 
 The order matters. A bond valence sum is computed from bond lengths, so a length that cannot be right makes every number built on it meaningless, and often good-looking. ICSD 85235 (TbCrO₃) has a chromium octahedron within 0.0004 Å of the mean of every measured Cr³⁺–O bond, a global instability index (GII) of 0.0047, and two oxygens 2.191 Å apart against a family median of 2.750 Å. Judged on its chemistry it is the best structure in a 938-entry perovskite set; judged on its geometry it is impossible.
 
-Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.49, comes from a rebuild that checks the geometry before it reads the chemistry.
+Eir was written to screen the Inorganic Crystal Structure Database (ICSD) at scale. Version 1.2 accompanied the rock salt study in *Dalton Transactions* (2026). The current version, 2.0.50, comes from a rebuild that checks the geometry before it reads the chemistry.
 
 ## What Eir checks
 
@@ -113,7 +113,7 @@ This runs the same pipeline as the notebook, on every CIF in the folder, and wri
 eir validate
 ```
 
-runs the 44 tests against structures whose answers are known by hand, the 14 gate tests, the 10 coordination-shell tests, the six tests of the two Fd-3m settings, the 52 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions, labels written at one position, dopants on mobile-ion positions, a file with no site to assess) and the structural self-check. Run it again after changing anything.
+runs the 44 tests against structures whose answers are known by hand, the 19 gate tests, the 10 coordination-shell tests, the six tests of the two Fd-3m settings, the 56 parsing tests (type symbols, labels, bond lists, data blocks and symmetry as other programs write them, polyanions, molecular carbon, anions, hydrogen, halogens stated positive, alternative positions, the lithium floor, mobile ions, labels written at one position, dopants on mobile-ion positions, a file with no site to assess, estimated bond lengths, parameters with the valence unstated) and the structural self-check. Run it again after changing anything.
 
 ### The notebook
 
@@ -167,7 +167,7 @@ outputs/
 - **The GII is cation-only.**
 - **ACCEPT_HETEROVALENT means a valence span of 2 or more on one position**, so Y³⁺/Zr⁴⁺ and Gd³⁺/Ce⁴⁺ count as homovalent.
 - **GII thresholds depend on the family.** The often-quoted 0.20 v.u. comes from simple ordered structures; spinels and many perovskites routinely exceed it while being perfectly stable. Read the number against the family, and always beside the tier.
-- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback, Chen and Adams (2017, softNC1) where Brown has nothing published, and Gilson and Burns (2021) for Np⁴⁺–O; not Brown and Altermatt (1985). This matters for any comparison with published GII values. Every entry traces to a published row at the anion charge Eir uses (or, for 127 pairs no published source covers, to Brown's own or Hu's unpublished values); `tools/audit_bv_table.py` checks it. Before 2.0.46, 52 entries did not, among them V²⁺–O, Yb²⁺–O, Ni³⁺–O, Pr⁴⁺–O and the actinide oxides; [Data/README.md](Data/README.md) lists what changed.
+- **Parameters:** Gagné and Hawthorne (2015), with Brown (2020) as fallback, Chen and Adams (2017, softNC1) where Brown has nothing published, Gilson and Burns (2021) for Np⁴⁺–O, and, for an element with one valence, Brese and O'Keeffe's (1991) rows that Brown lists with the valence unstated, where nothing else gives the pair; not Brown and Altermatt (1985). This matters for any comparison with published GII values. Every entry traces to a published row at the anion charge Eir uses (or, for 127 pairs no published source covers, to Brown's own or Hu's unpublished values); `tools/audit_bv_table.py` checks it. Before 2.0.46, 52 entries did not, among them V²⁺–O, Yb²⁺–O, Ni³⁺–O, Pr⁴⁺–O and the actinide oxides; [Data/README.md](Data/README.md) lists what changed.
 - **Every named threshold says where its value comes from** in the comment beside it: a reference, a calculation shown, a measurement on named data, or, for a value set by hand, what has since been checked about it. Where there is none, the comment says `UNSOURCED`. Those reviewed for 2.0.47 say which in one word: SOURCED, DERIVED, MEASURED, CHOSEN or UNSOURCED. Every inline cut-off that can move a verdict is now named in the same way; what is still written inline is numerical tolerances, display settings and the legacy error-type labels. Configuration settings are not thresholds in this sense.
 
 ## Reference data
@@ -176,10 +176,10 @@ outputs/
 
 ## Versions
 
-The current release is engine **2.0.49**, packaged as **eir-bvs 2.1.3**. eir-bvs 2.1.0 added the command line, the Python interface and the report. Every surviving version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one. To install a particular release rather than the latest code, name its tag:
+The current release is engine **2.0.50**, packaged as **eir-bvs 2.1.4**. eir-bvs 2.1.0 added the command line, the Python interface and the report. Every surviving version is tagged, from `v1.0` (December 2025) onwards, and [CHANGELOG.md](CHANGELOG.md) describes each one. To install a particular release rather than the latest code, name its tag:
 
 ```bash
-pip install "git+https://github.com/SuperBladesman/Eir.git@v2.0.49"
+pip install "git+https://github.com/SuperBladesman/Eir.git@v2.0.50"
 ```
 
 To reproduce the rock salt study, use the version that accompanied it:
@@ -197,11 +197,11 @@ The history in this repository was rebuilt in 2026 from dated copies of every ve
 - Some structures are NOT_ASSESSED for what they are rather than for a fault: coordination compounds with carbonyl, nitrosyl, cyanide or nitro ligands (R5), whose bonding the ionic model cannot describe; cations bonded to a homopolar anion unit (R8: a peroxide or superoxide O–O, a disulfide or polysulfide S–S, Se–Se, Te–Te, an azide or diazenide N–N), whose parameters describe the single ion, not the unit; files in a space-group setting gemmi does not know by its symbol, where the operations the file lists are not the group Eir would read (R7); and structures whose reported index the checks cannot rebuild from the site table (R6). Read none of these as a judgement on the entry.
 - A coordinate a little off its special position, beyond its own rounding and uncertainty, is FLAG (M12): Eir reads the special position the stated multiplicity names. ICSD 213392 is one. Where the coordinates and multiplicity describe different structures, the entry is EXPUNGE (P2), as ICSD 38769 is.
 - The packing gates (G2, G5) leave out positions refined to zero occupancy and any pair of positions the model can fill one at a time, whose occupancies sum to one or less. Where a close pair's occupancies sum to more than one, some such pairs must be filled together, so the model implies the contact and the gate stands. Anion-disorder models refined that way, such as pyrochlores with oxygen on the 8b site beside a nearly full 48f, are still expunged; review them by hand.
-- G7, which expunges a site missing bonds, was set on the 200-entry regression set, where it fires on nothing. On 4,806 ICSD spinels, perovskites, pyrochlores and fluorites it fires once, on ICSD 69461, which G2 already expunges.
+- G7, which expunges a site missing bonds, was set on the 200-entry regression set, where it fires on nothing. On 4,806 ICSD spinels, perovskites, pyrochlores and fluorites it fires once, on ICSD 69461, which G2 already expunges. From 2.0.50 its coordination floor is the larger of the smallest CN in the radius file and the smallest Gagné measured for the ion and ligand, so it no longer falls when the radius file reaches lower, for ions Gagné measured bonded to O or N.
 - Homopolar anion units are found by distance and charge: two atoms of one anion element inside the pair's bond window (O–O 1.20 to 1.60 Å, S–S 1.95 to 2.30, Se–Se 2.25 to 2.60, Te–Te 2.65 to 3.00, N–N 1.08 to 1.30), at any occupancy, where the file states a charge for at least one of the two atoms and every charge it states is −1 or a fraction between −1 and 0, or the formula is at least 35% short of positive charge (anions at their ordinary charges, cations at the valence Eir assigns, each atom counted by the multiplicity the file states) and the model holds every element the formula names (a hydrate whose H are not located would otherwise read as anion-rich). A file that types pyrite as Fe(4+) and S(2−) balances, so its S–S bond still reaches G2; so does an O–O, S–S or N–N contact shorter than its window (some superoxides at 1.09 to 1.19 Å, azides at 1.06 Å), which is read as a fault, and so does a contact between two units. Eir's parameters describe the single ion (O²⁻, S²⁻, N³⁻), not the unit, so the sums of cations bonded to these units are not assessed (R8); and so is the nearest cation to each unit atom, which catches a unit reached only through hydrogen bonds (the H of ammonium in an azide). Cations bonded to each other (hyponitrite and dinitramide N-N, closo-borate B-B) are still expunged on G5 for that bond.
 - The half-lattice shift screen counts an anion on a special position once for each symmetry operation that leaves it in place, so the shell spread it reads is understated there and some misplaced cations go unproposed. Counting each anion once is not yet safe: on disordered models it proposes shifts that are not there.
 - An ion with no bond valence parameters for its anion is reported as NOT_ASSESSED (R1). Pr⁴⁺–O, U³⁺–O, Np³⁺–O, Ag²⁺–O and Ra²⁺–O are among them: the values Eir carried for these until 2.0.46 are in no release of Brown's table, no other source was recorded, and Chen and Adams (2017) either do not cover them or fit them to fewer than three environments (Ag²⁺–O, two).
-- An ion with no measured bond lengths in Gagné's survey is reported as NOT_ASSESSED (R3). Transuranic ions, Pa, fluorides, N³⁺ (nitrites), Tc⁴⁺, Tc⁵⁺ and Ru⁶⁺ are among them.
+- An ion with no measured bond lengths in Gagné's surveys, which cover bonds to O and N, is judged against an estimate and is FLAG at best: interpolated in valence between two measured valences of the same ion, each measured at, or interpolated to, the site's coordination number (Ni³⁺ between Ni²⁺ and Ni⁴⁺), otherwise the sum of Shannon radii. Each estimate carries a band. For a Shannon sum to O or N it is the 95th percentile of how far such sums miss Gagné's means: 5.3% where the radius file holds the cation's radius at the site's coordination number, 23.8% where it is borrowed from another; `tools/measure_bands.py` reproduces both. The rest are chosen: 23.8% for a sum at a fractional valence or to S, Se, Te or a halide, which nothing measured calibrates, and 15.7% for valence interpolation. A site within its band is FLAG (M13), beyond it FLAG (M14). NOT_ASSESSED (R3) is left for an ion with no estimate either, and for a site bonded to more than one kind of anion, whose expected length Eir takes for the first anion listed.
 
 Each will gain a `VALIDATE()` test as it is addressed.
 

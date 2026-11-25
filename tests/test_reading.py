@@ -540,3 +540,152 @@ def test_the_new_reasons_have_their_own_sentences(tmp_path, sites, key, words):
     e = explain(r)
     assert e['reason_key'] == key
     assert words in e['reason'], e['reason']
+
+
+# ---- 2.0.50: estimated bond lengths (#11) ------------------------------
+
+def rocksalt_ni3(a):
+    return cif('nio', (a, a, a, 90, 90, 90), 'F m -3 m',
+               [('Ni1', 'Ni3+', 0, 0, 0, 1), ('O1', 'O2-', 0.5, 0.5, 0.5, 1)],
+               [('Ni3+', 3), ('O2-', -2)])
+
+
+def test_a_sulfide_is_judged_against_a_shannon_estimate(tmp_path):
+    zns = cif('zns', (5.41, 5.41, 5.41, 90, 90, 90), 'F -4 3 m',
+              [('Zn1', 'Zn2+', 0, 0, 0, 1), ('S1', 'S2-', 0.25, 0.25, 0.25, 1)],
+              [('Zn2+', 2), ('S2-', -2)])
+    r = run(tmp_path, zns)
+    assert (r.tier, r.code, r.reason) == ('FLAG', 'M13', 'bond_lengths_estimated'), r.evidence
+    # Zn(2+) at CN 4 (0.60 A) and S(2-) at Shannon's only CN, 6 (1.84 A); #64
+    assert 'against 2.440 A estimated from Shannon radii' in r.evidence
+
+
+def test_ni3_is_interpolated_between_measured_valences(tmp_path):
+    r = run(tmp_path, rocksalt_ni3(3.94))
+    assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
+    assert 'by interpolating between Ni(2) and Ni(4)' in r.evidence
+
+
+def test_a_polyhedron_off_its_estimate_is_flagged_not_expunged(tmp_path):
+    r = run(tmp_path, rocksalt_ni3(5.0))
+    assert (r.tier, r.code, r.reason) == ('FLAG', 'M14', 'polyhedron_size_off_estimate'), r.evidence
+    assert 'beyond the 15.7% band' in r.evidence
+
+
+def sphalerite(a):
+    return cif('zns', (a, a, a, 90, 90, 90), 'F -4 3 m',
+               [('Zn1', 'Zn2+', 0, 0, 0, 1), ('S1', 'S2-', 0.25, 0.25, 0.25, 1)],
+               [('Zn2+', 2), ('S2-', -2)])
+
+
+def test_each_estimate_carries_its_own_band():
+    # #68: Shannon gives N(3+) at CN 6 only, so a CN 2 nitrite borrows it;
+    # Fe(6+) is tabulated at CN 4; a sulfide always takes the borrowed band;
+    # valence interpolation keeps #11's band
+    e = eir.engine
+    assert e.expected_bond_length('N', 3, 2, 'O')['band'] == e.ESTIMATE_BAND_BORROWED
+    assert e.expected_bond_length('Fe', 6, 4, 'O')['band'] == e.ESTIMATE_BAND_AT_CN
+    assert e.expected_bond_length('Zn', 2, 4, 'S')['band'] == e.ESTIMATE_BAND_BORROWED
+    assert e.expected_bond_length('Ni', 3, 6, 'O')['band'] == e.ESTIMATE_BAND_VALENCE
+
+
+def test_a_sulfide_is_judged_on_the_borrowed_band(tmp_path):
+    # Zn-S 20% over its estimate of 2.440 A is inside 23.8%; 27% is beyond
+    r = run(tmp_path, sphalerite(4 * 2.440 * 1.20 / 3 ** 0.5))
+    assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
+    r = run(tmp_path, sphalerite(4 * 2.440 * 1.27 / 3 ** 0.5), name='y.cif')
+    assert (r.tier, r.code) == ('FLAG', 'M14'), r.evidence
+    assert 'beyond the 23.8% band' in r.evidence
+
+
+def rocksalt_vo(a, ox='V2+', v=2):
+    return cif('vo', (a, a, a, 90, 90, 90), 'F m -3 m',
+               [('V1', ox, 0, 0, 0, 1), ('O1', 'O2-', 0.5, 0.5, 0.5, 1)],
+               [(ox, v), ('O2-', -2)])
+
+
+def test_an_oxide_whose_radius_is_at_the_cn_is_judged_on_the_tight_band(tmp_path):
+    # #68: the file holds V(2+) at CN 6, so VO's Shannon sum of 2.190 A
+    # carries 5.3%: 3% short is within it, 10% long is beyond it
+    r = run(tmp_path, rocksalt_vo(2 * 2.190 * 0.97))
+    assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
+    r = run(tmp_path, rocksalt_vo(2 * 2.190 * 1.10), name='y.cif')
+    assert (r.tier, r.code) == ('FLAG', 'M14'), r.evidence
+    assert 'beyond the 5.3% band' in r.evidence
+
+
+def test_a_fractional_valence_takes_the_borrowed_band():
+    # #68: the sum is made at the nearest integer valence (V at 2.5 as V(2+)),
+    # which the at-the-CN population never tests
+    e = eir.engine
+    assert e.expected_bond_length('V', 2, 6, 'O')['band'] == e.ESTIMATE_BAND_AT_CN
+    assert e.expected_bond_length('V', 2.5, 6, 'O')['band'] == e.ESTIMATE_BAND_BORROWED
+    assert e.expected_bond_length('V', 2.5, 6, 'O')['mean'] == e.expected_bond_length('V', 2, 6, 'O')['mean']
+
+
+def test_estimates_never_extrapolate_in_valence():
+    e = eir.engine
+    assert e.expected_bond_length('U', 3, 8, 'O')['source'] == 'shannon_additive'
+    assert e.expected_bond_length('Ni', 3, 6, 'O')['source'] == 'valence_interpolated_2_4'
+    assert e.expected_bond_length('Cd', 2, 6, 'Cl')['source'] == 'shannon_additive'
+    assert e.expected_bond_length('Ni', 2, 6, 'O')['tier'] == 1
+    # an end extrapolated in CN is not used: Ni(4+) has no CN 4, so Ni(3+)
+    # at CN 4 falls to the Shannon sum
+    assert e.expected_bond_length('Ni', 4, 4, 'O')['tier'] == 3
+    assert e.expected_bond_length('Ni', 3, 4, 'O')['source'] == 'shannon_additive'
+
+
+def test_the_new_codes_explain_themselves(tmp_path):
+    from eir.explain import explain
+    x = explain(run(tmp_path, rocksalt_ni3(3.94)))
+    assert 'estimate' in x['reason'] and 'cannot' in x['reason'], x['reason']
+    y = explain(run(tmp_path, rocksalt_ni3(5.0), name='y.cif'))
+    assert 'band' in y['reason'], y['reason']
+
+
+def test_a_mixed_shell_is_not_judged_on_one_ligand():
+    e = eir.engine
+    row = {'element': 'S', 'valence': 6, 'cn': 5, 'cn_shannon_min': 4,
+           'coords': '(0.1, 0.1, 0.1)', 'bvs': 5.89, 'bvs_percent_diff': -1.8,
+           'is_dominant_species': True, 'occupancy': 1.0, 'ligand_types': 'N,O',
+           'bl_tier': 4.0, 'bl_source': 'shannon_additive',
+           'bl_expected_mean': 1.58, 'avg_bond_length': 3.585,
+           'bl_delta_mean': 2.005}
+    code, reason, evidence = e.classify_site(row, {'gii_recommended_value': 0.05})
+    assert (code, reason) == ('R3', 'mixed_ligand_shell_not_estimated'), evidence
+    from eir.explain import _reason_sentence
+    words = _reason_sentence(code, reason, row)
+    assert 'more than one kind of anion' in words and 'no radius' not in words
+
+
+def test_an_anion_centred_site_gets_no_estimate():
+    e = eir.engine
+    assert e.expected_bond_length('N', -3, 4, 'O') is None
+    assert e.expected_bond_length('N', 0, 4, 'O') is None
+
+
+def test_g7_takes_the_higher_of_the_two_floors():
+    # #72: Shannon lists Zr(4+) at CN 4, Gagne measured Zr(4+)-O from CN 6
+    e = eir.engine
+    row = {'element': 'Zr', 'valence': 4, 'cn': 4, 'cn_shannon_min': 4,
+           'coords': '(0.75, 0.25, 0.75)', 'ligand_types': 'O', 'bvs': 0.823,
+           'bvs_percent_diff': -79.4, 'is_dominant_species': True, 'occupancy': 0.9}
+    code, reason, evidence = e.classify_site(row, {'gii_recommended_value': 3.09})
+    assert (code, reason) == ('G7', 'coordination_incomplete'), (code, evidence)
+    assert 'below the smallest measured (6)' in evidence
+    assert e._measured_cn_min(dict(row, ligand_types='N,O')) is None
+
+
+def test_g7_floor_falls_back_and_keeps_the_tabulated_label():
+    # #72: with no radius-file floor the measured one applies; where the
+    # file's floor is as high as Gagne's, the evidence says "tabulated"
+    e = eir.engine
+    row = {'element': 'Zr', 'valence': 4, 'cn': 4, 'coords': '(0, 0, 0)',
+           'ligand_types': 'O', 'bvs': 0.823, 'bvs_percent_diff': -79.4,
+           'is_dominant_species': True, 'occupancy': 1.0}
+    g = {'gii_recommended_value': 3.0}
+    code, _, ev = e.classify_site(dict(row, cn_shannon_min=float('nan')), g)
+    assert code == 'G7' and 'below the smallest measured (6)' in ev, ev
+    code, _, ev = e.classify_site(dict(row, cn_shannon_min=6), g)
+    assert code == 'G7' and 'below the smallest tabulated (6)' in ev, ev
+    assert e._measured_cn_min(dict(row, valence=float('inf'))) is None

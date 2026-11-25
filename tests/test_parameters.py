@@ -96,3 +96,101 @@ def test_no_parameters_is_not_assessed_not_expunged(tmp_path, name, text):
     r = eir.check(p)
     assert r.tier == 'NOT_ASSESSED', (r.tier, r.reason)
     assert r.reason == 'no_bond_valence_parameters', r.reason
+
+
+def test_the_anion_radii_are_shannons():
+    # Shannon (1976), effective ionic radii; #64
+    import json
+    from pathlib import Path
+    want = {'O': {'-2': {'2': 1.35, '3': 1.36, '4': 1.38, '6': 1.40, '8': 1.42}},
+            'F': {'-1': {'2': 1.285, '3': 1.30, '4': 1.31, '6': 1.33}},
+            'Cl': {'-1': {'6': 1.81}}, 'Br': {'-1': {'6': 1.96}},
+            'I': {'-1': {'6': 2.20}}, 'S': {'-2': {'6': 1.84}},
+            'Se': {'-2': {'6': 1.98}}, 'Te': {'-2': {'6': 2.21}},
+            'N': {'-3': {'4': 1.46}}}
+    table = json.loads((Path(__file__).resolve().parents[1] / 'Data'
+                        / 'shannon_radii.json').read_text(encoding='utf-8'))
+    for el, qs in want.items():
+        for q, cns in qs.items():
+            assert table[el][q] == cns, (el, q, table[el][q])
+
+
+def test_unstated_valence_rows_serve_one_valence_elements_only(table):
+    # #13: Brese and O'Keeffe (1991) rows Brown lists with the valence
+    # unstated, only for an element with one valence in Eir's common
+    # oxidation states and in Gagne's surveys, where nothing else gives the pair
+    common = json.loads((DATA / 'common_oxidation_states.json').read_text())
+    gagne = json.loads((DATA / 'gagne_bond_lengths.json').read_text(encoding='utf-8'))
+    rows = {ast.literal_eval(k): v for k, v in table.items()
+            if v.get('valence_in_source') == 'unstated'}
+    assert len(rows) == 53
+    for (m, v, x), e in rows.items():
+        assert (e['reference'], e['brown_code']) == ('Brown_2020', 'b')
+        assert common[m] == [v] and sorted({int(q) for q in gagne[m]}) == [v], m
+    # multivalent elements that the common-states table lists once
+    assert not {m for m, _, _ in rows} & {'Nb', 'W', 'Ru', 'Bi', 'P'}
+
+
+def test_gdn_is_assessed_with_brese_and_okeeffe(tmp_path):
+    p = tmp_path / 'gdn.cif'
+    from test_reading import cif
+    p.write_text(cif('gdn', (4.99, 4.99, 4.99, 90, 90, 90), 'F m -3 m',
+                     [('Gd1', 'Gd3+', 0, 0, 0, 1), ('N1', 'N3-', 0.5, 0.5, 0.5, 1)],
+                     [('Gd3+', 3), ('N3-', -3)]))
+    r = eir.check(p)
+    assert r.code != 'R1', r.evidence
+    gd = r.sites[r.sites['element'] == 'Gd'].iloc[0]
+    assert abs(float(gd['bvs']) - 3.0) < 0.3
+
+
+def test_the_estimate_bands_are_measured():
+    # #68: tools/measure_bands.py re-measures ESTIMATE_BAND_AT_CN and
+    # ESTIMATE_BAND_BORROWED from the Data folder; they must match it
+    import importlib.util
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[1] / 'tools' / 'measure_bands.py'
+    spec = importlib.util.spec_from_file_location('measure_bands', path)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    assert m.main(['--check']) == 0
+
+
+def test_every_cation_radius_that_is_not_shannons_is_recorded():
+    # #69: an interpolated radius is the straight line between the two
+    # entries it names, which are in the table; a removed one is gone
+    import json
+    from pathlib import Path
+    data = Path(__file__).resolve().parents[1] / 'Data'
+    table = json.loads((data / 'shannon_radii.json').read_text(encoding='utf-8'))
+    src = json.loads((data / 'shannon_radii_sources.json').read_text(encoding='utf-8'))
+    n = 0
+    for el, qs in src['interpolated'].items():
+        for q, cns in qs.items():
+            for cn, rec in cns.items():
+                t = table[el][q]
+                assert t[cn] == rec['radius'], (el, q, cn)
+                assert t[str(rec['lo_cn'])] == rec['lo_radius'], (el, q, cn)
+                assert t[str(rec['hi_cn'])] == rec['hi_radius'], (el, q, cn)
+                assert rec['lo_cn'] < int(cn) < rec['hi_cn']
+                assert not any(rec['lo_cn'] < int(c) < rec['hi_cn'] and c != cn for c in t)
+                line = rec['lo_radius'] + (rec['hi_radius'] - rec['lo_radius']) * (
+                    int(cn) - rec['lo_cn']) / (rec['hi_cn'] - rec['lo_cn'])
+                assert round(line, 4) == rec['radius'], (el, q, cn)
+                n += 1
+    assert n == 9
+    for r in src['removed']:
+        el = r['ion'].rstrip('+').rstrip('0123456789')
+        q = r['ion'][len(el):].rstrip('+')
+        assert str(r['cn']) not in table.get(el, {}).get(q, {}), r
+
+
+def test_the_radii_follow_the_agreed_rule():
+    # #64 and #69: tools/audit_radii.py against Shannon's table, as pymatgen
+    # distributes it, copied to tests/data
+    import importlib.util
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location('audit_radii', root / 'tools' / 'audit_radii.py')
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    assert m.main(['audit_radii.py', str(root / 'tests' / 'data' / 'shannon_1976.json')]) == 0
