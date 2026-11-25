@@ -153,3 +153,32 @@ def test_the_estimate_bands_are_measured():
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
     assert m.main(['--check']) == 0
+
+
+def test_every_cation_radius_that_is_not_shannons_is_recorded():
+    # #69: an interpolated radius is the straight line between the two
+    # entries it names, which are in the table; a removed one is gone
+    import json
+    from pathlib import Path
+    data = Path(__file__).resolve().parents[1] / 'Data'
+    table = json.loads((data / 'shannon_radii.json').read_text(encoding='utf-8'))
+    src = json.loads((data / 'shannon_radii_sources.json').read_text(encoding='utf-8'))
+    n = 0
+    for el, qs in src['interpolated'].items():
+        for q, cns in qs.items():
+            for cn, rec in cns.items():
+                t = table[el][q]
+                assert t[cn] == rec['radius'], (el, q, cn)
+                assert t[str(rec['lo_cn'])] == rec['lo_radius'], (el, q, cn)
+                assert t[str(rec['hi_cn'])] == rec['hi_radius'], (el, q, cn)
+                assert rec['lo_cn'] < int(cn) < rec['hi_cn']
+                assert not any(rec['lo_cn'] < int(c) < rec['hi_cn'] and c != cn for c in t)
+                line = rec['lo_radius'] + (rec['hi_radius'] - rec['lo_radius']) * (
+                    int(cn) - rec['lo_cn']) / (rec['hi_cn'] - rec['lo_cn'])
+                assert round(line, 4) == rec['radius'], (el, q, cn)
+                n += 1
+    assert n == 9
+    for r in src['removed']:
+        el = r['ion'].rstrip('+').rstrip('0123456789')
+        q = r['ion'][len(el):].rstrip('+')
+        assert str(r['cn']) not in table.get(el, {}).get(q, {}), r

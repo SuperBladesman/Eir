@@ -1257,7 +1257,7 @@ def VALIDATE_GATES(verbose=True):
     _m16 = classify_site(dict(_f16, is_dominant_species=False), _g15)
     report('16. M14: a polyhedron off its estimate is FLAG, not expunged',
            _c16[0] == 'M14' and _m16[0] == 'M13'
-           and 'beyond the 23.1% band' in str(_c16[2]),
+           and 'beyond the 19.3% band' in str(_c16[2]),
            f'at +28.0%: {_c16[0]} ({_c16[2]}); as a minority species: {_m16[0]}')
     _c17 = classify_site(dict(_e15, bl_tier=float('nan'), bl_source=None,
                               bl_expected_mean=float('nan')), _g15)
@@ -1273,7 +1273,7 @@ def VALIDATE_GATES(verbose=True):
     # v2.0.50 (#68). M14 reads the band the site's estimate carries. A CN 2
     # nitrite, whose N(3+) radius is borrowed from CN 6: 1.240 A against a
     # sum of 1.510 A is inside the borrowed band, 1.141 A is beyond it; the
-    # same -17.9% against a radius Shannon gives at the CN is beyond 7.7%,
+    # same -17.9% against a radius held at the CN is beyond 5.1%,
     # and a row written before #68, with no band, is judged on 15.7%.
     _n18 = dict(_e15, element='N', valence=3, cn=2, cn_shannon_min=2,
                 ligand_types='O', bl_expected_mean=1.510,
@@ -1286,10 +1286,10 @@ def VALIDATE_GATES(verbose=True):
     _o18 = classify_site(dict(_n18, bl_estimate_band=None), _g15)
     report('18. M14: each estimate is judged on its own band',
            _c18[0] == 'M13' and _s18[0] == 'M14'
-           and 'beyond the 23.1% band' in str(_s18[2])
-           and _t18[0] == 'M14' and 'beyond the 7.7% band' in str(_t18[2])
+           and 'beyond the 19.3% band' in str(_s18[2])
+           and _t18[0] == 'M14' and 'beyond the 5.1% band' in str(_t18[2])
            and _o18[0] == 'M14' and 'beyond the 15.7% band' in str(_o18[2]),
-           f'nitrite at -17.9%: {_c18[0]}; at -24.4%: {_s18[0]}; on 7.7%: '
+           f'nitrite at -17.9%: {_c18[0]}; at -24.4%: {_s18[0]}; on 5.1%: '
            f'{_t18[0]}; no band: {_o18[0]}')
 
     ok = all(results)

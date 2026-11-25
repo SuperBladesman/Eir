@@ -1,0 +1,608 @@
+{
+  "_metadata": {
+    "description": "Where each cation radius in shannon_radii.json that is not Shannon's (1976) ionic radius at its CN comes from, and what #69 changed. Every other cation entry is one of Shannon's ionic radii at that CN; tools/audit_radii.py checks both.",
+    "rule": "Agreed 25 Nov 2026 (#69): Shannon's ionic radius where he lists the ion at the CN (the plain label over SQ or PY, high spin over low); otherwise linear interpolation in CN between his nearest CNs either side; otherwise the entry is removed, and Eir borrows his nearest CN for that ion. Ions Shannon does not list are removed.",
+    "issue": "#69",
+    "date": "2026-11-25"
+  },
+  "interpolated": {
+    "Ce": {
+      "4": {
+        "7": {
+          "radius": 0.92,
+          "was": 0.94,
+          "lo_cn": 6,
+          "lo_radius": 0.87,
+          "hi_cn": 8,
+          "hi_radius": 0.97,
+          "from": "Shannon (1976), linear in CN between his CN 6 (0.87 A) and CN 8 (0.97 A)"
+        },
+        "9": {
+          "radius": 1.02,
+          "was": 1.01,
+          "lo_cn": 8,
+          "lo_radius": 0.97,
+          "hi_cn": 10,
+          "hi_radius": 1.07,
+          "from": "Shannon (1976), linear in CN between his CN 8 (0.97 A) and CN 10 (1.07 A)"
+        }
+      }
+    },
+    "Hg": {
+      "1": {
+        "4": {
+          "radius": 1.0433,
+          "was": 1.02,
+          "lo_cn": 3,
+          "lo_radius": 0.97,
+          "hi_cn": 6,
+          "hi_radius": 1.19,
+          "from": "Shannon (1976), linear in CN between his CN 3 (0.97 A) and CN 6 (1.19 A)"
+        }
+      }
+    },
+    "Li": {
+      "1": {
+        "5": {
+          "radius": 0.675,
+          "was": 0.68,
+          "lo_cn": 4,
+          "lo_radius": 0.59,
+          "hi_cn": 6,
+          "hi_radius": 0.76,
+          "from": "Shannon (1976), linear in CN between his CN 4 (0.59 A) and CN 6 (0.76 A)"
+        }
+      }
+    },
+    "N": {
+      "5": {
+        "4": {
+          "radius": -0.026,
+          "was": 0.13,
+          "lo_cn": 3,
+          "lo_radius": -0.104,
+          "hi_cn": 6,
+          "hi_radius": 0.13,
+          "from": "Shannon (1976), linear in CN between his CN 3 (-0.104 A) and CN 6 (0.13 A)"
+        }
+      }
+    },
+    "Na": {
+      "1": {
+        "10": {
+          "radius": 1.29,
+          "was": 1.3,
+          "lo_cn": 9,
+          "lo_radius": 1.24,
+          "hi_cn": 12,
+          "hi_radius": 1.39,
+          "from": "Shannon (1976), linear in CN between his CN 9 (1.24 A) and CN 12 (1.39 A)"
+        }
+      }
+    },
+    "Nb": {
+      "4": {
+        "7": {
+          "radius": 0.735,
+          "was": 0.74,
+          "lo_cn": 6,
+          "lo_radius": 0.68,
+          "hi_cn": 8,
+          "hi_radius": 0.79,
+          "from": "Shannon (1976), linear in CN between his CN 6 (0.68 A) and CN 8 (0.79 A)"
+        }
+      },
+      "5": {
+        "5": {
+          "radius": 0.56,
+          "was": 0.48,
+          "lo_cn": 4,
+          "lo_radius": 0.48,
+          "hi_cn": 6,
+          "hi_radius": 0.64,
+          "from": "Shannon (1976), linear in CN between his CN 4 (0.48 A) and CN 6 (0.64 A)"
+        }
+      }
+    },
+    "Th": {
+      "4": {
+        "7": {
+          "radius": 0.995,
+          "was": 1.0,
+          "lo_cn": 6,
+          "lo_radius": 0.94,
+          "hi_cn": 8,
+          "hi_radius": 1.05,
+          "from": "Shannon (1976), linear in CN between his CN 6 (0.94 A) and CN 8 (1.05 A)"
+        }
+      }
+    }
+  },
+  "derived": {},
+  "changed": [
+    {
+      "ion": "Ag1+",
+      "cn": 2,
+      "was": 0.59,
+      "now": 0.67,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Ag1+",
+      "cn": 4,
+      "was": 0.81,
+      "now": 1.0,
+      "reason": "Shannon's (1976) ionic radius at this CN; several values: [('IV', '', 1.0), ('IVSQ', '', 1.02)]"
+    },
+    {
+      "ion": "Ag1+",
+      "cn": 5,
+      "was": 0.9,
+      "now": 1.09,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "C4+",
+      "cn": 3,
+      "was": 0.16,
+      "now": -0.08,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Ce3+",
+      "cn": 8,
+      "was": 1.14,
+      "now": 1.143,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Ce3+",
+      "cn": 9,
+      "was": 1.2,
+      "now": 1.196,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Cf4+",
+      "cn": 6,
+      "was": 0.82,
+      "now": 0.821,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Hg2+",
+      "cn": 4,
+      "was": 0.83,
+      "now": 0.96,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "I5+",
+      "cn": 6,
+      "was": 0.62,
+      "now": 0.95,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "K1+",
+      "cn": 10,
+      "was": 1.6,
+      "now": 1.59,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "K1+",
+      "cn": 12,
+      "was": 1.65,
+      "now": 1.64,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Mg2+",
+      "cn": 5,
+      "was": 0.63,
+      "now": 0.66,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Mn3+",
+      "cn": 5,
+      "was": 0.62,
+      "now": 0.58,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "N5+",
+      "cn": 3,
+      "was": 0.13,
+      "now": -0.104,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Na1+",
+      "cn": 5,
+      "was": 1.05,
+      "now": 1.0,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Nb4+",
+      "cn": 8,
+      "was": 0.82,
+      "now": 0.79,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Nb5+",
+      "cn": 4,
+      "was": 0.38,
+      "now": 0.48,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Nb5+",
+      "cn": 7,
+      "was": 0.7,
+      "now": 0.69,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Nd2+",
+      "cn": 8,
+      "was": 1.25,
+      "now": 1.29,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Np5+",
+      "cn": 6,
+      "was": 0.82,
+      "now": 0.75,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Pu5+",
+      "cn": 6,
+      "was": 0.81,
+      "now": 0.74,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Ru7+",
+      "cn": 4,
+      "was": 0.35,
+      "now": 0.38,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Sb3+",
+      "cn": 5,
+      "was": 0.76,
+      "now": 0.8,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Sm2+",
+      "cn": 8,
+      "was": 1.22,
+      "now": 1.27,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Ta5+",
+      "cn": 7,
+      "was": 0.68,
+      "now": 0.69,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Tc7+",
+      "cn": 4,
+      "was": 0.34,
+      "now": 0.37,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Te4+",
+      "cn": 4,
+      "was": 0.52,
+      "now": 0.66,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Th4+",
+      "cn": 9,
+      "was": 1.11,
+      "now": 1.09,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Th4+",
+      "cn": 10,
+      "was": 1.15,
+      "now": 1.13,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "U4+",
+      "cn": 7,
+      "was": 0.94,
+      "now": 0.95,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "U4+",
+      "cn": 9,
+      "was": 1.03,
+      "now": 1.05,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "U5+",
+      "cn": 6,
+      "was": 0.84,
+      "now": 0.76,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "U5+",
+      "cn": 7,
+      "was": 0.89,
+      "now": 0.84,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "U6+",
+      "cn": 7,
+      "was": 0.76,
+      "now": 0.81,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "U6+",
+      "cn": 8,
+      "was": 0.81,
+      "now": 0.86,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    },
+    {
+      "ion": "Y3+",
+      "cn": 9,
+      "was": 1.07,
+      "now": 1.075,
+      "reason": "Shannon's (1976) ionic radius at this CN"
+    }
+  ],
+  "added": [
+    {
+      "ion": "Ga3+",
+      "cn": 5,
+      "radius": 0.55,
+      "reason": "Shannon's (1976) ionic radius, added so that a CN removed above borrows his nearest"
+    },
+    {
+      "ion": "H1+",
+      "cn": 1,
+      "radius": -0.38,
+      "reason": "Shannon's (1976) ionic radius, added so that a CN removed above borrows his nearest"
+    },
+    {
+      "ion": "H1+",
+      "cn": 2,
+      "radius": -0.18,
+      "reason": "Shannon's (1976) ionic radius, added so that a CN removed above borrows his nearest"
+    },
+    {
+      "ion": "Hg1+",
+      "cn": 3,
+      "radius": 0.97,
+      "reason": "Shannon's (1976) ionic radius, added so that a CN removed above borrows his nearest"
+    },
+    {
+      "ion": "Hg1+",
+      "cn": 6,
+      "radius": 1.19,
+      "reason": "Shannon's (1976) ionic radius, added so that a CN removed above borrows his nearest"
+    },
+    {
+      "ion": "Nd2+",
+      "cn": 9,
+      "radius": 1.35,
+      "reason": "Shannon's (1976) ionic radius, added so that a CN removed above borrows his nearest"
+    },
+    {
+      "ion": "Sm2+",
+      "cn": 7,
+      "radius": 1.22,
+      "reason": "Shannon's (1976) ionic radius, added so that a CN removed above borrows his nearest"
+    },
+    {
+      "ion": "Sm2+",
+      "cn": 9,
+      "radius": 1.32,
+      "reason": "Shannon's (1976) ionic radius, added so that a CN removed above borrows his nearest"
+    }
+  ],
+  "removed": [
+    {
+      "ion": "Ac3+",
+      "cn": 8,
+      "was": 1.26,
+      "reason": "outside Shannon CNs [6]"
+    },
+    {
+      "ion": "Al3+",
+      "cn": 8,
+      "was": 0.67,
+      "reason": "outside Shannon CNs [4, 5, 6]"
+    },
+    {
+      "ion": "As3+",
+      "cn": 4,
+      "was": 0.34,
+      "reason": "outside Shannon CNs [6]"
+    },
+    {
+      "ion": "Br1+",
+      "cn": 6,
+      "was": 1.14,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "Br5+",
+      "cn": 6,
+      "was": 0.39,
+      "reason": "outside Shannon CNs [3]"
+    },
+    {
+      "ion": "Cl1+",
+      "cn": 6,
+      "was": 0.99,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "Cl5+",
+      "cn": 6,
+      "was": 0.26,
+      "reason": "outside Shannon CNs [3]"
+    },
+    {
+      "ion": "Cm3+",
+      "cn": 8,
+      "was": 1.08,
+      "reason": "outside Shannon CNs [6]"
+    },
+    {
+      "ion": "Ga3+",
+      "cn": 8,
+      "was": 0.77,
+      "reason": "outside Shannon CNs [4, 5, 6]"
+    },
+    {
+      "ion": "H1+",
+      "cn": 4,
+      "was": 0.01,
+      "reason": "outside Shannon CNs [1, 2]"
+    },
+    {
+      "ion": "Hg1+",
+      "cn": 2,
+      "was": 0.83,
+      "reason": "outside Shannon CNs [3, 6]"
+    },
+    {
+      "ion": "I1+",
+      "cn": 6,
+      "was": 1.33,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "Ir6+",
+      "cn": 6,
+      "was": 0.57,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "Mn5+",
+      "cn": 6,
+      "was": 0.47,
+      "reason": "outside Shannon CNs [4]"
+    },
+    {
+      "ion": "Mn6+",
+      "cn": 6,
+      "was": 0.395,
+      "reason": "outside Shannon CNs [4]"
+    },
+    {
+      "ion": "Nd2+",
+      "cn": 6,
+      "was": 1.09,
+      "reason": "outside Shannon CNs [8, 9]"
+    },
+    {
+      "ion": "Os8+",
+      "cn": 6,
+      "was": 0.525,
+      "reason": "outside Shannon CNs [4]"
+    },
+    {
+      "ion": "Pd4+",
+      "cn": 4,
+      "was": 0.59,
+      "reason": "outside Shannon CNs [6]"
+    },
+    {
+      "ion": "Ru4+",
+      "cn": 8,
+      "was": 0.72,
+      "reason": "outside Shannon CNs [6]"
+    },
+    {
+      "ion": "Ru6+",
+      "cn": 6,
+      "was": 0.53,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "Ru7+",
+      "cn": 6,
+      "was": 0.52,
+      "reason": "outside Shannon CNs [4]"
+    },
+    {
+      "ion": "S2+",
+      "cn": 6,
+      "was": 2.19,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "Sm2+",
+      "cn": 6,
+      "was": 1.07,
+      "reason": "outside Shannon CNs [7, 8, 9]"
+    },
+    {
+      "ion": "Sn2+",
+      "cn": 6,
+      "was": 1.12,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "Sn2+",
+      "cn": 7,
+      "was": 1.16,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "Sn2+",
+      "cn": 8,
+      "was": 1.22,
+      "reason": "Shannon does not list the ion"
+    },
+    {
+      "ion": "U3+",
+      "cn": 8,
+      "was": 1.15,
+      "reason": "outside Shannon CNs [6]"
+    },
+    {
+      "ion": "U3+",
+      "cn": 9,
+      "was": 1.2,
+      "reason": "outside Shannon CNs [6]"
+    },
+    {
+      "ion": "U5+",
+      "cn": 8,
+      "was": 0.95,
+      "reason": "outside Shannon CNs [6, 7]"
+    },
+    {
+      "ion": "Y3+",
+      "cn": 12,
+      "was": 1.19,
+      "reason": "outside Shannon CNs [6, 7, 8, 9]"
+    }
+  ]
+}

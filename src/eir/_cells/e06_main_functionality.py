@@ -508,24 +508,26 @@ BL_MIN_SAMPLE = 30
 # the configurations Gagne measured, bonded to O or N, the 95th percentile of
 # |sum - Gagne's mean| / Gagne's mean is
 #
-#   at the CN   7.7% on 389 configurations, median 1.9%  ESTIMATE_BAND_AT_CN
-#   borrowed   23.1% on 204, median 3.8%                 ESTIMATE_BAND_BORROWED
+#   at the CN   5.1% on 383 configurations, median 1.7%  ESTIMATE_BAND_AT_CN
+#   borrowed   19.3% on 202, median 3.8%                 ESTIMATE_BAND_BORROWED
 #
-# and tools/measure_bands.py reproduces both from the Data folder. "At the CN"
-# means in Data/shannon_radii.json, which is what Eir can know; 54 of the 593
-# fall the other way by Shannon's own table, which gives 7.0% on 415 and 24.1%
-# on 178, because some of the file's cation entries are not his (#69, which
-# re-measures these bands when it settles them).
+# and tools/measure_bands.py reproduces both from the Data folder (a test
+# fails if they drift). "At the CN" means in Data/shannon_radii.json, which
+# is what Eir can know. #68 first measured 7.7% on 389 and 23.1% on 204; #69
+# then made every cation entry Shannon's, or interpolated between his CNs, or
+# removed it (Data/shannon_radii_sources.json), and the bands fell to these.
+# The old entries included Shannon's CN 6 radii for the nitrate and carbonate
+# ions at CN 3, which missed by 19% and 18% on 468 and 389 polyhedra.
 #
-# #11 used one band over both, 15.7% on 593: twice too loose where the radius
-# is at the CN, and too tight where it is borrowed, so a CN 2 nitrite (N(3+)
-# is held at CN 6 only) at 1.24 A, 18% under its sum of 1.51 A, was called off
-# its estimate (13 in the regression sets).
+# #11 used one band over both, 15.7% on 593: three times too loose where the
+# radius is at the CN, and too tight where it is borrowed, so a CN 2 nitrite
+# (N(3+) is held at CN 6 only) at 1.24 A, 18% under its sum of 1.51 A, was
+# called off its estimate (13 in the regression sets).
 #
 # CHOSEN, not measured, the borrowed band for:
 #   - S, Se, Te and the halides: nothing measured calibrates a sum to them;
 #   - a fractional valence: the sum is made at the nearest integer valence
-#     (V(2.5+) as V(2+)), which the 7.7% population never tests.
+#     (V(2.5+) as V(2+)), which the at-the-CN population never tests.
 #
 # Interpolating in valence (tier 5) between two of Gagne's valences of the
 # same ion, each measured or interpolated in CN at this CN (tiers 1 and 2),
@@ -534,10 +536,10 @@ BL_MIN_SAMPLE = 30
 # measured, because a fractional valence interpolates across a change of
 # chemistry the 19 never test (Te written at 5.26 to 5.32 sits between Te(4+),
 # with its lone pair, and Te(6+): ICSD 261939, 261942 and 261943 would be
-# called off a 4.4% or 7.7% band). With an end extrapolated in CN (tier 3)
+# called off a 4.4% or 5.1% band). With an end extrapolated in CN (tier 3)
 # interpolation missed by 14.6% on 38, and such ends are not used.
-ESTIMATE_BAND_AT_CN = 0.077
-ESTIMATE_BAND_BORROWED = 0.231
+ESTIMATE_BAND_AT_CN = 0.051
+ESTIMATE_BAND_BORROWED = 0.193
 ESTIMATE_BAND_VALENCE = 0.157
 # The one band #11 gave every estimate. Output written before #68 carries it
 # in bl_estimate_band and is judged on it; output with no band at all is
