@@ -635,9 +635,10 @@ def summarise_dataset(dfq, save_to=None, gii_threshold=0.20,
         out("  angstroms, and bl_n_polyhedra is the number of coordination")
         out("  polyhedra it rests on.")
         out()
+        # v2.0.50 (#11): tiers 4 and 5 are estimates, judged by M13/M14
         _lab = {1: 'measured', 2: 'interpolated', 3: 'extrapolated',
-                4: 'Shannon additive'}
-        for _t in (1, 2, 3, 4):
+                5: 'estimated, valence', 4: 'estimated, Shannon'}
+        for _t in (1, 2, 3, 5, 4):
             _n = int((_bt == _t).sum())
             if _n:
                 out(f"      tier {_t}  {_lab[_t]:18} {_n:6}  "

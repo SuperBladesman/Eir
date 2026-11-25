@@ -202,7 +202,8 @@ PGRM_SUPPRESSED_COLUMNS = (
     'bvs_gap_shell', 'bvs_bv_adaptive', 'bvs_econ_weighted',
     'gii', 'wagii', 'gii_site_averaged', 'gii_recommended',
     'gii_recommended_value',
-    'bl_delta_mean', 'bl_delta_min', 'bl_ratio_min')
+    'bl_delta_mean', 'bl_delta_min', 'bl_ratio_min',
+    'bl_estimate_deviation')                                 # v2.0.50
 
 _GATE_TIER = {'P': 'EXPUNGE', 'G': 'EXPUNGE', 'R': 'NOT_ASSESSED', 'M': 'FLAG',
               '-': 'ACCEPT'}
@@ -327,6 +328,44 @@ def _bl_sample(row):
         has_new = False
     return _pgrm_f(row.get('bl_n_polyhedra') if has_new
                    else row.get('bl_n_bonds'), 0.0)
+
+
+def _bl_ligands(row):
+    v = row.get('ligand_types')
+    if v is None or v != v:
+        return []
+    return [x.strip() for x in str(v).split(',') if x.strip()]
+
+
+def _bl_ligand(row):
+    ligs = _bl_ligands(row)
+    return ligs[0] if ligs else 'the ligand'
+
+
+def _bl_estimate(row):
+    """v2.0.50 (#11): for a site whose expected bond length is an estimate
+    (bl_tier 4 or 5), what it was estimated from and how far the site's mean
+    bond sits from it, as a fraction; None where the expectation is measured
+    or absent. Read from bl_delta_mean, so output written before 2.0.50 is
+    judged on the estimate it carries: O and N sites move, but an S, Se, Te or
+    halide site has none until it is re-run, and stays R3."""
+    t = _pgrm_f(row.get('bl_tier'))
+    if t != t or int(t) not in ESTIMATED_TIERS or len(_bl_ligands(row)) > 1:
+        return None
+    m = _pgrm_f(row.get('bl_expected_mean'))
+    d = _pgrm_f(row.get('bl_delta_mean'))
+    obs = _pgrm_f(row.get('avg_bond_length'))
+    dev = d / m if (m == m and m > 0 and d == d) else float('nan')
+    src = str(row.get('bl_source') or '')
+    el, v = row.get('element'), row.get('valence')
+    mv = re.match(r'valence_interpolated_(-?\d+)_(-?\d+)$', src)
+    how = (f'by interpolating between {el}({mv.group(1)}) and {el}({mv.group(2)})'
+           if mv else 'from Shannon radii')
+    head = (f'{el}({v}) at CN {row.get("cn")} to {_bl_ligand(row)}: no '
+            f'measured bond lengths; mean bond '
+            + (f'{obs:.3f} A' if obs == obs else 'not measured')
+            + (f' against {m:.3f} A estimated {how}' if m == m else ''))
+    return {'deviation': dev, 'head': head}
 
 
 def classify_site(row, struct):
@@ -535,8 +574,27 @@ def classify_site(row, struct):
     if _pgrm_f(row.get('cn_shannon_min')) != _pgrm_f(row.get('cn_shannon_min')):
         return ('R2', 'no_ionic_radius',
                 f'{row.get("element")}({row.get("valence")}) not tabulated')
-    if _pgrm_f(row.get('bl_tier')) in (4.0,) or _pgrm_f(row.get('bl_tier')) != _pgrm_f(row.get('bl_tier')):
-        return ('R3', 'no_measured_bond_lengths', 'expected distance from additive radii')
+    # v2.0.50 (#11): an estimated expectation (tiers 4 and 5) no longer stops
+    # here; M13 and M14 below flag it. R3 is left for a site with no
+    # expectation at all: no measurement, no two measured valences to
+    # interpolate between, and no radius to add.
+    _blt3 = _pgrm_f(row.get('bl_tier'))
+    if _blt3 != _blt3:
+        return ('R3', 'no_measured_bond_lengths',
+                f'{row.get("element")}({row.get("valence")}) to '
+                f'{_bl_ligand(row)}: no measured bond lengths, and no radius '
+                f'to estimate them from')
+    # ... nor for a shell of mixed ligands, whose expectation is taken for
+    # the first ligand listed (alphabetically: Cl before O in a perchlorate
+    # with chloride beside it) and so does not describe the shell. Kept at
+    # R3 until the expectation follows the ligands actually bonded.
+    _ligs = _bl_ligands(row)
+    if int(_blt3) in ESTIMATED_TIERS and len(_ligs) > 1:
+        return ('R3', 'mixed_ligand_shell_not_estimated',
+                f'{row.get("element")}({row.get("valence")}) bonded to '
+                f'{" and ".join(_ligs)}: no measured bond lengths for '
+                f'{_ligs[0]}, and no estimate is made for a shell of mixed '
+                f'ligands')
 
     # v2.0.37: THE INDEX THE TIER TELLS A READER TO QUOTE MUST EXIST.
     #
@@ -674,7 +732,9 @@ def classify_site(row, struct):
     # bond_size_z is exported either way, so the evidence is on the row.
     _bz = _pgrm_f(row.get('bond_size_z'))
     _bzn = _bl_sample(row)
+    _bzt = _pgrm_f(row.get('bl_tier'))   # v2.0.50: never on an estimate
     if (_bz == _bz and abs(_bz) > BOND_SIZE_Z
+            and not (_bzt == _bzt and int(_bzt) in ESTIMATED_TIERS)
             and _bzn >= BL_MIN_SAMPLE
             and _pgrm_is_true(row.get('is_dominant_species'))
             and not _pgrm_has_value(row.get('cn_fault'))
@@ -689,6 +749,24 @@ def classify_site(row, struct):
                 f'{_pgrm_f(row.get("bl_expected_mean")):.3f} +/- '
                 f'{_pgrm_f(row.get("bl_expected_sd")):.3f} A over '
                 f'{int(_bzn)} measured polyhedra, {_bz:+.1f} sd')
+
+    # v2.0.50 (#11): M14, THE POLYHEDRON IS OFF ITS ESTIMATE. An estimate
+    # (tiers 4 and 5; see ESTIMATE_BAND, CELL 2) can flag but never expunge.
+    # Asked where M10 is, with M10's eligibility rules except the sample,
+    # which an estimate does not have; where they fail, M13 below says the
+    # expectation was estimated and nothing more.
+    _est = _bl_estimate(row)
+    if (_est is not None and _est['deviation'] == _est['deviation']
+            and abs(_est['deviation']) > ESTIMATE_BAND
+            and _pgrm_is_true(row.get('is_dominant_species'))
+            and not _pgrm_has_value(row.get('cn_fault'))
+            and not _pgrm_is_true(row.get('has_mixed_occupancy'))
+            and occ >= PGRM_FULL_OCC
+            and str(row.get('measurement_conditions') or 'unknown')
+            not in BOND_SIZE_NON_AMBIENT):
+        return ('M14', 'polyhedron_size_off_estimate',
+                f'{_est["head"]}, {100 * _est["deviation"]:+.1f}%, beyond '
+                f'the {100 * ESTIMATE_BAND:.1f}% band')
 
     # v2.0.25: A CAVEAT MUST NOT MASK A DEFECT.
     #
@@ -717,6 +795,13 @@ def classify_site(row, struct):
     _osp = row.get('off_special_position')
     if _pgrm_has_value(_osp):
         return ('M12', 'off_special_position', str(_osp).strip())
+    # v2.0.50 (#11): M13, the expectation was estimated. Asked before M2/M3
+    # and M9, whose tiers accept: an estimate can raise doubt but cannot
+    # certify, so an entry judged against one is FLAG at best.
+    if _est is not None:
+        _dv = _est['deviation']
+        return ('M13', 'bond_lengths_estimated',
+                _est['head'] + (f', {100 * _dv:+.1f}%' if _dv == _dv else ''))
 
     # M2/M3 mean TWO OR MORE SPECIES SHARE A POSITION, which is an ambiguity in
     # the depositor's model. They do NOT mean partial occupancy: in a spinel
@@ -861,9 +946,11 @@ def classify_pgrm(df):
                   # squeezed, so every existing pair keeps its order.
                   # v2.0.46: M11 sits below M8, above M10, for the same
                   # reason, and the rest are renumbered.
-                  'M5': 16, 'M8': 17, 'M11': 18, 'M10': 19, 'M7': 20,
-                  'M4': 21, 'M1': 22, 'M6': 23, 'M12': 24, 'M3': 25,
-                  'M2': 26, '-': 99}
+                  # v2.0.50: M14 below M10, which it mirrors for an
+                  # estimate; M13, a caveat, after M12 and before M3/M2.
+                  'M5': 16, 'M8': 17, 'M11': 18, 'M10': 19, 'M14': 20,
+                  'M7': 21, 'M4': 22, 'M1': 23, 'M6': 24, 'M12': 25,
+                  'M13': 26, 'M3': 27, 'M2': 28, '-': 99}
     # v2.0.47: among sites failing the same contact gate, the headline
     # evidence is the worst site's on the measure that gate judges, not the
     # last row's: the shortest contact for G1, the lowest ratio to the
@@ -1142,6 +1229,40 @@ def VALIDATE_GATES(verbose=True):
     report('8. R6: an index the table cannot rebuild is not assessed, after G',
            _r6[0] == 'R6' and _g6[0] == 'G1',
            f'index_check only: {_r6[0]}; with a contact under the floor: {_g6[0]}')
+
+    # v2.0.50 (#11). An estimated expectation flags but never expunges or
+    # certifies. Zn(2+)S4 judged against a Shannon sum of 2.300 A.
+    _e15 = dict(_row, element='Zn', valence=2, cn=4, cn_shannon_min=4,
+                bvs=2.0, bvs_percent_diff=0.0, ligand_types='S',
+                is_dominant_species=True, occupancy=1.0,
+                bl_tier=4.0, bl_source='shannon_additive',
+                bl_expected_mean=2.300, avg_bond_length=2.343,
+                bl_delta_mean=0.043)
+    _g15 = {'gii_recommended_value': 0.05}
+    _c15 = classify_site(_e15, _g15)
+    _s15 = classify_site(_e15, dict(_g15, _site_species_count=2,
+                                    _site_valence_span=0))
+    report('15. M13: an estimated expectation is FLAG, even on a shared position',
+           _c15[0] == 'M13' and _s15[0] == 'M13'
+           and 'estimated from Shannon radii, +1.9%' in str(_c15[2]),
+           f'Zn(2)S4 at +1.9%: {_c15[0]} ({_c15[2]}); shared: {_s15[0]}')
+    _f16 = dict(_e15, avg_bond_length=2.743, bl_delta_mean=0.443)
+    _c16 = classify_site(_f16, _g15)
+    _m16 = classify_site(dict(_f16, is_dominant_species=False), _g15)
+    report('16. M14: a polyhedron off its estimate is FLAG, not expunged',
+           _c16[0] == 'M14' and _m16[0] == 'M13'
+           and 'beyond the 15.6% band' in str(_c16[2]),
+           f'at +19.3%: {_c16[0]} ({_c16[2]}); as a minority species: {_m16[0]}')
+    _c17 = classify_site(dict(_e15, bl_tier=float('nan'), bl_source=None,
+                              bl_expected_mean=float('nan')), _g15)
+    _x17 = classify_site(dict(_e15, element='S', valence=6, cn=5,
+                              ligand_types='N,O', avg_bond_length=3.585,
+                              bl_expected_mean=1.58, bl_delta_mean=2.005),
+                         _g15)
+    report('17. R3: no measurement and no estimate is not assessed, nor a mixed shell',
+           _c17[0] == 'R3' and 'no radius to estimate them from' in str(_c17[2])
+           and _x17[0] == 'R3' and 'mixed ligands' in str(_x17[2]),
+           f'{_c17[0]} ({_c17[2]}); S(6) bonded to N and O: {_x17[0]} ({_x17[2]})')
 
     ok = all(results)
     if verbose:
@@ -1850,6 +1971,35 @@ def VALIDATE_PARSING(verbose=True):
         return (not r.get('success') and r.get('error') == NO_SITE_REASON,
                 f"success {r.get('success')}: {r.get('error')}")
     _case(49, 'no cation site to assess: a failure, with the reason', _t49)
+
+    # ---- v2.0.50: estimated bond lengths (#11) -------------------------
+    def _t50():
+        # sphalerite ZnS: no measured Zn-S lengths, so a Shannon sum, which
+        # until 2.0.50 looked S up as 3- and found nothing (R3)
+        r = _parsing_run(_parsing_cif('zns50', 5.41, 'F -4 3 m',
+                                      [('Zn1', 'Zn2+', 0, 0, 0, 1),
+                                       ('S1', 'S2-', 0.25, 0.25, 0.25, 1)],
+                                      loop=[('Zn2+', 2), ('S2-', -2)]))
+        s = [x for x in r.get('sites', []) if x.get('element') == 'Zn']
+        t = s[0].get('bl_tier') if s else None
+        src = s[0].get('bl_source') if s else None
+        return t == 4 and src == 'shannon_additive', f'Zn: tier {t}, {src}'
+    _case(50, 'a sulfide gets a Shannon estimate (S at 2-)', _t50)
+
+    def _t51():
+        # Ni(3+)O6: between Gagne's Ni(2+) and Ni(4+), never extrapolated
+        r = _parsing_run(_parsing_cif('nio51', 3.94, 'F m -3 m',
+                                      [('Ni1', 'Ni3+', 0, 0, 0, 1),
+                                       ('O1', 'O2-', 0.5, 0.5, 0.5, 1)],
+                                      loop=[('Ni3+', 3), ('O2-', -2)]))
+        s = [x for x in r.get('sites', []) if x.get('element') == 'Ni']
+        src = s[0].get('bl_source') if s else None
+        dev = s[0].get('bl_estimate_deviation') if s else None
+        u = expected_bond_length('U', 3, 8, 'O')
+        return (src == 'valence_interpolated_2_4' and dev is not None
+                and abs(dev) < 0.01 and u and u['tier'] == 4,
+                f'Ni(3): {src}, deviation {dev}; U(3) CN 8: {u and u["source"]}')
+    _case(51, 'Ni(3+) interpolated between Ni(2+) and Ni(4+); U(3+) not extrapolated', _t51)
 
     ok = all(results)
     if verbose:
