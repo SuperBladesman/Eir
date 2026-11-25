@@ -21,9 +21,10 @@ Coord. Chem. Rev. 445, 213994, section 2.3.
 Brese and O'Keeffe's (1991) rows that Brown lists with the cation's valence
 unstated (valence 9 in the file, code 'b') are used, from 2.0.50 (#13), only
 for an element with one valence, both in Data/common_oxidation_states.json and
-in Gagne's bond length surveys (Data/gagne_bond_lengths.json), at that valence, and only where nothing else gives the pair: no Gagne row, no
-row of Brown's at a stated valence, no Chen and Adams fit, and no entry
-removed on purpose (bvs_parameters_excluded.json). Such an entry records
+in Gagne's bond length surveys (Data/gagne_bond_lengths.json), at that
+valence, and only where nothing else gives the pair: no Gagne and Hawthorne
+(2015) parameters, no row of Brown's at a stated valence, no Chen and Adams
+fit, and no entry removed on purpose (bvs_parameters_excluded.json). Such an entry records
 'valence_in_source': 'unstated'. Every row that qualifies must be in the
 table.
 
