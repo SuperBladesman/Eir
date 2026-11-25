@@ -10174,5 +10174,482 @@
     "reference": "ChenAdams2017_softNC1",
     "anion_charge": -1,
     "n_environments": 3
+  },
+  "('Ag', 1, 'H')": {
+    "r0": 1.5,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ag', 1, 'N')": {
+    "r0": 1.85,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ag', 1, 'P')": {
+    "r0": 2.22,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('C', 4, 'As')": {
+    "r0": 1.99,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('C', 4, 'H')": {
+    "r0": 1.1,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('C', 4, 'I')": {
+    "r0": 2.12,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('C', 4, 'P')": {
+    "r0": 1.89,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('C', 4, 'Se')": {
+    "r0": 1.97,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('C', 4, 'Te')": {
+    "r0": 2.21,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Dy', 3, 'As')": {
+    "r0": 2.64,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Dy', 3, 'H')": {
+    "r0": 1.89,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Dy', 3, 'N')": {
+    "r0": 2.18,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Dy', 3, 'P')": {
+    "r0": 2.57,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Dy', 3, 'Se')": {
+    "r0": 2.61,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Dy', 3, 'Te')": {
+    "r0": 2.8,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Er', 3, 'As')": {
+    "r0": 2.63,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Er', 3, 'H')": {
+    "r0": 1.86,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Er', 3, 'N')": {
+    "r0": 2.16,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Er', 3, 'P')": {
+    "r0": 2.55,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Er', 3, 'Te')": {
+    "r0": 2.78,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Gd', 3, 'As')": {
+    "r0": 2.68,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Gd', 3, 'H')": {
+    "r0": 1.93,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Gd', 3, 'N')": {
+    "r0": 2.22,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Gd', 3, 'P')": {
+    "r0": 2.61,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Gd', 3, 'Se')": {
+    "r0": 2.65,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Gd', 3, 'Te')": {
+    "r0": 2.84,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ge', 4, 'Br')": {
+    "r0": 2.3,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ge', 4, 'H')": {
+    "r0": 1.55,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ge', 4, 'I')": {
+    "r0": 2.5,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hf', 4, 'As')": {
+    "r0": 2.56,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hf', 4, 'Br')": {
+    "r0": 2.47,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hf', 4, 'H')": {
+    "r0": 1.78,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hf', 4, 'N')": {
+    "r0": 2.09,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hf', 4, 'P')": {
+    "r0": 2.48,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hf', 4, 'Te')": {
+    "r0": 2.72,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hg', 2, 'As')": {
+    "r0": 2.5,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hg', 2, 'H')": {
+    "r0": 1.71,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hg', 2, 'N')": {
+    "r0": 2.02,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Hg', 2, 'P')": {
+    "r0": 2.42,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ho', 3, 'As')": {
+    "r0": 2.64,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ho', 3, 'H')": {
+    "r0": 1.88,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ho', 3, 'N')": {
+    "r0": 2.18,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ho', 3, 'P')": {
+    "r0": 2.56,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ho', 3, 'Se')": {
+    "r0": 2.61,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ho', 3, 'Te')": {
+    "r0": 2.8,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('In', 3, 'H')": {
+    "r0": 1.72,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('In', 3, 'N')": {
+    "r0": 2.03,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ta', 5, 'As')": {
+    "r0": 2.55,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ta', 5, 'Br')": {
+    "r0": 2.45,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ta', 5, 'H')": {
+    "r0": 1.76,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ta', 5, 'I')": {
+    "r0": 2.66,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -1,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ta', 5, 'P')": {
+    "r0": 2.47,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -3,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
+  },
+  "('Ta', 5, 'Te')": {
+    "r0": 2.7,
+    "b": 0.37,
+    "reference": "Brown_2020",
+    "anion_charge": -2,
+    "brown_code": "b",
+    "valence_in_source": "unstated",
+    "valence_from": "the one valence in common_oxidation_states.json and in Gagne's surveys"
   }
 }
