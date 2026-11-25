@@ -189,6 +189,10 @@ PGRM_MIXED_VALENCE_TOL = 0.05
 # of the corpus, 1,254 pyrochlores and 733 fluorites): it fires once, on ICSD
 # 69461, a Tb2Ti2O7 whose 48f x appears to be quoted for the other origin, so
 # that Tb has two neighbours. G2 expunged it already.
+#
+# v2.0.50 (#72): the floor is no longer Shannon's alone but the larger of the
+# radius file's smallest CN and the smallest Gagne measured for the ion and
+# ligand (see G7 in classify_site).
 CN_DEFICIT_BVS_FRACTION = 0.50
 
 # The two packing floors come from CELL 1, where they are set from the
@@ -351,7 +355,7 @@ def _measured_cn_min(row):
         return None
     try:
         v = int(round(float(row.get('valence'))))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
     bl = db_manager.load_bond_lengths() or {}
     cns = [k[3] for k in bl if k[0] == row.get('element') and k[1] == v
@@ -527,9 +531,11 @@ def classify_site(row, struct):
     # file happened not to reach: #69 added Shannon's Zr(4+) at CN 4, and two
     # (Zr0.9Sc0.1) positions at CN 4 summing to 0.82 for Zr(4+), -79%, went
     # from EXPUNGE to ACCEPT_HOMOVALENT (ICSD 126284, 126285). Gagne measured
-    # Zr(4+)-O from CN 6. Measured on the 8,046 rows of the regression sets,
-    # the larger floor changes those two and nothing else, and on output
-    # written before #69 it changes nothing.
+    # Zr(4+)-O from CN 6. Measured on the 8,046 structure rows of the
+    # regression sets, the larger floor changes those two and nothing else,
+    # and on output written before #69 it changes nothing. Gagne's CNs are
+    # taken whatever their sample size, unlike expected_bond_length's
+    # BL_MIN_SAMPLE: a small sample can only lower his floor, never raise it.
     _cnmin = _pgrm_f(row.get('cn_shannon_min'))
     _bpd = _pgrm_f(row.get('bvs_percent_diff'))
     _floor, _floor_src = _cnmin, 'tabulated'

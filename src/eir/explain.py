@@ -165,7 +165,8 @@ def _reason_sentence(code, reason, site):
             f'not decide anything.',
         'coordination_incomplete':
             f'{ion}{at} has fewer neighbours than the smallest coordination '
-            f'tabulated for it, and its bond valence sum is less than half '
+            f'tabulated or measured for it (the evidence says which), and its '
+            f'bond valence sum is less than half '
             f'its valence: bonds are missing from the model, so no sum '
             f'built on it can be trusted.',
         'position_overfilled':
