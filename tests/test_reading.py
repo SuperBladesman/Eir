@@ -598,6 +598,31 @@ def test_a_sulfide_is_judged_on_the_borrowed_band(tmp_path):
     assert 'beyond the 23.1% band' in r.evidence
 
 
+def rocksalt_vo(a, ox='V2+', v=2):
+    return cif('vo', (a, a, a, 90, 90, 90), 'F m -3 m',
+               [('V1', ox, 0, 0, 0, 1), ('O1', 'O2-', 0.5, 0.5, 0.5, 1)],
+               [(ox, v), ('O2-', -2)])
+
+
+def test_an_oxide_whose_radius_is_at_the_cn_is_judged_on_the_tight_band(tmp_path):
+    # #68: the file holds V(2+) at CN 6, so VO's Shannon sum of 2.190 A
+    # carries 7.7%: 5% short is within it, 10% long is beyond it
+    r = run(tmp_path, rocksalt_vo(2 * 2.190 * 0.95))
+    assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
+    r = run(tmp_path, rocksalt_vo(2 * 2.190 * 1.10), name='y.cif')
+    assert (r.tier, r.code) == ('FLAG', 'M14'), r.evidence
+    assert 'beyond the 7.7% band' in r.evidence
+
+
+def test_a_fractional_valence_takes_the_borrowed_band():
+    # #68: the sum is made at the nearest integer valence (V at 2.5 as V(2+)),
+    # which the 7.7% population never tests
+    e = eir.engine
+    assert e.expected_bond_length('V', 2, 6, 'O')['band'] == e.ESTIMATE_BAND_AT_CN
+    assert e.expected_bond_length('V', 2.5, 6, 'O')['band'] == e.ESTIMATE_BAND_BORROWED
+    assert e.expected_bond_length('V', 2.5, 6, 'O')['mean'] == e.expected_bond_length('V', 2, 6, 'O')['mean']
+
+
 def test_estimates_never_extrapolate_in_valence():
     e = eir.engine
     assert e.expected_bond_length('U', 3, 8, 'O')['source'] == 'shannon_additive'

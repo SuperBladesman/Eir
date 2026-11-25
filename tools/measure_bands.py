@@ -6,14 +6,15 @@ An expected bond length that Gagne did not measure is estimated, either as
 the sum of Shannon radii (tier 4) or by interpolating in valence between two
 of Gagne's measured valences of the same ion (tier 5). A band is the 95th
 percentile of |estimate - Gagne's mean| / Gagne's mean over the
-configurations, bonded to O or N, where both exist. Every estimate is made
-by the engine's own functions, exactly as Eir makes it.
+configurations, bonded to O or N, where both exist.
 
-The Shannon sums fall into two populations, by whether Shannon gives the
-cation's radius at the configuration's CN or Eir borrows it from his nearest
-CN; each gets its own band (ESTIMATE_BAND_AT_CN, ESTIMATE_BAND_BORROWED).
-Tier 5 is tested by leaving each measured configuration out and
-interpolating between the valences either side; its band,
+The Shannon sums are made, and sorted by band, by the engine's own
+shannon_bond_estimate, so this measures the estimate Eir makes on the rule
+Eir applies: two populations, by whether Data/shannon_radii.json holds the
+cation's radius at the configuration's CN or Eir borrows it from the nearest
+CN it holds (ESTIMATE_BAND_AT_CN, ESTIMATE_BAND_BORROWED). Tier 5 is tested
+by leaving each measured configuration out and interpolating between the
+measured valences either side, as expected_bond_length does; its band,
 ESTIMATE_BAND_VALENCE, is chosen rather than measured (see CELL 2), so it is
 reported but not checked.
 
@@ -41,19 +42,17 @@ def engine():
 
 
 def shannon_misses(e):
-    """(element, valence, anion, cn, miss, radius at the CN?) for every
-    configuration Gagne measured, bonded to O or N, that Shannon covers."""
+    """(element, valence, anion, cn, miss, on the at-the-CN band?) for every
+    configuration Gagne measured, bonded to O or N, that the radii cover."""
     out = []
     for (el, v, an, cn), rec in sorted(e.db_manager.bond_lengths.items()):
         if an not in ('O', 'N') or v <= 0:
             continue
-        q = e.ALWAYS_ANION.get(an, e.AMPHOTERIC_ANION.get(an))
-        r_cat, how = e.get_ionic_radius_fractional(el, v, cn)
-        r_an, _ = e.get_ionic_radius_fractional(an, q, cn)
-        if r_cat is None or r_an is None:
+        s = e.shannon_bond_estimate(el, v, cn, an)
+        if s is None:
             continue
-        out.append((el, v, an, cn, (r_cat + r_an - rec['mean']) / rec['mean'],
-                    how == 'exact'))
+        out.append((el, v, an, cn, (s['mean'] - rec['mean']) / rec['mean'],
+                    s['band'] == e.ESTIMATE_BAND_AT_CN))
     return out
 
 

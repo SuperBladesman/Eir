@@ -502,22 +502,30 @@ BL_MIN_SAMPLE = 30
 # never expunge it, and its band says how far a site's mean bond may sit from
 # the estimate before it is flagged as off it (M14, CELL 7b).
 #
-# v2.0.50 (#68): THREE BANDS, NOT ONE. The bands are the 95th percentile of
-# |estimate - Gagne's mean| / Gagne's mean over the configurations both cover,
-# bonded to O or N, and tools/measure_bands.py reproduces them from the Data
-# folder. A Shannon sum is two populations, split by whether Shannon gives the
-# cation's radius at the site's CN or Eir borrows it from his nearest CN:
+# v2.0.50 (#68): THREE BANDS, NOT ONE. A Shannon sum (shannon_bond_estimate)
+# is two populations, split by whether the radius file holds the cation's
+# radius at the site's CN or Eir borrows it from the nearest CN it holds. Over
+# the configurations Gagne measured, bonded to O or N, the 95th percentile of
+# |sum - Gagne's mean| / Gagne's mean is
 #
 #   at the CN   7.7% on 389 configurations, median 1.9%  ESTIMATE_BAND_AT_CN
 #   borrowed   23.1% on 204, median 3.8%                 ESTIMATE_BAND_BORROWED
 #
+# and tools/measure_bands.py reproduces both from the Data folder. "At the CN"
+# means in Data/shannon_radii.json, which is what Eir can know; 54 of the 593
+# fall the other way by Shannon's own table, which gives 7.0% on 415 and 24.1%
+# on 178, because some of the file's cation entries are not his (#69, which
+# re-measures these bands when it settles them).
+#
 # #11 used one band over both, 15.7% on 593: twice too loose where the radius
-# is Shannon's, and too tight where it is borrowed, so a CN 2 nitrite (N(3+)
-# is tabulated at CN 6 only) at 1.24 A, 17% under its sum of 1.51 A, was
-# called off its estimate (13 in the regression sets). S, Se, Te and the
-# halides have nothing measured to calibrate against: CHOSEN, the borrowed
-# band, because Shannon gives those anions at CN 6 only, so at any other CN
-# their radius is borrowed too.
+# is at the CN, and too tight where it is borrowed, so a CN 2 nitrite (N(3+)
+# is held at CN 6 only) at 1.24 A, 18% under its sum of 1.51 A, was called off
+# its estimate (13 in the regression sets).
+#
+# CHOSEN, not measured, the borrowed band for:
+#   - S, Se, Te and the halides: nothing measured calibrates a sum to them;
+#   - a fractional valence: the sum is made at the nearest integer valence
+#     (V(2.5+) as V(2+)), which the 7.7% population never tests.
 #
 # Interpolating in valence (tier 5) between two of Gagne's valences of the
 # same ion, each measured or interpolated in CN at this CN (tiers 1 and 2),
@@ -531,6 +539,10 @@ BL_MIN_SAMPLE = 30
 ESTIMATE_BAND_AT_CN = 0.077
 ESTIMATE_BAND_BORROWED = 0.231
 ESTIMATE_BAND_VALENCE = 0.157
+# The one band #11 gave every estimate. Output written before #68 carries it
+# in bl_estimate_band and is judged on it; output with no band at all is
+# judged on it too (CELL 7b). Not to be re-chosen with ESTIMATE_BAND_VALENCE.
+ESTIMATE_BAND_LEGACY = 0.157
 ESTIMATED_TIERS = (4, 5)
 
 
@@ -569,10 +581,10 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
                                Ni(3+) at CN 4 takes its CN 6 radius.
 
     An estimate (tiers 4 and 5) carries its 'band' (#68): ESTIMATE_BAND_AT_CN
-    for a Shannon sum to O or N whose cation radius Shannon gives at this CN,
-    ESTIMATE_BAND_BORROWED for any other Shannon sum, ESTIMATE_BAND_VALENCE
-    for tier 5. It can flag an entry (M13, M14) but never expunge one, and
-    never decide G6 or M10.
+    for a Shannon sum to O or N at an integer valence whose cation radius the
+    radius file holds at this CN, ESTIMATE_BAND_BORROWED for any other Shannon
+    sum, ESTIMATE_BAND_VALENCE for tier 5. It can flag an entry (M13, M14) but
+    never expunge one, and never decide G6 or M10.
     """
     db = db or db_manager
     try:
@@ -633,24 +645,51 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
                     'source': f'valence_interpolated_{v_lo}_{v_hi}',
                     'tier': 5, 'cn_used': c, 'band': ESTIMATE_BAND_VALENCE}
 
-    # v2.0.50 (#11): the anion at the charge Eir gives it. Every anion but O
-    # was looked up as 3-, so S, Se, Te and the halides had no estimate.
+    s = shannon_bond_estimate(element, valence, c, anion)
+    if s is None:
+        return None
+    return {'mean': s['mean'], 'sd': None, 'min': None,
+            'n_polyhedra': None, 'ref': 'Shannon (1976) Acta Cryst A32, 751',
+            'source': 'shannon_additive', 'tier': 4, 'cn_used': c,
+            'radius_at_cn': s['radius_at_cn'], 'band': s['band']}
+
+
+def shannon_bond_estimate(element, valence, cn, anion='O'):
+    """
+    v2.0.50 (#11, #68): tier 4 of expected_bond_length, the sum of the
+    cation's and the anion's radii from Data/shannon_radii.json, both at the
+    cation's CN (the nearest CN the file holds where it holds none at this
+    one), and its band. A function of its own so that tools/measure_bands.py
+    measures the estimate Eir makes, and on the rule Eir applies.
+
+    The cation is looked up at the nearest integer valence, as it always has
+    been. The anion is looked up at the charge Eir gives it (#11: every anion
+    but O was looked up as 3-, so S, Se, Te and the halides had no estimate).
+
+    Returns {'mean', 'radius_at_cn', 'whole_valence', 'band'}, or None where
+    either radius is missing or the anion is not one Eir knows.
+    """
     q = ALWAYS_ANION.get(anion, AMPHOTERIC_ANION.get(anion))
     if q is None:
         return None
+    try:
+        x = float(valence)
+        c = int(round(float(cn)))
+    except (TypeError, ValueError):
+        return None
+    v = int(round(x))
+    whole = abs(x - v) < 1e-6
     r_cat, how = get_ionic_radius_fractional(element, v, c)
     r_an, _ = get_ionic_radius_fractional(anion, q, c)
     if r_cat is None or r_an is None:
         return None
-    # v2.0.50 (#68): the band by whether the cation's radius is Shannon's at
-    # this CN ('exact'; v is an integer here) or borrowed from another
+    # the band (#68, see the bands above): 'exact' is the file's radius at
+    # this CN for this integer valence
     at_cn = how == 'exact'
-    band = (ESTIMATE_BAND_AT_CN if at_cn and anion in ('O', 'N')
+    band = (ESTIMATE_BAND_AT_CN if at_cn and whole and anion in ('O', 'N')
             else ESTIMATE_BAND_BORROWED)
-    return {'mean': round(r_cat + r_an, 4), 'sd': None, 'min': None,
-            'n_polyhedra': None, 'ref': 'Shannon (1976) Acta Cryst A32, 751',
-            'source': 'shannon_additive', 'tier': 4, 'cn_used': c,
-            'radius_at_cn': at_cn, 'band': band}
+    return {'mean': round(r_cat + r_an, 4), 'radius_at_cn': at_cn,
+            'whole_valence': whole, 'band': band}
 
 
 def get_ionic_radius_fractional(element, valence, cn):

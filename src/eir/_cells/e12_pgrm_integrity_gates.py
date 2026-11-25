@@ -357,10 +357,10 @@ def _bl_estimate(row):
     obs = _pgrm_f(row.get('avg_bond_length'))
     dev = d / m if (m == m and m > 0 and d == d) else float('nan')
     # v2.0.50 (#68): the band the estimate carries; output written before
-    # #68 carries #11's single band, 15.7%, which is ESTIMATE_BAND_VALENCE
+    # #68 carries #11's single band, and output with none is judged on it
     band = _pgrm_f(row.get('bl_estimate_band'))
     if band != band or band <= 0:
-        band = ESTIMATE_BAND_VALENCE
+        band = ESTIMATE_BAND_LEGACY
     src = str(row.get('bl_source') or '')
     el, v = row.get('element'), row.get('valence')
     mv = re.match(r'valence_interpolated_(-?\d+)_(-?\d+)$', src)
@@ -2047,14 +2047,16 @@ def VALIDATE_PARSING(verbose=True):
     def _t53():
         b = {k: (expected_bond_length(*k) or {}).get('band') for k in
              (('N', 3, 2, 'O'), ('Fe', 6, 4, 'O'), ('Zn', 2, 4, 'S'),
-              ('Ni', 3, 6, 'O'))}
+              ('Ni', 3, 6, 'O'), ('V', 2.5, 6, 'O'))}
         return (b[('N', 3, 2, 'O')] == ESTIMATE_BAND_BORROWED
                 and b[('Fe', 6, 4, 'O')] == ESTIMATE_BAND_AT_CN
                 and b[('Zn', 2, 4, 'S')] == ESTIMATE_BAND_BORROWED
-                and b[('Ni', 3, 6, 'O')] == ESTIMATE_BAND_VALENCE,
+                and b[('Ni', 3, 6, 'O')] == ESTIMATE_BAND_VALENCE
+                and b[('V', 2.5, 6, 'O')] == ESTIMATE_BAND_BORROWED,
                 f'N(3) CN 2 to O {b[("N", 3, 2, "O")]}, Fe(6) CN 4 to O '
                 f'{b[("Fe", 6, 4, "O")]}, Zn(2) CN 4 to S {b[("Zn", 2, 4, "S")]}, '
-                f'Ni(3) CN 6 to O {b[("Ni", 3, 6, "O")]}')
+                f'Ni(3) CN 6 to O {b[("Ni", 3, 6, "O")]}, V(2.5) CN 6 to O '
+                f'{b[("V", 2.5, 6, "O")]}')
     _case(53, 'each kind of estimate carries its own band', _t53)
 
     ok = all(results)
