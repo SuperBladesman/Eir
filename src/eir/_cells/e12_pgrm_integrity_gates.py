@@ -1257,7 +1257,7 @@ def VALIDATE_GATES(verbose=True):
     _m16 = classify_site(dict(_f16, is_dominant_species=False), _g15)
     report('16. M14: a polyhedron off its estimate is FLAG, not expunged',
            _c16[0] == 'M14' and _m16[0] == 'M13'
-           and 'beyond the 23.6% band' in str(_c16[2]),
+           and 'beyond the 23.8% band' in str(_c16[2]),
            f'at +28.0%: {_c16[0]} ({_c16[2]}); as a minority species: {_m16[0]}')
     _c17 = classify_site(dict(_e15, bl_tier=float('nan'), bl_source=None,
                               bl_expected_mean=float('nan')), _g15)
@@ -1286,7 +1286,7 @@ def VALIDATE_GATES(verbose=True):
     _o18 = classify_site(dict(_n18, bl_estimate_band=None), _g15)
     report('18. M14: each estimate is judged on its own band',
            _c18[0] == 'M13' and _s18[0] == 'M14'
-           and 'beyond the 23.6% band' in str(_s18[2])
+           and 'beyond the 23.8% band' in str(_s18[2])
            and _t18[0] == 'M14' and 'beyond the 5.3% band' in str(_t18[2])
            and _o18[0] == 'M14' and 'beyond the 15.7% band' in str(_o18[2]),
            f'nitrite at -17.9%: {_c18[0]}; at -24.4%: {_s18[0]}; on 5.3%: '

@@ -41,7 +41,14 @@ ROMAN = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7,
          'VIII': 8, 'IX': 9, 'X': 10, 'XI': 11, 'XII': 12, 'XIV': 14}
 
 
-def reference(path=None):
+# pymatgen files Shannon's Eu(3+) at CN VII (1.01 A) under a blank charge;
+# his table gives it as Eu(3+)
+BLANK_CHARGE = {'Eu': '3'}
+
+
+def reference(path=None, labelled=False):
+    """{(element, charge, CN): set of Shannon's ionic radii}; with labelled,
+    {(element, charge, CN): [(label, spin, radius)]}."""
     if path is None:
         import pymatgen.core
         path = Path(pymatgen.core.__file__).parent / 'periodic_table.json.gz'
@@ -49,23 +56,35 @@ def reference(path=None):
     opener = gzip.open if path.suffix == '.gz' else open
     with opener(path, 'rt', encoding='utf-8') as fh:
         pt = json.load(fh)
-    ref = {}
+    ref, lab = {}, {}
     for el, d in pt.items():
         sr = d.get('Shannon radii') if isinstance(d, dict) else None
         if not isinstance(sr, dict):
             continue
         for q, cns in sr.items():
+            if q == '' and el in BLANK_CHARGE:
+                q = BLANK_CHARGE[el]
             if not isinstance(cns, dict) or not q.lstrip('+-').isdigit():
                 continue
             for cn, spins in cns.items():
                 c = ROMAN.get(cn.upper().replace('SQ', '').replace('PY', ''))
                 if c is None or not isinstance(spins, dict):
                     continue
-                for v in spins.values():
+                for sp, v in spins.items():
                     if isinstance(v, dict) and 'ionic_radius' in v:
-                        ref.setdefault((el, int(q), c), set()).add(
-                            round(float(v['ionic_radius']), 3))
-    return ref
+                        r = round(float(v['ionic_radius']), 3)
+                        ref.setdefault((el, int(q), c), set()).add(r)
+                        lab.setdefault((el, int(q), c), []).append((cn, sp, r))
+    return lab if labelled else ref
+
+
+def preferred(values):
+    """The value #69's rule chooses among several of Shannon's at one CN:
+    the plain coordination over square-planar or pyramidal, then high spin
+    over low."""
+    plain = [x for x in values if x[0].upper() in ROMAN] or values
+    high = [x for x in plain if x[1] == 'High Spin'] or plain
+    return high[0][2]
 
 
 def interpolated_ok(ref, el, q, cn, r, rec):
@@ -126,6 +145,29 @@ def main(argv):
                 else:
                     cations.append((k, r, sorted(ref.get(k, ()))))
     missing = []
+    # every CN Gagne measured to O for a derived ion is in the file
+    for el, qs in src['derived'].items():
+        for q in qs:
+            for c in gagne.get(el, {}).get(q, {}).get('O', {}):
+                if c not in table.get(el, {}).get(q, {}) or c not in qs[q]:
+                    missing.append((el, int(q), int(c), 'Gagne measured it'))
+    # a value #69 chose (changed, added, an interpolation's ends) is the one
+    # its rule prefers among Shannon's at that CN
+    lab = reference(argv[1] if len(argv) > 1 else None, labelled=True)
+    chosen = [(r['ion'], r['cn'], r['now']) for r in src['changed']]
+    chosen += [(r['ion'], r['cn'], r['radius']) for r in src['added']]
+    for el, qs in src['interpolated'].items():
+        for q, cns in qs.items():
+            for rec in cns.values():
+                chosen += [(f'{el}{q}+', rec['lo_cn'], rec['lo_radius']),
+                           (f'{el}{q}+', rec['hi_cn'], rec['hi_radius'])]
+    for ion, c, r in chosen:
+        el = ion.rstrip('+').rstrip('0123456789')
+        q = int(ion[len(el):].rstrip('+'))
+        held = table.get(el, {}).get(str(q), {}).get(str(c))
+        want = preferred(lab[(el, q, c)]) if (el, q, c) in lab else None
+        if want is None or round(r, 3) != want or held is None or round(held, 3) != want:
+            cations.append(((el, q, c), held, [want, 'as #69 prefers; recorded ' + str(r)]))
     for (el, q, c) in sorted(ref):
         if q < 0 and str(c) not in table.get(el, {}).get(str(q), {}):
             fails.append(((el, q, c), None, sorted(ref[(el, q, c)])))
@@ -137,13 +179,14 @@ def main(argv):
         print(f'CATION {k[0]}{k[1]:+d} CN {k[2]}: file {r}, Shannon '
               f'{want or "not tabulated"}, and no valid record in {SOURCES.name}')
     for el, q, c, want in missing:
-        print(f'CATION {el}{q:+d} CN {c}: Shannon gives {want}, missing from the file')
+        why = want if isinstance(want, str) else f'Shannon gives {want}'
+        print(f'CATION {el}{q:+d} CN {c}: missing from the file ({why})')
     print('anion entries: ' + ('all match Shannon (1976)' if not fails
                                else f'{len(fails)} differ'))
     print(f"cation entries: {counts['Shannon']} Shannon's, {counts['interpolated']} "
           f"interpolated, {counts['derived']} derived"
           + (f'; {len(cations)} break the rule' if cations else ', all by the rule')
-          + (f'; {len(missing)} of his CNs missing' if missing else ''))
+          + (f'; {len(missing)} CNs missing' if missing else ''))
     return 1 if fails or cations or missing else 0
 
 

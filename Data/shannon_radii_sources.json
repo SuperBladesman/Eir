@@ -813,6 +813,12 @@
       "cn": 8,
       "radius": 1.28,
       "reason": "Shannon's (1976) ionic radius at a CN he lists that the file lacked"
+    },
+    {
+      "ion": "Eu3+",
+      "cn": 7,
+      "radius": 1.01,
+      "reason": "Shannon's (1976) ionic radius at a CN he lists that the file lacked; pymatgen files it under a blank charge, which tools/audit_radii.py reads as Eu(3+)"
     }
   ],
   "removed": [

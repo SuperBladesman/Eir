@@ -508,8 +508,8 @@ BL_MIN_SAMPLE = 30
 # the configurations Gagne measured, bonded to O or N, the 95th percentile of
 # |sum - Gagne's mean| / Gagne's mean is
 #
-#   at the CN   5.3% on 421 configurations, median 1.6%  ESTIMATE_BAND_AT_CN
-#   borrowed   23.6% on 164, median 4.2%                 ESTIMATE_BAND_BORROWED
+#   at the CN   5.3% on 422 configurations, median 1.6%  ESTIMATE_BAND_AT_CN
+#   borrowed   23.8% on 163, median 4.2%                 ESTIMATE_BAND_BORROWED
 #
 # and tools/measure_bands.py reproduces both from the Data folder (a test
 # fails if they drift). "At the CN" means in Data/shannon_radii.json, which
@@ -542,7 +542,7 @@ BL_MIN_SAMPLE = 30
 # called off a 4.4% or 5.3% band). With an end extrapolated in CN (tier 3)
 # interpolation missed by 14.6% on 38, and such ends are not used.
 ESTIMATE_BAND_AT_CN = 0.053
-ESTIMATE_BAND_BORROWED = 0.236
+ESTIMATE_BAND_BORROWED = 0.238
 ESTIMATE_BAND_VALENCE = 0.157
 # The one band #11 gave every estimate. Output written before #68 carries it
 # in bl_estimate_band and is judged on it; output with no band at all is

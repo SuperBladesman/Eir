@@ -590,12 +590,12 @@ def test_each_estimate_carries_its_own_band():
 
 
 def test_a_sulfide_is_judged_on_the_borrowed_band(tmp_path):
-    # Zn-S 20% over its estimate of 2.440 A is inside 23.6%; 27% is beyond
+    # Zn-S 20% over its estimate of 2.440 A is inside 23.8%; 27% is beyond
     r = run(tmp_path, sphalerite(4 * 2.440 * 1.20 / 3 ** 0.5))
     assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
     r = run(tmp_path, sphalerite(4 * 2.440 * 1.27 / 3 ** 0.5), name='y.cif')
     assert (r.tier, r.code) == ('FLAG', 'M14'), r.evidence
-    assert 'beyond the 23.6% band' in r.evidence
+    assert 'beyond the 23.8% band' in r.evidence
 
 
 def rocksalt_vo(a, ox='V2+', v=2):
