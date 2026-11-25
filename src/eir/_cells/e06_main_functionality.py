@@ -536,7 +536,11 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
       4 shannon_additive       adding ionic radii, the old behaviour, kept as a
                                fallback because it is the construction G&H's
                                own data argues against. An ESTIMATE. Asked
-                               after tier 5, which stays closer to measurement.
+                               after tier 5, as decided for #11. On the 38
+                               configurations both can be tested on, the two
+                               miss by the same median (1.9%); tier 5's tail
+                               comes from CN-extrapolated ends (95th
+                               percentile 4.4% with both ends at tiers 1-2).
 
     An estimate (tiers 4 and 5) carries 'band', ESTIMATE_BAND: it can flag an
     entry (M13, M14) but never expunge one, and never decide G6 or M10.
@@ -548,6 +552,10 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
     except (TypeError, ValueError):
         return None
     if c <= 0:
+        return None
+    # v2.0.50 (#11): an anion-centred site (N(3-) bonded to O) would otherwise
+    # get a 'Shannon sum' of two anion radii. Nothing below is for it.
+    if v <= 0:
         return None
 
     bl = db.load_bond_lengths() or {}

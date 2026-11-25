@@ -585,3 +585,24 @@ def test_the_new_codes_explain_themselves(tmp_path):
     assert 'estimate' in x['reason'] and 'cannot' in x['reason'], x['reason']
     y = explain(run(tmp_path, rocksalt_ni3(5.0), name='y.cif'))
     assert 'band' in y['reason'], y['reason']
+
+
+def test_a_mixed_shell_is_not_judged_on_one_ligand():
+    e = eir.engine
+    row = {'element': 'S', 'valence': 6, 'cn': 5, 'cn_shannon_min': 4,
+           'coords': '(0.1, 0.1, 0.1)', 'bvs': 5.89, 'bvs_percent_diff': -1.8,
+           'is_dominant_species': True, 'occupancy': 1.0, 'ligand_types': 'N,O',
+           'bl_tier': 4.0, 'bl_source': 'shannon_additive',
+           'bl_expected_mean': 1.58, 'avg_bond_length': 3.585,
+           'bl_delta_mean': 2.005}
+    code, reason, evidence = e.classify_site(row, {'gii_recommended_value': 0.05})
+    assert (code, reason) == ('R3', 'mixed_ligand_shell_not_estimated'), evidence
+    from eir.explain import _reason_sentence
+    words = _reason_sentence(code, reason, row)
+    assert 'more than one kind of anion' in words and 'no radius' not in words
+
+
+def test_an_anion_centred_site_gets_no_estimate():
+    e = eir.engine
+    assert e.expected_bond_length('N', -3, 4, 'O') is None
+    assert e.expected_bond_length('N', 0, 4, 'O') is None

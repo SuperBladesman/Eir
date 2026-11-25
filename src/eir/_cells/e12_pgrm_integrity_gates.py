@@ -202,7 +202,8 @@ PGRM_SUPPRESSED_COLUMNS = (
     'bvs_gap_shell', 'bvs_bv_adaptive', 'bvs_econ_weighted',
     'gii', 'wagii', 'gii_site_averaged', 'gii_recommended',
     'gii_recommended_value',
-    'bl_delta_mean', 'bl_delta_min', 'bl_ratio_min')
+    'bl_delta_mean', 'bl_delta_min', 'bl_ratio_min',
+    'bl_estimate_deviation')                                 # v2.0.50
 
 _GATE_TIER = {'P': 'EXPUNGE', 'G': 'EXPUNGE', 'R': 'NOT_ASSESSED', 'M': 'FLAG',
               '-': 'ACCEPT'}
@@ -346,7 +347,8 @@ def _bl_estimate(row):
     (bl_tier 4 or 5), what it was estimated from and how far the site's mean
     bond sits from it, as a fraction; None where the expectation is measured
     or absent. Read from bl_delta_mean, so output written before 2.0.50 is
-    judged the same way."""
+    judged on the estimate it carries: O and N sites move, but an S, Se, Te or
+    halide site has none until it is re-run, and stays R3."""
     t = _pgrm_f(row.get('bl_tier'))
     if t != t or int(t) not in ESTIMATED_TIERS or len(_bl_ligands(row)) > 1:
         return None
@@ -588,7 +590,7 @@ def classify_site(row, struct):
     # R3 until the expectation follows the ligands actually bonded.
     _ligs = _bl_ligands(row)
     if int(_blt3) in ESTIMATED_TIERS and len(_ligs) > 1:
-        return ('R3', 'no_measured_bond_lengths',
+        return ('R3', 'mixed_ligand_shell_not_estimated',
                 f'{row.get("element")}({row.get("valence")}) bonded to '
                 f'{" and ".join(_ligs)}: no measured bond lengths for '
                 f'{_ligs[0]}, and no estimate is made for a shell of mixed '
@@ -730,7 +732,9 @@ def classify_site(row, struct):
     # bond_size_z is exported either way, so the evidence is on the row.
     _bz = _pgrm_f(row.get('bond_size_z'))
     _bzn = _bl_sample(row)
+    _bzt = _pgrm_f(row.get('bl_tier'))   # v2.0.50: never on an estimate
     if (_bz == _bz and abs(_bz) > BOND_SIZE_Z
+            and not (_bzt == _bzt and int(_bzt) in ESTIMATED_TIERS)
             and _bzn >= BL_MIN_SAMPLE
             and _pgrm_is_true(row.get('is_dominant_species'))
             and not _pgrm_has_value(row.get('cn_fault'))
