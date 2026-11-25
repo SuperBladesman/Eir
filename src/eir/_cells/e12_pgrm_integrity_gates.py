@@ -342,6 +342,23 @@ def _bl_ligand(row):
     return ligs[0] if ligs else 'the ligand'
 
 
+def _measured_cn_min(row):
+    """v2.0.50 (#72): the smallest CN Gagne measured for this ion, at its
+    nearest integer valence, bonded to the site's one ligand; None for a
+    mixed shell, or where he measured none."""
+    ligs = _bl_ligands(row)
+    if len(ligs) != 1:
+        return None
+    try:
+        v = int(round(float(row.get('valence'))))
+    except (TypeError, ValueError):
+        return None
+    bl = db_manager.load_bond_lengths() or {}
+    cns = [k[3] for k in bl if k[0] == row.get('element') and k[1] == v
+           and k[2] == ligs[0]]
+    return min(cns) if cns else None
+
+
 def _bl_estimate(row):
     """v2.0.50 (#11): for a site whose expected bond length is an estimate
     (bl_tier 4 or 5), what it was estimated from and how far the site's mean
@@ -503,14 +520,29 @@ def classify_site(row, struct):
     # v2.0.46: G7, see CN_DEFICIT_BVS_FRACTION. Asked after the tested
     # origin hypothesis, which can explain a broken shell, and before the
     # packing floors, because it says WHERE.
+    #
+    # v2.0.50 (#72): the floor is the larger of the smallest CN the radius
+    # file holds for the ion and the smallest Gagne measured for it bonded to
+    # this site's ligand. With the file's floor alone, G7 caught only what the
+    # file happened not to reach: #69 added Shannon's Zr(4+) at CN 4, and two
+    # (Zr0.9Sc0.1) positions at CN 4 summing to 0.82 for Zr(4+), -79%, went
+    # from EXPUNGE to ACCEPT_HOMOVALENT (ICSD 126284, 126285). Gagne measured
+    # Zr(4+)-O from CN 6. Measured on the 8,046 rows of the regression sets,
+    # the larger floor changes those two and nothing else, and on output
+    # written before #69 it changes nothing.
     _cnmin = _pgrm_f(row.get('cn_shannon_min'))
     _bpd = _pgrm_f(row.get('bvs_percent_diff'))
-    if (cn == cn and _cnmin == _cnmin and cn < _cnmin
+    _floor, _floor_src = _cnmin, 'tabulated'
+    if _bpd == _bpd and _bpd < -100.0 * CN_DEFICIT_BVS_FRACTION:
+        _cnmeas = _measured_cn_min(row)
+        if _cnmeas is not None and (_floor != _floor or _cnmeas > _floor):
+            _floor, _floor_src = float(_cnmeas), 'measured'
+    if (cn == cn and _floor == _floor and cn < _floor
             and _bpd == _bpd and _bpd < -100.0 * CN_DEFICIT_BVS_FRACTION
             and _pgrm_is_true(row.get('is_dominant_species'))):
         return ('G7', 'coordination_incomplete',
                 f'{row.get("element")}({row.get("valence")}) at CN {int(cn)}, '
-                f'below the smallest tabulated ({int(_cnmin)}); bond valence '
+                f'below the smallest {_floor_src} ({int(_floor)}); bond valence '
                 f'sum {_pgrm_f(row.get("bvs")):.3f} for a valence of '
                 f'{row.get("valence")} ({_bpd:+.0f}%)')
 
@@ -1291,6 +1323,20 @@ def VALIDATE_GATES(verbose=True):
            and _o18[0] == 'M14' and 'beyond the 15.7% band' in str(_o18[2]),
            f'nitrite at -17.9%: {_c18[0]}; at -24.4%: {_s18[0]}; on 5.3%: '
            f'{_t18[0]}; no band: {_o18[0]}')
+
+    # v2.0.50 (#72). G7's floor is the larger of the radius file's and
+    # Gagne's: Shannon lists Zr(4+) at CN 4, Gagne measured Zr(4+)-O from
+    # CN 6, so a dominant Zr at CN 4 summing to -79% has lost bonds; at -30%
+    # it has not (the sum decides, as before).
+    _z19 = dict(_row, element='Zr', valence=4, cn=4, cn_shannon_min=4,
+                ligand_types='O', bvs=0.823, bvs_percent_diff=-79.4,
+                is_dominant_species=True, occupancy=0.9)
+    _c19 = classify_site(_z19, _g15)
+    _d19 = classify_site(dict(_z19, bvs=2.8, bvs_percent_diff=-30.0), _g15)
+    report('19. G7: the floor is the larger of the tabulated and the measured',
+           _c19[0] == 'G7' and 'below the smallest measured (6)' in str(_c19[2])
+           and _d19[0] != 'G7',
+           f'Zr(4) at CN 4, -79%: {_c19[0]} ({_c19[2]}); at -30%: {_d19[0]}')
 
     ok = all(results)
     if verbose:
