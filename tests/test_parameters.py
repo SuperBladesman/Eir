@@ -182,3 +182,15 @@ def test_every_cation_radius_that_is_not_shannons_is_recorded():
         el = r['ion'].rstrip('+').rstrip('0123456789')
         q = r['ion'][len(el):].rstrip('+')
         assert str(r['cn']) not in table.get(el, {}).get(q, {}), r
+
+
+def test_the_radii_follow_the_agreed_rule():
+    # #64 and #69: tools/audit_radii.py against Shannon's table, as pymatgen
+    # distributes it, copied to tests/data
+    import importlib.util
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location('audit_radii', root / 'tools' / 'audit_radii.py')
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    assert m.main(['audit_radii.py', str(root / 'tests' / 'data' / 'shannon_1976.json')]) == 0

@@ -508,16 +508,19 @@ BL_MIN_SAMPLE = 30
 # the configurations Gagne measured, bonded to O or N, the 95th percentile of
 # |sum - Gagne's mean| / Gagne's mean is
 #
-#   at the CN   5.1% on 383 configurations, median 1.7%  ESTIMATE_BAND_AT_CN
-#   borrowed   19.3% on 202, median 3.8%                 ESTIMATE_BAND_BORROWED
+#   at the CN   5.3% on 421 configurations, median 1.6%  ESTIMATE_BAND_AT_CN
+#   borrowed   23.6% on 164, median 4.2%                 ESTIMATE_BAND_BORROWED
 #
 # and tools/measure_bands.py reproduces both from the Data folder (a test
 # fails if they drift). "At the CN" means in Data/shannon_radii.json, which
 # is what Eir can know. #68 first measured 7.7% on 389 and 23.1% on 204; #69
 # then made every cation entry Shannon's, or interpolated between his CNs, or
-# removed it (Data/shannon_radii_sources.json), and the bands fell to these.
-# The old entries included Shannon's CN 6 radii for the nitrate and carbonate
-# ions at CN 3, which missed by 19% and 18% on 468 and 389 polyhedra.
+# removed it, and added the CNs he lists that the file lacked
+# (Data/shannon_radii_sources.json). The old entries included Shannon's CN 6
+# radii for the nitrate and carbonate ions at CN 3, which missed by 19% and
+# 18% on 468 and 389 polyhedra. Sn(2+)'s eight configurations are left out
+# (585 in all, not 593): Shannon does not list Sn(2+), and #69 derives its
+# radii from these same measurements.
 #
 # #11 used one band over both, 15.7% on 593: three times too loose where the
 # radius is at the CN, and too tight where it is borrowed, so a CN 2 nitrite
@@ -536,10 +539,10 @@ BL_MIN_SAMPLE = 30
 # measured, because a fractional valence interpolates across a change of
 # chemistry the 19 never test (Te written at 5.26 to 5.32 sits between Te(4+),
 # with its lone pair, and Te(6+): ICSD 261939, 261942 and 261943 would be
-# called off a 4.4% or 5.1% band). With an end extrapolated in CN (tier 3)
+# called off a 4.4% or 5.3% band). With an end extrapolated in CN (tier 3)
 # interpolation missed by 14.6% on 38, and such ends are not used.
-ESTIMATE_BAND_AT_CN = 0.051
-ESTIMATE_BAND_BORROWED = 0.193
+ESTIMATE_BAND_AT_CN = 0.053
+ESTIMATE_BAND_BORROWED = 0.236
 ESTIMATE_BAND_VALENCE = 0.157
 # The one band #11 gave every estimate. Output written before #68 carries it
 # in bl_estimate_band and is judged on it; output with no band at all is

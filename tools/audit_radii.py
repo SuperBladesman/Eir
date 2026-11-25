@@ -5,7 +5,8 @@
 The reference is the table of Shannon's effective ionic radii that pymatgen
 distributes (pymatgen/core/periodic_table.json.gz, in the pymatgen-core
 package; "Shannon radii", "ionic_radius"). With no path, the installed
-pymatgen-core is used.
+pymatgen-core is used; tests/data/shannon_1976.json is a copy of just that
+table, which the tests use.
 
 Every anion entry (a negative charge) must be one of Shannon's ionic radii
 for that ion and coordination number, and every one Shannon gives must be in
@@ -20,7 +21,11 @@ Every cation entry must be, by the rule agreed on #69:
     measured mean bond length to O at that CN less the O(2-) radius in the
     file, as recorded.
 
-Exits 1 if any entry breaks the rule. pymatgen labels square-planar and
+and every CN Shannon lists for a cation the file holds must be in the file,
+so that a CN he does not list borrows his nearest. Where he gives several
+values at one CN (square-planar, pyramidal, low or high spin), any of them
+passes: the rule's preference applies when a value is chosen, and entries
+that already held one of his were kept. Exits 1 if any entry breaks the rule. pymatgen labels square-planar and
 pyramidal coordinations IVSQ, IIIPY and IVPY; they count as IV and III.
 """
 import gzip
@@ -86,8 +91,11 @@ def derived_ok(ref, table, gagne, el, q, cn, r, rec):
     if rec is None or any(e == el and v == q for (e, v, c) in ref):
         return False
     mean = gagne.get(el, {}).get(str(q), {}).get('O', {}).get(str(cn), {}).get('mean')
+    o_cns = sorted(int(c) for c in table['O']['-2'])
+    nearest = min(o_cns, key=lambda c: (abs(c - cn), c))   # as Eir looks it up
     o = table['O']['-2'].get(str(rec['anion_cn']))
-    return (mean is not None and mean == rec['gagne_mean'] and o == rec['anion_radius']
+    return (mean is not None and mean == rec['gagne_mean'] and rec['anion_cn'] == nearest
+            and o == rec['anion_radius']
             and abs(float(r) - rec['radius']) < 1e-9
             and abs(round(mean - o, 3) - rec['radius']) < 1e-9)
 
@@ -117,20 +125,26 @@ def main(argv):
                     counts['derived'] += 1
                 else:
                     cations.append((k, r, sorted(ref.get(k, ()))))
+    missing = []
     for (el, q, c) in sorted(ref):
         if q < 0 and str(c) not in table.get(el, {}).get(str(q), {}):
             fails.append(((el, q, c), None, sorted(ref[(el, q, c)])))
+        if q > 0 and str(q) in table.get(el, {}) and str(c) not in table[el][str(q)]:
+            missing.append((el, q, c, sorted(ref[(el, q, c)])))
     for k, r, want in fails:
         print(f'ANION  {k[0]}{k[1]:+d} CN {k[2]}: file {r}, Shannon {want or "none"}')
     for k, r, want in sorted(cations):
         print(f'CATION {k[0]}{k[1]:+d} CN {k[2]}: file {r}, Shannon '
               f'{want or "not tabulated"}, and no valid record in {SOURCES.name}')
+    for el, q, c, want in missing:
+        print(f'CATION {el}{q:+d} CN {c}: Shannon gives {want}, missing from the file')
     print('anion entries: ' + ('all match Shannon (1976)' if not fails
                                else f'{len(fails)} differ'))
     print(f"cation entries: {counts['Shannon']} Shannon's, {counts['interpolated']} "
           f"interpolated, {counts['derived']} derived"
-          + (f'; {len(cations)} break the rule' if cations else ', all by the rule'))
-    return 1 if fails or cations else 0
+          + (f'; {len(cations)} break the rule' if cations else ', all by the rule')
+          + (f'; {len(missing)} of his CNs missing' if missing else ''))
+    return 1 if fails or cations or missing else 0
 
 
 if __name__ == '__main__':

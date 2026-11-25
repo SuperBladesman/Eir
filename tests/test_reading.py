@@ -590,12 +590,12 @@ def test_each_estimate_carries_its_own_band():
 
 
 def test_a_sulfide_is_judged_on_the_borrowed_band(tmp_path):
-    # Zn-S 15% over its estimate of 2.440 A is inside 19.3%; 22% is beyond
-    r = run(tmp_path, sphalerite(4 * 2.440 * 1.15 / 3 ** 0.5))
+    # Zn-S 20% over its estimate of 2.440 A is inside 23.6%; 27% is beyond
+    r = run(tmp_path, sphalerite(4 * 2.440 * 1.20 / 3 ** 0.5))
     assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
-    r = run(tmp_path, sphalerite(4 * 2.440 * 1.22 / 3 ** 0.5), name='y.cif')
+    r = run(tmp_path, sphalerite(4 * 2.440 * 1.27 / 3 ** 0.5), name='y.cif')
     assert (r.tier, r.code) == ('FLAG', 'M14'), r.evidence
-    assert 'beyond the 19.3% band' in r.evidence
+    assert 'beyond the 23.6% band' in r.evidence
 
 
 def rocksalt_vo(a, ox='V2+', v=2):
@@ -606,12 +606,12 @@ def rocksalt_vo(a, ox='V2+', v=2):
 
 def test_an_oxide_whose_radius_is_at_the_cn_is_judged_on_the_tight_band(tmp_path):
     # #68: the file holds V(2+) at CN 6, so VO's Shannon sum of 2.190 A
-    # carries 5.1%: 3% short is within it, 10% long is beyond it
+    # carries 5.3%: 3% short is within it, 10% long is beyond it
     r = run(tmp_path, rocksalt_vo(2 * 2.190 * 0.97))
     assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
     r = run(tmp_path, rocksalt_vo(2 * 2.190 * 1.10), name='y.cif')
     assert (r.tier, r.code) == ('FLAG', 'M14'), r.evidence
-    assert 'beyond the 5.1% band' in r.evidence
+    assert 'beyond the 5.3% band' in r.evidence
 
 
 def test_a_fractional_valence_takes_the_borrowed_band():
