@@ -572,6 +572,57 @@ def test_a_polyhedron_off_its_estimate_is_flagged_not_expunged(tmp_path):
     assert 'beyond the 15.7% band' in r.evidence
 
 
+def sphalerite(a):
+    return cif('zns', (a, a, a, 90, 90, 90), 'F -4 3 m',
+               [('Zn1', 'Zn2+', 0, 0, 0, 1), ('S1', 'S2-', 0.25, 0.25, 0.25, 1)],
+               [('Zn2+', 2), ('S2-', -2)])
+
+
+def test_each_estimate_carries_its_own_band():
+    # #68: Shannon gives N(3+) at CN 6 only, so a CN 2 nitrite borrows it;
+    # Fe(6+) is tabulated at CN 4; a sulfide always takes the borrowed band;
+    # valence interpolation keeps #11's band
+    e = eir.engine
+    assert e.expected_bond_length('N', 3, 2, 'O')['band'] == e.ESTIMATE_BAND_BORROWED
+    assert e.expected_bond_length('Fe', 6, 4, 'O')['band'] == e.ESTIMATE_BAND_AT_CN
+    assert e.expected_bond_length('Zn', 2, 4, 'S')['band'] == e.ESTIMATE_BAND_BORROWED
+    assert e.expected_bond_length('Ni', 3, 6, 'O')['band'] == e.ESTIMATE_BAND_VALENCE
+
+
+def test_a_sulfide_is_judged_on_the_borrowed_band(tmp_path):
+    # Zn-S 20% over its estimate of 2.440 A is inside 23.1%; 26% is beyond
+    r = run(tmp_path, sphalerite(4 * 2.440 * 1.20 / 3 ** 0.5))
+    assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
+    r = run(tmp_path, sphalerite(4 * 2.440 * 1.26 / 3 ** 0.5), name='y.cif')
+    assert (r.tier, r.code) == ('FLAG', 'M14'), r.evidence
+    assert 'beyond the 23.1% band' in r.evidence
+
+
+def rocksalt_vo(a, ox='V2+', v=2):
+    return cif('vo', (a, a, a, 90, 90, 90), 'F m -3 m',
+               [('V1', ox, 0, 0, 0, 1), ('O1', 'O2-', 0.5, 0.5, 0.5, 1)],
+               [(ox, v), ('O2-', -2)])
+
+
+def test_an_oxide_whose_radius_is_at_the_cn_is_judged_on_the_tight_band(tmp_path):
+    # #68: the file holds V(2+) at CN 6, so VO's Shannon sum of 2.190 A
+    # carries 7.7%: 5% short is within it, 10% long is beyond it
+    r = run(tmp_path, rocksalt_vo(2 * 2.190 * 0.95))
+    assert (r.tier, r.code) == ('FLAG', 'M13'), r.evidence
+    r = run(tmp_path, rocksalt_vo(2 * 2.190 * 1.10), name='y.cif')
+    assert (r.tier, r.code) == ('FLAG', 'M14'), r.evidence
+    assert 'beyond the 7.7% band' in r.evidence
+
+
+def test_a_fractional_valence_takes_the_borrowed_band():
+    # #68: the sum is made at the nearest integer valence (V at 2.5 as V(2+)),
+    # which the 7.7% population never tests
+    e = eir.engine
+    assert e.expected_bond_length('V', 2, 6, 'O')['band'] == e.ESTIMATE_BAND_AT_CN
+    assert e.expected_bond_length('V', 2.5, 6, 'O')['band'] == e.ESTIMATE_BAND_BORROWED
+    assert e.expected_bond_length('V', 2.5, 6, 'O')['mean'] == e.expected_bond_length('V', 2, 6, 'O')['mean']
+
+
 def test_estimates_never_extrapolate_in_valence():
     e = eir.engine
     assert e.expected_bond_length('U', 3, 8, 'O')['source'] == 'shannon_additive'
