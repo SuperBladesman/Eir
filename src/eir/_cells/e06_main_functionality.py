@@ -504,10 +504,13 @@ BL_MIN_SAMPLE = 30
 # 95th percentile of |Shannon sum - Gagne's mean| / Gagne's mean over every
 # configuration both cover: 15.6% on 457 bonded to O and 15.5% on 136 bonded
 # to N (median miss 0.05 and 0.07 A). Interpolating in valence between two of
-# Gagne's measured valences of the same ion misses by 14.6% at the 95th
-# percentile on the 38 configurations it can be tested on, so one band serves
-# both. S, Se, Te and the halides have nothing measured to calibrate against:
-# CHOSEN, the same band, until a survey of them exists.
+# Gagne's valences of the same ion, each measured or interpolated in CN at
+# this CN (tiers 1 and 2), misses by 4.4% at the 95th percentile on the 19
+# configurations it can be tested on, so the band covers it too; with an end
+# extrapolated in CN (tier 3) it missed by 14.6% on 38, no better than the
+# Shannon sum, and such ends are not used. S, Se, Te and the halides have
+# nothing measured to calibrate against: CHOSEN, the same band, until a survey
+# of them exists.
 ESTIMATE_BAND = 0.156
 ESTIMATED_TIERS = (4, 5)
 
@@ -531,16 +534,15 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
       5 valence_interpolated   v2.0.50 (#11): no measurement at this valence;
                                linear in valence between two measured valences
                                of the same ion and anion (Ni(3+) between Ni(2+)
-                               and Ni(4+)), each at this CN by tiers 1 to 3.
-                               Never extrapolated. An ESTIMATE.
+                               and Ni(4+)), each at this CN by tier 1 or 2,
+                               never an end extrapolated in CN (tier 3), and
+                               never beyond the measured valences. An
+                               ESTIMATE.
       4 shannon_additive       adding ionic radii, the old behaviour, kept as a
                                fallback because it is the construction G&H's
                                own data argues against. An ESTIMATE. Asked
-                               after tier 5, as decided for #11. On the 38
-                               configurations both can be tested on, the two
-                               miss by the same median (1.9%); tier 5's tail
-                               comes from CN-extrapolated ends (95th
-                               percentile 4.4% with both ends at tiers 1-2).
+                               after tier 5, which misses Gagne's means by
+                               4.4% at the 95th percentile where it applies.
 
     An estimate (tiers 4 and 5) carries 'band', ESTIMATE_BAND: it can flag an
     entry (M13, M14) but never expunge one, and never decide G6 or M10.
@@ -596,7 +598,7 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
     if v_lo is not None and v_hi is not None:
         a = expected_bond_length(element, v_lo, c, anion, db)
         b = expected_bond_length(element, v_hi, c, anion, db)
-        if a and b and a['tier'] <= 3 and b['tier'] <= 3:
+        if a and b and a['tier'] <= 2 and b['tier'] <= 2:
             f = (v - v_lo) / (v_hi - v_lo)
             return {'mean': round(a['mean'] + f * (b['mean'] - a['mean']), 4),
                     'sd': None, 'min': None, 'n_polyhedra': None,

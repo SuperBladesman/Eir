@@ -577,6 +577,10 @@ def test_estimates_never_extrapolate_in_valence():
     assert e.expected_bond_length('Ni', 3, 6, 'O')['source'] == 'valence_interpolated_2_4'
     assert e.expected_bond_length('Cd', 2, 6, 'Cl')['source'] == 'shannon_additive'
     assert e.expected_bond_length('Ni', 2, 6, 'O')['tier'] == 1
+    # an end extrapolated in CN is not used: Ni(4+) has no CN 4, so Ni(3+)
+    # at CN 4 falls to the Shannon sum
+    assert e.expected_bond_length('Ni', 4, 4, 'O')['tier'] == 3
+    assert e.expected_bond_length('Ni', 3, 4, 'O')['source'] == 'shannon_additive'
 
 
 def test_the_new_codes_explain_themselves(tmp_path):
