@@ -113,3 +113,31 @@ def test_the_anion_radii_are_shannons():
     for el, qs in want.items():
         for q, cns in qs.items():
             assert table[el][q] == cns, (el, q, table[el][q])
+
+
+def test_unstated_valence_rows_serve_one_valence_elements_only(table):
+    # #13: Brese and O'Keeffe (1991) rows Brown lists with the valence
+    # unstated, only for an element with one valence in Eir's common
+    # oxidation states and in Gagne's surveys, where nothing else gives the pair
+    common = json.loads((DATA / 'common_oxidation_states.json').read_text())
+    gagne = json.loads((DATA / 'gagne_bond_lengths.json').read_text(encoding='utf-8'))
+    rows = {ast.literal_eval(k): v for k, v in table.items()
+            if v.get('valence_in_source') == 'unstated'}
+    assert len(rows) == 53
+    for (m, v, x), e in rows.items():
+        assert (e['reference'], e['brown_code']) == ('Brown_2020', 'b')
+        assert common[m] == [v] and sorted({int(q) for q in gagne[m]}) == [v], m
+    # multivalent elements that the common-states table lists once
+    assert not {m for m, _, _ in rows} & {'Nb', 'W', 'Ru', 'Bi', 'P'}
+
+
+def test_gdn_is_assessed_with_brese_and_okeeffe(tmp_path):
+    p = tmp_path / 'gdn.cif'
+    from test_reading import cif
+    p.write_text(cif('gdn', (4.99, 4.99, 4.99, 90, 90, 90), 'F m -3 m',
+                     [('Gd1', 'Gd3+', 0, 0, 0, 1), ('N1', 'N3-', 0.5, 0.5, 0.5, 1)],
+                     [('Gd3+', 3), ('N3-', -3)]))
+    r = eir.check(p)
+    assert r.code != 'R1', r.evidence
+    gd = r.sites[r.sites['element'] == 'Gd'].iloc[0]
+    assert abs(float(gd['bvs']) - 3.0) < 0.3

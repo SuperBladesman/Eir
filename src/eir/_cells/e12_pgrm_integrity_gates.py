@@ -2001,6 +2001,20 @@ def VALIDATE_PARSING(verbose=True):
                 f'Ni(3): {src}, deviation {dev}; U(3) CN 8: {u and u["source"]}')
     _case(51, 'Ni(3+) interpolated between Ni(2+) and Ni(4+); U(3+) not extrapolated', _t51)
 
+    # ---- v2.0.50: Brese and O'Keeffe, valence unstated (#13) -----------
+    def _t52():
+        # rock salt GdN: Gd-N from Brese and O'Keeffe (1991), whose row Brown
+        # lists with the valence unstated; Gd has one valence. R1 before
+        r = _parsing_run(_parsing_cif('gdn52', 4.99, 'F m -3 m',
+                                      [('Gd1', 'Gd3+', 0, 0, 0, 1),
+                                       ('N1', 'N3-', 0.5, 0.5, 0.5, 1)],
+                                      loop=[('Gd3+', 3), ('N3-', -3)]))
+        s = [x for x in r.get('sites', []) if x.get('element') == 'Gd']
+        b = s[0].get('bvs') if s else None
+        return (b is not None and abs(b - 3.0) < 0.3,
+                f'Gd(3) in GdN: bond valence sum {b}')
+    _case(52, "Gd-N from Brese and O'Keeffe, valence unstated", _t52)
+
     ok = all(results)
     if verbose:
         print()

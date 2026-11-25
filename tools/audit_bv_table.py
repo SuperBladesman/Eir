@@ -18,6 +18,15 @@ taken from elsewhere are listed in NOT_IN_BROWN_2020 with their values:
 Fe4+-O from Brown (2009), Table 2, and Np4+-O from Gilson and Burns (2021),
 Coord. Chem. Rev. 445, 213994, section 2.3.
 
+Brese and O'Keeffe's (1991) rows that Brown lists with the cation's valence
+unstated (valence 9 in the file, code 'b') are used, from 2.0.50 (#13), only
+for an element with one valence, both in Data/common_oxidation_states.json and
+in Gagne's bond length surveys (Data/gagne_bond_lengths.json), at that valence, and only where nothing else gives the pair: no Gagne row, no
+row of Brown's at a stated valence, no Chen and Adams fit, and no entry
+removed on purpose (bvs_parameters_excluded.json). Such an entry records
+'valence_in_source': 'unstated'. Every row that qualifies must be in the
+table.
+
 Each entry must also be the row the merge rule picks: Gagne and Hawthorne
 (2015) first, then Brown and Altermatt (1985, 'a'), then Brese and O'Keeffe
 (1991, 'b'), then any other published source, then the unpublished ones
@@ -38,6 +47,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TABLE = ROOT / 'Data' / 'bvs_parameters.json'
+COMMON = ROOT / 'Data' / 'common_oxidation_states.json'
+GAGNE = ROOT / 'Data' / 'gagne_bond_lengths.json'
+EXCLUDED = ROOT / 'Data' / 'bvs_parameters_excluded.json'
 # the charge Eir gives each anion (ALWAYS_ANION and AMPHOTERIC_ANION, CELL 1)
 EIR_ANION = {'O': -2, 'F': -1, 'Cl': -1, 'Br': -1, 'I': -1, 'S': -2, 'Se': -2,
              'Te': -2, 'N': -3, 'P': -3, 'As': -3, 'H': -1, 'C': -4, 'Si': -4,
@@ -101,6 +113,12 @@ def main(bvparm, softnc1=None):
         if m:
             year[m.group(1)] = int(m.group(2))
     table = json.loads(TABLE.read_text())
+    common = json.loads(COMMON.read_text())
+    gagne = json.loads(GAGNE.read_text(encoding='utf-8'))
+    one = {m: v[0] for m, v in common.items()
+           if len(v) == 1 and v[0] > 0
+           and sorted({int(x) for x in gagne.get(m, {})}) == v}
+    excluded = {k for k in json.loads(EXCLUDED.read_text()) if not k.startswith('_')}
     bad, ties = [], []
     soft = read_softnc1(softnc1) if softnc1 else None
     if soft is not None:
@@ -134,6 +152,21 @@ def main(bvparm, softnc1=None):
         q, code = e.get('anion_charge'), e.get('brown_code')
         if q is None or q != EIR_ANION.get(key[2]):
             bad.append((k, f'anion_charge {q}, Eir gives {key[2]} {EIR_ANION.get(key[2])}'))
+            continue
+        if e.get('valence_in_source') == 'unstated':
+            # #13: Brese and O'Keeffe, valence unstated, one-valence elements
+            src = [r for r in rows.get((key[0], 9, key[2]), []) if r[0] == q
+                   and r[3] == 'b' and abs(r[1] - e['r0']) < 1e-6
+                   and abs(r[2] - e['b']) < 1e-6]
+            if code != 'b' or not src:
+                bad.append((k, f"no 'b' row with the valence unstated at {q:+d}, "
+                               f"R0 {e['r0']}, b {e['b']}"))
+            elif one.get(key[0]) != key[1]:
+                bad.append((k, f'{key[0]} has common valences {common.get(key[0])} and '
+                               f'Gagne surveys {sorted(gagne.get(key[0], {}))}; unstated '
+                               'rows serve only an element with one'))
+            elif any(r[0] == q for r in rows.get(key, [])):
+                bad.append((k, 'Brown gives this pair at a stated valence'))
             continue
         here = [r for r in rows.get(key, []) if r[0] == q]
         hit = [r for r in here if r[3] == code and abs(r[1] - e['r0']) < 1e-6
@@ -169,6 +202,18 @@ def main(bvparm, softnc1=None):
                                    f"the most recent unrestricted is {pick[3]!r}; table has {code!r}"))
                     continue
             ties.append((k, code, [(r[1], r[2], r[3]) for r in tied]))
+    # #13: every Brese and O'Keeffe row with the valence unstated that the
+    # rule admits is in the table
+    for (m, v9, x), rs in rows.items():
+        if v9 != 9 or m not in one:
+            continue
+        k = str((m, one[m], x))
+        for r in rs:
+            if (r[3] == 'b' and r[0] == EIR_ANION.get(x) and k not in table
+                    and k not in excluded
+                    and not any(s[0] == r[0] for s in rows.get((m, one[m], x), []))):
+                bad.append((k, f"the unstated-valence 'b' row (R0 {r[1]}, b {r[2]}) "
+                               'should fill this pair'))
     print(f'{len(table)} entries; {len(bad)} fail; {len(ties)} equal-rank choices')
     for k, why in bad:
         print('  FAIL', k, why)
