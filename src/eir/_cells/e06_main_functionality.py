@@ -543,7 +543,12 @@ def expected_bond_length(element, valence, cn, anion='O', db=None):
                                fallback because it is the construction G&H's
                                own data argues against. An ESTIMATE. Asked
                                after tier 5, which misses Gagne's means by
-                               4.4% at the 95th percentile where it applies.
+                               4.4% at the 95th percentile where it applies
+                               (median 0.8%; the Shannon sum's tail on the
+                               same 19 is no worse, its median is). The
+                               cation radius is Shannon's at the nearest
+                               tabulated CN where he gives none at this one:
+                               Ni(3+) at CN 4 takes its CN 6 radius.
 
     An estimate (tiers 4 and 5) carries 'band', ESTIMATE_BAND: it can flag an
     entry (M13, M14) but never expunge one, and never decide G6 or M10.
