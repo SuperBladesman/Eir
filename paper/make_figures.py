@@ -36,7 +36,7 @@ STEPS = [
     ('P', 'Parse', ['Can the file be read?'],
      'EXPUNGE', ['No bond valence result quoted.']),
     ('G', 'Geometry', ['Can the atoms be where the file puts them?',
-                       'Six independent screens; a proposed origin',
+                       'Seven independent screens; a proposed origin',
                        'shift is tested on a copy, never applied.'],
      'EXPUNGE', ['No bond valence result quoted.']),
     ('R', 'Reference', ['Are there bond valence parameters and',

@@ -33,3 +33,18 @@ def test_notebook_fragment(examples):
     frag = r._repr_html_()
     assert frag.startswith('<div class="eir-report">')
     assert ':root' not in frag
+
+
+def test_report_shows_the_position_occupancy_screen(examples, tmp_path):
+    # engine 2.0.49 (#49) added the seventh screen; the report lists it (#60)
+    from test_reading import MG, OX, mgo
+    ok = eir.check(examples / 'MgO.cif').report_html()
+    assert 'Seven independent screens' in ok
+    assert 'Position occupancy' in ok and 'no position over-filled' in ok
+    cif = tmp_path / 'twice.cif'
+    cif.write_text(mgo([MG, OX, ('O2', 'O2-', 0.5, 0.5, 0.5, 1)]))
+    bad = eir.check(cif).report_html()
+    screens = bad.split('<table class="screens">', 1)[1].split('</table>', 1)[0]
+    row = screens.split('Position occupancy', 1)[1].split('</tr>', 1)[0]
+    assert 'failed' in row, row
+    assert 'O1 and O2 written at one position, total occupancy 2.000' in row, row

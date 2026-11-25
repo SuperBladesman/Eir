@@ -34,7 +34,7 @@ EXPUNGE means no bond valence result should be quoted. NOT_ASSESSED means part o
 
 These gates replace and contain the six-type failure taxonomy of the *Dalton Transactions* paper (Type 2 → R1, 3 → M1, 4 → M3, 5 → M2, 6A → M6, 7 → M4). What they add is the G facet. The taxonomy was derived on rock salts, where every atom sits on a special position and a coordinate error is impossible by construction; in every family with positional freedom, geometry faults dominate.
 
-Six independent geometry screens feed the G and M facets, reported separately because they see different things:
+Seven independent geometry screens feed the G and M facets, reported separately because they see different things:
 
 | Screen | What it sees |
 |---|---|
@@ -44,6 +44,7 @@ Six independent geometry screens feed the G and M facets, reported separately be
 | Cation–cation packing | The same for the cation sublattice |
 | Coordination | Whether bonds are missing, rather than too short |
 | Half-lattice shift | Whether a cation sits on the wrong origin |
+| Position occupancy | Labels written at one position that together fill it more than once |
 
 The shift screen proposes and never corrects. Each proposal is applied to a copy of the CIF and the whole analysis re-run, so `cation_on_wrong_origin` means the hypothesis was tested and held.
 
@@ -76,7 +77,7 @@ MgO.cif  ·  Mg O  ·  F m -3 m
   Report               examples/MgO.eir.html
 ```
 
-The verdict comes first, in plain English, then the number to quote. Beside the CIF Eir writes a one-page report: the verdict and what decided it, the four facets, the six geometry screens, every site against the bond lengths measured for that ion, and a drawing of each coordination polyhedron.
+The verdict comes first, in plain English, then the number to quote. Beside the CIF Eir writes a one-page report: the verdict and what decided it, the four facets, the seven geometry screens, every site against the bond lengths measured for that ion, and a drawing of each coordination polyhedron.
 
 Most Rietveld programs write element symbols without charges, and Eir does not guess oxidation states. Give them with `--ox`, or put a `config.json` beside the file:
 
