@@ -16,7 +16,9 @@ CN it holds (ESTIMATE_BAND_AT_CN, ESTIMATE_BAND_BORROWED). Tier 5 is tested
 by leaving each measured configuration out and interpolating between the
 measured valences either side, as expected_bond_length does; its band,
 ESTIMATE_BAND_VALENCE, is chosen rather than measured (see CELL 2), so it is
-reported but not checked.
+reported but not checked. An ion whose radii are recorded as derived from
+Gagne's own means (Data/shannon_radii_sources.json, #69) is left out at every
+CN, since even a CN it borrows at rests on the data it would be tested on.
 
 --check exits 1 if a measured band, rounded to 0.001, differs from the
 engine's constant: re-run this whenever Data/shannon_radii.json or
@@ -44,9 +46,14 @@ def engine():
 def shannon_misses(e):
     """(element, valence, anion, cn, miss, on the at-the-CN band?) for every
     configuration Gagne measured, bonded to O or N, that the radii cover."""
+    import json
+    src = json.loads((ROOT / 'Data' / 'shannon_radii_sources.json')
+                     .read_text(encoding='utf-8'))
     out = []
     for (el, v, an, cn), rec in sorted(e.db_manager.bond_lengths.items()):
         if an not in ('O', 'N') or v <= 0:
+            continue
+        if str(v) in src.get('derived', {}).get(el, {}):
             continue
         s = e.shannon_bond_estimate(el, v, cn, an)
         if s is None:
