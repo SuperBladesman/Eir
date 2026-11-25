@@ -96,3 +96,20 @@ def test_no_parameters_is_not_assessed_not_expunged(tmp_path, name, text):
     r = eir.check(p)
     assert r.tier == 'NOT_ASSESSED', (r.tier, r.reason)
     assert r.reason == 'no_bond_valence_parameters', r.reason
+
+
+def test_the_anion_radii_are_shannons():
+    # Shannon (1976), effective ionic radii; #64
+    import json
+    from pathlib import Path
+    want = {'O': {'-2': {'2': 1.35, '3': 1.36, '4': 1.38, '6': 1.40, '8': 1.42}},
+            'F': {'-1': {'2': 1.285, '3': 1.30, '4': 1.31, '6': 1.33}},
+            'Cl': {'-1': {'6': 1.81}}, 'Br': {'-1': {'6': 1.96}},
+            'I': {'-1': {'6': 2.20}}, 'S': {'-2': {'6': 1.84}},
+            'Se': {'-2': {'6': 1.98}}, 'Te': {'-2': {'6': 2.21}},
+            'N': {'-3': {'4': 1.46}}}
+    table = json.loads((Path(__file__).resolve().parents[1] / 'Data'
+                        / 'shannon_radii.json').read_text(encoding='utf-8'))
+    for el, qs in want.items():
+        for q, cns in qs.items():
+            assert table[el][q] == cns, (el, q, table[el][q])
