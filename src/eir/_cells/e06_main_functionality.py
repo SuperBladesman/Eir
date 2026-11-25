@@ -500,10 +500,11 @@ BL_MIN_SAMPLE = 30
 # Where Gagne has no measurement for an ion at its valence, its expected bond
 # length is estimated (tiers 4 and 5 below). An estimate can flag an entry but
 # never expunge it, and the band says how far a site's mean bond may sit from
-# the estimate before it is flagged as off it (M14, CELL 7b). 0.156 is the
+# the estimate before it is flagged as off it (M14, CELL 7b). 0.157 is the
 # 95th percentile of |Shannon sum - Gagne's mean| / Gagne's mean over every
-# configuration both cover: 15.6% on 457 bonded to O and 15.5% on 136 bonded
-# to N (median miss 0.05 and 0.07 A). Interpolating in valence between two of
+# configuration both cover: 15.66% on the 593 bonded to O (457, 15.7%) and to
+# N (136, 15.5%), median miss 0.05 and 0.07 A, with Shannon's own anion radii
+# (#64; with the radii the file held before, 15.6%). Interpolating in valence between two of
 # Gagne's valences of the same ion, each measured or interpolated in CN at
 # this CN (tiers 1 and 2), misses by 4.4% at the 95th percentile on the 19
 # configurations it can be tested on, so the band covers it too; with an end
@@ -511,7 +512,7 @@ BL_MIN_SAMPLE = 30
 # Shannon sum, and such ends are not used. S, Se, Te and the halides have
 # nothing measured to calibrate against: CHOSEN, the same band, until a survey
 # of them exists.
-ESTIMATE_BAND = 0.156
+ESTIMATE_BAND = 0.157
 ESTIMATED_TIERS = (4, 5)
 
 

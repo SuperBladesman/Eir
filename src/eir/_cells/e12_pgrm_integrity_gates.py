@@ -1251,7 +1251,7 @@ def VALIDATE_GATES(verbose=True):
     _m16 = classify_site(dict(_f16, is_dominant_species=False), _g15)
     report('16. M14: a polyhedron off its estimate is FLAG, not expunged',
            _c16[0] == 'M14' and _m16[0] == 'M13'
-           and 'beyond the 15.6% band' in str(_c16[2]),
+           and 'beyond the 15.7% band' in str(_c16[2]),
            f'at +19.3%: {_c16[0]} ({_c16[2]}); as a minority species: {_m16[0]}')
     _c17 = classify_site(dict(_e15, bl_tier=float('nan'), bl_source=None,
                               bl_expected_mean=float('nan')), _g15)

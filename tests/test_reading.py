@@ -556,7 +556,8 @@ def test_a_sulfide_is_judged_against_a_shannon_estimate(tmp_path):
               [('Zn2+', 2), ('S2-', -2)])
     r = run(tmp_path, zns)
     assert (r.tier, r.code, r.reason) == ('FLAG', 'M13', 'bond_lengths_estimated'), r.evidence
-    assert 'against 2.300 A estimated from Shannon radii' in r.evidence
+    # Zn(2+) at CN 4 (0.60 A) and S(2-) at Shannon's only CN, 6 (1.84 A); #64
+    assert 'against 2.440 A estimated from Shannon radii' in r.evidence
 
 
 def test_ni3_is_interpolated_between_measured_valences(tmp_path):
@@ -568,7 +569,7 @@ def test_ni3_is_interpolated_between_measured_valences(tmp_path):
 def test_a_polyhedron_off_its_estimate_is_flagged_not_expunged(tmp_path):
     r = run(tmp_path, rocksalt_ni3(5.0))
     assert (r.tier, r.code, r.reason) == ('FLAG', 'M14', 'polyhedron_size_off_estimate'), r.evidence
-    assert 'beyond the 15.6% band' in r.evidence
+    assert 'beyond the 15.7% band' in r.evidence
 
 
 def test_estimates_never_extrapolate_in_valence():
