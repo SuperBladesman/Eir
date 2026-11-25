@@ -662,3 +662,30 @@ def test_an_anion_centred_site_gets_no_estimate():
     e = eir.engine
     assert e.expected_bond_length('N', -3, 4, 'O') is None
     assert e.expected_bond_length('N', 0, 4, 'O') is None
+
+
+def test_g7_takes_the_higher_of_the_two_floors():
+    # #72: Shannon lists Zr(4+) at CN 4, Gagne measured Zr(4+)-O from CN 6
+    e = eir.engine
+    row = {'element': 'Zr', 'valence': 4, 'cn': 4, 'cn_shannon_min': 4,
+           'coords': '(0.75, 0.25, 0.75)', 'ligand_types': 'O', 'bvs': 0.823,
+           'bvs_percent_diff': -79.4, 'is_dominant_species': True, 'occupancy': 0.9}
+    code, reason, evidence = e.classify_site(row, {'gii_recommended_value': 3.09})
+    assert (code, reason) == ('G7', 'coordination_incomplete'), (code, evidence)
+    assert 'below the smallest measured (6)' in evidence
+    assert e._measured_cn_min(dict(row, ligand_types='N,O')) is None
+
+
+def test_g7_floor_falls_back_and_keeps_the_tabulated_label():
+    # #72: with no radius-file floor the measured one applies; where the
+    # file's floor is as high as Gagne's, the evidence says "tabulated"
+    e = eir.engine
+    row = {'element': 'Zr', 'valence': 4, 'cn': 4, 'coords': '(0, 0, 0)',
+           'ligand_types': 'O', 'bvs': 0.823, 'bvs_percent_diff': -79.4,
+           'is_dominant_species': True, 'occupancy': 1.0}
+    g = {'gii_recommended_value': 3.0}
+    code, _, ev = e.classify_site(dict(row, cn_shannon_min=float('nan')), g)
+    assert code == 'G7' and 'below the smallest measured (6)' in ev, ev
+    code, _, ev = e.classify_site(dict(row, cn_shannon_min=6), g)
+    assert code == 'G7' and 'below the smallest tabulated (6)' in ev, ev
+    assert e._measured_cn_min(dict(row, valence=float('inf'))) is None
